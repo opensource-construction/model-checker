@@ -11,7 +11,7 @@ export const processFile = (props: processFileProps) => {
   const { fileId, dispatch, file } = props
 
   dispatch({ type: 'SET_FILE', payload: fileId, fileId })
-  const worker = new Worker('/src/context/ValidationContext/worker.ts', { type: 'module' })
+  const worker = new Worker(new URL('/src/context/ValidationContext/worker.ts', import.meta.url), { type: 'module' })
   worker.postMessage({ file, fileId })
   worker.onmessage = (e) => {
     //console.log("Message received from worker", e.data);
