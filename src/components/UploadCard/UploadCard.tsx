@@ -16,8 +16,8 @@ export const UploadCard = () => {
     if (!files) return
     files.forEach((file) => {
       processFile({ file: file as File, dispatch, fileId: file.name })
-      dispatch({ type: 'SET_FILE', payload: file.name, fileId: file.name })
     })
+    setFiles([])
     navigate('/results')
   }
 
@@ -62,8 +62,8 @@ export const UploadCard = () => {
             </div>
           </Group>
           <div>
-            {files?.map((file) => (
-              <Group>
+            {files?.map((file, index) => (
+              <Group key={index}>
                 <IconFile3d stroke={0.7} />
                 <Text size='sm'>{file.name}</Text>
               </Group>
