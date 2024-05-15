@@ -3,11 +3,21 @@ import { Paper } from '@components'
 import { Dropzone } from '@mantine/dropzone'
 import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useValidationContext } from '@context'
+import { processFile } from './processFile.ts'
 
 export const UploadCard = () => {
   const navigate = useNavigate()
+  const { dispatch } = useValidationContext()
+  const [files, setFiles] = useState<File[]>([])
 
   const handleClick = () => {
+    if (!files) return
+    files.forEach((file) => {
+      processFile({ file: file as File, dispatch, fileId: file.name })
+      dispatch({ type: 'SET_FILE', payload: file.name, fileId: file.name })
+    })
     navigate('/results')
   }
 
@@ -19,10 +29,11 @@ export const UploadCard = () => {
         </Center>
         <Divider py={8} />
         <Dropzone
-          onDrop={(files) => console.log('accepted files', files)}
+          onDrop={(files) => setFiles((prevFiles) => [...prevFiles, ...files])}
           onReject={(files) => console.log('rejected files', files)}
           maxSize={500 * 1024 ** 2}
           accept={['application/p21']}
+          multiple={true}
         >
           <Group justify='center' gap='xl' mih={220} style={{ pointerEvents: 'none' }}>
             <Dropzone.Accept>
@@ -50,8 +61,16 @@ export const UploadCard = () => {
               </Text>
             </div>
           </Group>
+          <div>
+            {files?.map((file) => (
+              <Group>
+                <IconFile3d stroke={0.7} />
+                <Text size='sm'>{file.name}</Text>
+              </Group>
+            ))}
+          </div>
         </Dropzone>
-        <Button color='#319555' mt='md' radius='md' onClick={handleClick}>
+        <Button color='#319555' mt='md' radius='md' onClick={handleClick} disabled={!files}>
           Validate
         </Button>
       </Paper>

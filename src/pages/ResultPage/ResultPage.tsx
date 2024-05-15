@@ -1,7 +1,10 @@
 import { Paper, ProjectResult } from '@components'
 import { Button, Container, Divider, Title, Group } from '@mantine/core'
+import { useValidationContext } from '@context'
 
 export const ResultPage = () => {
+  const { state } = useValidationContext()
+
   return (
     <Container mt={36} size='xl'>
       <Paper>
@@ -12,7 +15,9 @@ export const ResultPage = () => {
           </Button>
         </Group>
         <Divider my='sm' style={{ width: '30%' }} />
-        <ProjectResult fileName={'my_project.ifc'} />
+        {Object.values(state).map((result) => (
+          <ProjectResult key={result.name} fileName={result.name} />
+        ))}
       </Paper>
     </Container>
   )

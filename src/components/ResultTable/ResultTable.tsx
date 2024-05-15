@@ -1,52 +1,26 @@
-import { Group, Progress, Table, Text } from '@mantine/core'
-import { IconCircleCheck, IconCircleX } from '@tabler/icons-react'
+import { ActionIcon, Group, Progress, Skeleton, Table, Text } from '@mantine/core'
+import { IconChevronDown, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
+import { FileResult } from '@context'
 
-interface ResultData {
-  status: boolean
-  rule: string
-  fulfilment: number
-  ruleDescription: string
+interface ResultTableProps {
+  results: FileResult[]
+  inProgress: boolean
 }
 
-const data = [
-  {
-    status: true,
-    rule: 'Project Name',
-    fulfilment: 100.0,
-    ruleDescription: 'Elements are assigned to a project',
-  },
-  {
-    status: true,
-    rule: 'Elements in Project',
-    fulfilment: 80.0,
-    ruleDescription: 'Elements have a project name assigned',
-  },
-  {
-    status: false,
-    rule: 'Elements in Building',
-    fulfilment: 28.0,
-    ruleDescription: 'Elements are assigned to a building',
-  },
-  {
-    status: true,
-    rule: 'Elements in Levels',
-    fulfilment: 96.0,
-    ruleDescription: 'Elements are assigned to a level',
-  },
-  {
-    status: false,
-    rule: 'Element Names',
-    fulfilment: 12.0,
-    ruleDescription: 'Elements have names',
-  },
-] as ResultData[]
+export const ResultTable = (props: ResultTableProps) => {
+  const { results, inProgress } = props
 
-export const ResultTable = () => {
-  const rows = data.map(({ rule, status, ruleDescription, fulfilment }) => {
+  // @ts-expect-error ignore for now
+  const rows = results.map(({ name, result: { passed, value }, ruleDescription = 'Text', fulfilment = '50' }) => {
     return (
-      <Table.Tr key={rule}>
+      <Table.Tr key={name}>
         <Table.Td>
-          {status ? (
+          {inProgress ? (
+            <Group>
+              <IconCircleCheck color='#319555' />
+              <Skeleton height={8} radius='xl' />
+            </Group>
+          ) : passed ? (
             <Group>
               <IconCircleCheck color='#319555' />
               <Text c='#319555'>Passed</Text>
@@ -58,7 +32,7 @@ export const ResultTable = () => {
             </Group>
           )}
         </Table.Td>
-        <Table.Td>{rule}</Table.Td>
+        <Table.Td>{name}</Table.Td>
         <Table.Td>
           <Progress.Root size='xxl'>
             <Progress.Section value={fulfilment} color='#319555'>
@@ -69,6 +43,13 @@ export const ResultTable = () => {
           </Progress.Root>
         </Table.Td>
         <Table.Td>{ruleDescription}</Table.Td>
+        <Table.Td>
+          {value.length ? (
+            <ActionIcon variant='transparent' size='sm'>
+              <IconChevronDown />
+            </ActionIcon>
+          ) : null}
+        </Table.Td>
       </Table.Tr>
     )
   })
@@ -82,6 +63,7 @@ export const ResultTable = () => {
             <Table.Th>Rule</Table.Th>
             <Table.Th>Level of Fulfilment</Table.Th>
             <Table.Th>Rule Description</Table.Th>
+            <Table.Th></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
