@@ -1,46 +1,46 @@
-import { Button, Center, Divider, Group, rem, Stack, Text, Title } from '@mantine/core';
-import { Paper } from '@components';
-import { Dropzone, FileRejection } from '@mantine/dropzone';
-import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { useValidationContext } from '@context';
-import { processFile } from './processFile.ts';
+import { Button, Center, Divider, Group, rem, Stack, Text, Title } from '@mantine/core'
+import { Paper } from '@components'
+import { Dropzone, FileRejection } from '@mantine/dropzone'
+import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
+import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useValidationContext } from '@context'
+import { processFile } from './processFile.ts'
 
 export const UploadCard = () => {
-  const navigate = useNavigate();
-  const { dispatch } = useValidationContext();
-  const [files, setFiles] = useState<File[]>([]);
+  const navigate = useNavigate()
+  const { dispatch } = useValidationContext()
+  const [files, setFiles] = useState<File[]>([])
 
   const handleClick = () => {
-    if (!files.length) return;
+    if (!files.length) return
     files.forEach((file) => {
-      processFile({ file: file as File, dispatch, fileId: file.name });
-    });
-    setFiles([]);
-    navigate('/results');
-  };
+      processFile({ file: file as File, dispatch, fileId: file.name })
+    })
+    setFiles([])
+    navigate('/results')
+  }
 
   const handleDrop = (acceptedFiles: File[]) => {
-    console.log('Accepted files:', acceptedFiles);
-    setFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
-  };
+    console.log('Accepted files:', acceptedFiles)
+    setFiles((prevFiles) => [...prevFiles, ...acceptedFiles])
+  }
 
   const handleReject = (fileRejections: FileRejection[]) => {
-    console.log('Rejected files:', fileRejections);
-  };
+    console.log('Rejected files:', fileRejections)
+  }
 
   // Custom validator to check for .ifc file extension
   const fileValidator = (file: File) => {
-    const validExtension = file.name.endsWith('.ifc');
+    const validExtension = file.name.endsWith('.ifc')
     if (!validExtension) {
       return {
         code: 'file-invalid-type',
         message: 'Invalid file type. Only .ifc files are allowed.',
-      };
+      }
     }
-    return null;
-  };
+    return null
+  }
 
   return (
     <Stack>
@@ -96,5 +96,5 @@ export const UploadCard = () => {
         </Button>
       </Paper>
     </Stack>
-  );
-};
+  )
+}
