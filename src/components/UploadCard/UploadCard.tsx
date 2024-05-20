@@ -7,10 +7,17 @@ import { useState } from 'react'
 import { useValidationContext } from '@context'
 import { processFile } from './processFile.ts'
 
+interface FileError {
+  code: string
+  message: string
+  file: string
+}
+
 export const UploadCard = () => {
   const navigate = useNavigate()
   const { dispatch } = useValidationContext()
   const [files, setFiles] = useState<File[]>([])
+  const [errors, setErrors] = useState<FileError[] | null>(null)
 
   const handleClick = () => {
     if (!files.length) return
@@ -22,12 +29,12 @@ export const UploadCard = () => {
   }
 
   const handleDrop = (acceptedFiles: File[]) => {
-    console.log('Accepted files:', acceptedFiles)
+    setErrors([])
     setFiles((prevFiles) => [...prevFiles, ...acceptedFiles])
   }
 
   const handleReject = (fileRejections: FileRejection[]) => {
-    console.log('Rejected files:', fileRejections)
+    setErrors(fileRejections.map((rejection) => ({ ...rejection.errors[0], file: rejection.file.name })))
   }
 
   // Custom validator to check for .ifc file extension
@@ -90,6 +97,15 @@ export const UploadCard = () => {
               </Group>
             ))}
           </div>
+          {errors ? (
+            <div>
+              {errors.map((error) => (
+                <Text size='sm' c='red'>
+                  File: {error.file} - {error.message}
+                </Text>
+              ))}
+            </div>
+          ) : null}
         </Dropzone>
         <Button color='#319555' mt='md' radius='md' onClick={handleClick} disabled={!files.length}>
           Validate
