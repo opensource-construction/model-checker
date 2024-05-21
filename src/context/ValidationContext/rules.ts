@@ -123,39 +123,39 @@ interface Rule {
 // Rule definitions
 export const rules: Rule[] = [
   {
-    name: 'Project Name',
+    name: 'project-name',
     regex: /IFCPROJECT\('[^']+',#[^,]+,'([^']+)'/i,
     process: extractAttributeValue,
     check: (value) => ({ value, passed: !!value }), // Ensure value exists to pass
   },
   {
-    name: 'Objects related to Project',
+    name: 'project-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)/gi,
     process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCPROJECT' }),
     // @ts-expect-error issues with boolean value
     check: (passed) => ({ value: passed, passed: passed }),
   },
   {
-    name: 'Site Name',
+    name: 'site-name',
     regex: /IFCSITE\('[^']+',#[^,]+,'([^']+)'/i,
     process: extractAttributeValue,
     check: (value) => ({ value, passed: !!value }), // Ensure value exists to pass
   },
   {
-    name: 'Objects related to Site',
+    name: 'site-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)/gi,
     process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCSITE' }),
     // @ts-expect-error issues with boolean value
     check: (passed) => ({ value: passed, passed }),
   },
   {
-    name: 'Building Name',
+    name: 'building-name',
     regex: /IFCBUILDING\('[^']+',#[^,]+,'([^']+)'/i,
     process: extractAttributeValue,
     check: (value) => ({ value, passed: !!value }), // Ensure value exists to pass
   },
   {
-    name: 'Objects related to Building',
+    name: 'building-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)/gi,
     process: ({ content, regex }) =>
       checkObjectRelations({
@@ -167,13 +167,13 @@ export const rules: Rule[] = [
     check: (passed) => ({ value: passed, passed }),
   },
   {
-    name: 'Storey Names',
+    name: 'story-name',
     regex: /IFCBUILDINGSTOREY\('[^']+',#[^,]+,'([^']+)'/gi,
     process: ({ content }) => extractBuildingStoreys({ content } as { content: string }),
     check: (value) => ({ value, passed: value.length > 0 }),
   },
   {
-    name: 'Objects related to BuildingStory',
+    name: 'story-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#\d+,'([^']*)'/gi,
     process: countElementsWithoutStorey,
     check: (value) => ({
@@ -182,13 +182,13 @@ export const rules: Rule[] = [
     }),
   },
   {
-    name: 'Space Names',
+    name: 'space-name',
     regex: /IFCSPACE\(/gi,
     process: ({ content }) => extractSpaceNames({ content } as { content: string }),
     check: (spaces) => ({ value: spaces, passed: spaces.length === 0 }), // Passes if no spaces found
   },
   {
-    name: 'Proxy Count',
+    name: 'object-count',
     regex: /IFCBUILDINGELEMENTPROXY\(/gi,
     process: ({ content }) => extractProxies({ content } as { content: string }),
     check: (proxies) => ({ value: proxies, passed: proxies.length === 0 }), // Update logic as needed
