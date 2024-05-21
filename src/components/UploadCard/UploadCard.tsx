@@ -83,9 +83,7 @@ export const UploadCard = () => {
             </Dropzone.Idle>
 
             <div>
-              <Text size='xl'>
-                {t('dropzone.drag')}
-              </Text>
+              <Text size='xl'>{t('dropzone.drag')}</Text>
               <Text size='sm' c='dimmed' mt={7}>
                 {t('dropzone.attach')}
               </Text>

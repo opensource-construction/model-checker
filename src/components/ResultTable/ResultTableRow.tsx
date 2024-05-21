@@ -55,7 +55,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         <Table.Td>
           {value.length ? (
             <ActionIcon variant='transparent' size='sm' onClick={toggle}>
-              {opened? <IconChevronUp />: <IconChevronDown />}
+              {opened ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
           ) : null}
         </Table.Td>

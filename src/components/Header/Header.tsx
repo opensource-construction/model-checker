@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 export const Header = () => {
   const navigate = useNavigate()
-  const { i18n} = useTranslation()
+  const { i18n } = useTranslation()
   const size = 36
 
   return (
@@ -17,7 +17,7 @@ export const Header = () => {
           <Title order={3}>IFC Model Checker</Title>
         </Group>
       </UnstyledButton>
-      <UnstyledButton onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en'? 'de': 'en')} mr='md'>
+      <UnstyledButton onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en' ? 'de' : 'en')} mr='md'>
         {i18n.resolvedLanguage?.toUpperCase()}
       </UnstyledButton>
     </Group>
