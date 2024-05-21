@@ -1,0 +1,46 @@
+{
+  "upload-file": "Datei Hochladen",
+  "validate": "Validieren",
+  "dropzone": {
+    "drag": "Ziehen Sie IFC-Dateien hierher oder klicken Sie, um Dateien auszuwählen",
+    "attach": "Hängen Sie so viele Dateien an, wie Sie möchten. Jede Datei sollte 500 MB nicht überschreiten",
+    "error": "Dateityp ungültig. Nur .ifc Dateien sind erlaubt.",
+    "error-message": "Datei"
+  },
+  "results": "Resultaten",
+  "print": "Print",
+  "result-table": {
+    "rule": "Regel",
+    "status": "Status",
+    "level-of-fulfilment": "Erfüllungsgrad",
+    "passed": "Erfüllt",
+    "failed": "Nicht Erfüllt"
+  },
+  "rules": {
+    "project-name": "Ist der IfcProject Name ausgefüllt?",
+    "site-name": "Ist der IfcSite Name ausgefüllt?",
+    "building-name": "Ist der IfcBuilding Name ausgefüllt?",
+    "story-name": "Sind IfcBuilding Storey Namen ausgefüllt?",
+    "story-relation": "Haben alle Objekte einen Bezug zu einer IfcBuildingStory?",
+    "building-relation": "Haben alle Objekte einen Bezug zu einem IfcBuilding?",
+    "site-relation": "Haben alle Objekte einen Bezug zu einer IfcSite?",
+    "project-relation": "Haben alle Objekte einen Bezug zu einer IfcSite?",
+    "space-name": "Wenn Räume als IfcSpace vorhanden, sind deren Namen ausgefüllt?",
+    "object-name": "Haben alle Objekte einen Namen?",
+    "type-name": "Haben alle Objekte einen Typennamen?",
+    "object-description": "Haben alle Objekte eine Beschreibung?",
+    "material-name": "Haben alle Objekte einen Materialbezeichnung?",
+    "predefined-type": "Wenn die Objekte einen PredefinedType haben, sind diese ausgefüllt?",
+    "object-count": "Wie hoch ist der Anteil von BuildingElementProxy Objekten?",
+    "project-names": "Welche IfcProject Namen wurden verwendet?",
+    "site-names": "Welche IfcSite Namen wurden verwendet?",
+    "building-names": "Welche IfcBuilding Namen wurden verwendet?",
+    "story-names": "Welche IfcBuildingStory, also Geschossnamen wurden verwendet?",
+    "object-names": "Welche Objektnamen wurden verwendet?",
+    "type-names": "Welche Typennamen wurden verwendet?",
+    "descriptions": "Welche Beschreibungen wurden verwendet?",
+    "material-names": "Welche Materialnamen wurden verwendet?",
+    "predefined-types": "Welche PredefinedType wurden verwendet?",
+    "building-element-proxies": "Welche IfcBuildingElementProxy Namen wurden verwendet?"
+  }
+}

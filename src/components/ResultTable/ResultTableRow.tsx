@@ -1,7 +1,8 @@
 import { ActionIcon, Group, Progress, Skeleton, Table, Text } from '@mantine/core'
-import { IconChevronDown, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
+import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { PartialResult } from '../../context/ValidationContext/interfaces.ts'
+import { useTranslation } from 'react-i18next'
 
 interface ResultTableRowProps {
   name: string
@@ -9,7 +10,6 @@ interface ResultTableRowProps {
     passed: boolean
     value: string[] | PartialResult[]
   }
-  ruleDescription?: string
   fulfilment?: number
   inProgress: boolean
 }
@@ -18,11 +18,11 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   const {
     name,
     result: { passed, value },
-    ruleDescription = 'Text',
     fulfilment = 50,
     inProgress,
   } = props
   const [opened, { toggle }] = useDisclosure(false)
+  const { t } = useTranslation()
 
   return (
     <>
@@ -33,16 +33,16 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
           ) : passed ? (
             <Group>
               <IconCircleCheck color='#319555' />
-              <Text c='#319555'>Passed</Text>
+              <Text c='#319555'>{t('result-table.passed')}</Text>
             </Group>
           ) : (
             <Group>
               <IconCircleX color='#BE4A5A' />
-              <Text c='#BE4A5A'>Failed</Text>
+              <Text c='#BE4A5A'>{t('result-table.failed')}</Text>
             </Group>
           )}
         </Table.Td>
-        <Table.Td>{name}</Table.Td>
+        <Table.Td>{t(`rules.${name}`)}</Table.Td>
         <Table.Td>
           <Progress.Root size='xxl'>
             <Progress.Section value={fulfilment} color='#319555'>
@@ -52,18 +52,17 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
             </Progress.Section>
           </Progress.Root>
         </Table.Td>
-        <Table.Td>{ruleDescription}</Table.Td>
         <Table.Td>
           {value.length ? (
             <ActionIcon variant='transparent' size='sm' onClick={toggle}>
-              <IconChevronDown />
+              {opened ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
           ) : null}
         </Table.Td>
       </Table.Tr>
       <Table.Tr key={`${name}_hidden`} style={opened ? undefined : { display: 'none' }}>
         <Table.Td colSpan={1} />
-        <Table.Td colSpan={4}>
+        <Table.Td colSpan={3}>
           <ExpandedRow value={value} />
         </Table.Td>
       </Table.Tr>

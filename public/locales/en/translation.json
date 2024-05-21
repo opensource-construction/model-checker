@@ -1,0 +1,46 @@
+{
+  "upload-file": "Upload File",
+  "validate": "Validate",
+  "dropzone": {
+    "drag": "Drag IFC files here or click to select files",
+    "attach": "Attach as many files as you like, each file should not exceed 500Mb",
+    "error": "Invalid file type. Only .ifc files are allowed.",
+    "error-message": "File"
+  },
+  "results": "Results",
+  "print": "Print",
+  "result-table": {
+    "rule": "Rule",
+    "status": "Status",
+    "level-of-fulfilment": "Level of Fulfilment",
+    "passed": "Passed",
+    "failed": "Failed"
+  },
+  "rules": {
+    "project-name": "Is IfcProject Name filled out?",
+    "site-name": "Is IfcSite Name filled out?",
+    "building-name": "Is IfcBuilding Name filled out?",
+    "story-name": "Are IfcBuilding Storey Names filled out?",
+    "story-relation": "Do, all Objects have a relation to a BuildingStory?",
+    "building-relation": "Do all Objects have a relation to a Building?",
+    "site-relation": "Do all Objects have a relation to a Site?",
+    "project-relation": "Do all Objects have a relation to a Project?",
+    "space-name": "If there are IfcSpaces, do they have the Name filled out?",
+    "object-name": "Do all Objects have a Name?",
+    "type-name": "Do all Objects have a Type Name?",
+    "object-description": "Do all Objects have a Description?",
+    "material-name": "Do all Objects have a Material Name?",
+    "predefined-type": "If Objects have a Predefined Type, are they filled out?",
+    "object-count": "How many Objects are in the Model and how many of them are IfcBuildingElementProxy?",
+    "project-names": "IFC Project Name used",
+    "site-names": "IFC Site Name used",
+    "building-names": "IFC Building Name used",
+    "story-names": "IFC Building Storey Names used",
+    "object-names": "IFC Object Names used",
+    "type-names": "IFC Object TypeName used",
+    "descriptions": "IFC Object Description used",
+    "material-names": "IFC Object MaterialName used",
+    "predefined-types": "IFC Object Predefined Type used",
+    "building-element-proxies": "IFC BuildingElementProxy Name used"
+  }
+}
