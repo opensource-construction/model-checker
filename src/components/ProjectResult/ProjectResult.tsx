@@ -12,7 +12,7 @@ export const ProjectResult = (props: ProjectResultProps) => {
   const { state } = useValidationContext()
 
   return (
-    <Stack mt={16}>
+    <Stack mt='lg'>
       <Title order={3}>{fileName}</Title>
       <ValidationProgressbar show={state[fileName].fileProcessing} progress={state[fileName].progress} />
       <ResultTable results={state[fileName].results} inProgress={state[fileName].fileProcessing} />

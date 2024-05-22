@@ -1,6 +1,6 @@
-import { ActionIcon, Group, Progress, Skeleton, Table, Text } from '@mantine/core'
+import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineTheme } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
-import { useDisclosure } from '@mantine/hooks'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { PartialResult } from '../../context/ValidationContext/interfaces.ts'
 import { useTranslation } from 'react-i18next'
 
@@ -23,6 +23,8 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   } = props
   const [opened, { toggle }] = useDisclosure(false)
   const { t } = useTranslation()
+  const theme = useMantineTheme()
+  const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`)
 
   return (
     <>
@@ -33,12 +35,16 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
           ) : passed ? (
             <Group>
               <IconCircleCheck color='#319555' />
-              <Text c='#319555'>{t('result-table.passed')}</Text>
+              <Text c='#319555' style={matches ? { display: 'none' } : undefined}>
+                {t('result-table.passed')}
+              </Text>
             </Group>
           ) : (
             <Group>
               <IconCircleX color='#BE4A5A' />
-              <Text c='#BE4A5A'>{t('result-table.failed')}</Text>
+              <Text c='#BE4A5A' style={matches ? { display: 'none' } : undefined}>
+                {t('result-table.failed')}
+              </Text>
             </Group>
           )}
         </Table.Td>
