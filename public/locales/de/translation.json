@@ -7,7 +7,7 @@
     "error": "Dateityp ungültig. Nur .ifc Dateien sind erlaubt.",
     "error-message": "Datei"
   },
-  "results": "Resultaten",
+  "results": "Resultate",
   "print": "Print",
   "result-table": {
     "rule": "Regel",
