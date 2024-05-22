@@ -6,11 +6,20 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useValidationContext } from '@context'
 import { processFile } from './processFile.ts'
+import { useTranslation } from 'react-i18next'
+
+interface FileError {
+  code: string
+  message: string
+  file: string
+}
 
 export const UploadCard = () => {
   const navigate = useNavigate()
   const { dispatch } = useValidationContext()
   const [files, setFiles] = useState<File[]>([])
+  const [errors, setErrors] = useState<FileError[] | null>(null)
+  const { t } = useTranslation()
 
   const handleClick = () => {
     if (!files.length) return
@@ -22,12 +31,12 @@ export const UploadCard = () => {
   }
 
   const handleDrop = (acceptedFiles: File[]) => {
-    console.log('Accepted files:', acceptedFiles)
+    setErrors([])
     setFiles((prevFiles) => [...prevFiles, ...acceptedFiles])
   }
 
   const handleReject = (fileRejections: FileRejection[]) => {
-    console.log('Rejected files:', fileRejections)
+    setErrors(fileRejections.map((rejection) => ({ ...rejection.errors[0], file: rejection.file.name })))
   }
 
   // Custom validator to check for .ifc file extension
@@ -36,7 +45,7 @@ export const UploadCard = () => {
     if (!validExtension) {
       return {
         code: 'file-invalid-type',
-        message: 'Invalid file type. Only .ifc files are allowed.',
+        message: t('dropzone.error'),
       }
     }
     return null
@@ -46,7 +55,7 @@ export const UploadCard = () => {
     <Stack>
       <Paper>
         <Center>
-          <Title order={2}>Upload File</Title>
+          <Title order={2}>{t('upload-file')}</Title>
         </Center>
         <Divider py={8} />
         <Dropzone
@@ -54,7 +63,7 @@ export const UploadCard = () => {
           onReject={handleReject}
           maxSize={500 * 1024 ** 2}
           multiple={true}
-          validator={fileValidator} // Use the correct prop name 'validator'
+          validator={fileValidator}
         >
           <Group justify='center' gap='xl' mih={220} style={{ pointerEvents: 'none' }}>
             <Dropzone.Accept>
@@ -74,11 +83,9 @@ export const UploadCard = () => {
             </Dropzone.Idle>
 
             <div>
-              <Text size='xl' inline>
-                Drag IFC files here or click to select files
-              </Text>
-              <Text size='sm' c='dimmed' inline mt={7}>
-                Attach as many files as you like, each file should not exceed 500Mb
+              <Text size='xl'>{t('dropzone.drag')}</Text>
+              <Text size='sm' c='dimmed' mt={7}>
+                {t('dropzone.attach')}
               </Text>
             </div>
           </Group>
@@ -90,9 +97,18 @@ export const UploadCard = () => {
               </Group>
             ))}
           </div>
+          {errors ? (
+            <div>
+              {errors.map((error) => (
+                <Text size='sm' c='red'>
+                  {t('dropzone.error-message')}: {error.file} - {error.message}
+                </Text>
+              ))}
+            </div>
+          ) : null}
         </Dropzone>
         <Button color='#319555' mt='md' radius='md' onClick={handleClick} disabled={!files.length}>
-          Validate
+          {t('validate')}
         </Button>
       </Paper>
     </Stack>
