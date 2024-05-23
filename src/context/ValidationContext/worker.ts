@@ -7,7 +7,7 @@ interface ReadInChunksProps {
 }
 
 export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
-  const chunkSize = 1024 * 1024 * 5 // 5 MB
+  const chunkSize = 1024 * 1024 * 500 // 500 MB
   let offset = 0
   const totalSize = file.size
 
