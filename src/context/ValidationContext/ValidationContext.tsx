@@ -57,7 +57,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction) => 
         [fileId]: { ...state[fileId], progress: payload as number },
       }
     case 'SET_RESULTS':
-      // console.log('RESULTS', fileId, payload, state[fileId].results)
+       console.log('RESULTS', fileId, payload, state[fileId].results)
       return {
         ...state,
         [fileId]: {

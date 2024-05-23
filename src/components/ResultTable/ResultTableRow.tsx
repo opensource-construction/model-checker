@@ -1,17 +1,17 @@
-import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineTheme } from '@mantine/core'
-import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
-import { useDisclosure, useMediaQuery } from '@mantine/hooks'
-import { PartialResult } from '../../context/ValidationContext/interfaces.ts'
-import { useTranslation } from 'react-i18next'
+import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineTheme } from '@mantine/core';
+import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { PartialResult } from '../../context/ValidationContext/interfaces.ts';
+import { useTranslation } from 'react-i18next';
 
 interface ResultTableRowProps {
-  name: string
+  name: string;
   result: {
-    passed: boolean
-    value: string[] | PartialResult[]
-  }
-  fulfilment?: number
-  inProgress: boolean
+    passed: boolean;
+    value: string[] | PartialResult[];
+  };
+  fulfilment?: number;
+  inProgress: boolean;
 }
 
 export const ResultTableRow = (props: ResultTableRowProps) => {
@@ -20,11 +20,11 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
     result: { passed, value },
     fulfilment = 50,
     inProgress,
-  } = props
-  const [opened, { toggle }] = useDisclosure(false)
-  const { t } = useTranslation()
-  const theme = useMantineTheme()
-  const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`)
+  } = props;
+  const [opened, { toggle }] = useDisclosure(false);
+  const { t } = useTranslation();
+  const theme = useMantineTheme();
+  const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`);
 
   return (
     <>
@@ -73,23 +73,26 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         </Table.Td>
       </Table.Tr>
     </>
-  )
-}
+  );
+};
 
 const ExpandedRow = ({ value }: { value: string[] | PartialResult[] }) => {
   if (typeof value[0] === 'object') {
-    return <SubTable rows={value as PartialResult[]} />
+    return <SubTable rows={value as PartialResult[]} />;
   }
-  return <Text>{value.join(', ')}</Text>
-}
+  return <Text>{value.join(', ')}</Text>;
+};
 
 const SubTable = ({ rows }: { rows: PartialResult[] }) => {
-  const _rows = rows.map(({ globalId, name }) => (
-    <Table.Tr key={globalId}>
+  const _rows = rows.map(({ globalId, name, passed }, index) => (
+    <Table.Tr key={`${globalId}-${index}`}>
       <Table.Td>{globalId}</Table.Td>
       <Table.Td>{name}</Table.Td>
+      <Table.Td>
+        {passed ? <IconCircleCheck color='#319555' /> : <IconCircleX color='#BE4A5A' />}
+      </Table.Td>
     </Table.Tr>
-  ))
+  ));
   return (
     <Table.ScrollContainer minWidth={200}>
       <Table verticalSpacing='xs'>
@@ -97,11 +100,11 @@ const SubTable = ({ rows }: { rows: PartialResult[] }) => {
           <Table.Tr>
             <Table.Th>Global Id</Table.Th>
             <Table.Th>Name</Table.Th>
-            <Table.Th></Table.Th>
+            <Table.Th>Status</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{_rows}</Table.Tbody>
       </Table>
     </Table.ScrollContainer>
-  )
-}
+  );
+};
