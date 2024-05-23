@@ -1,5 +1,17 @@
 import { PartialResult } from './interfaces.ts';
 
+interface ProcessContentChunkProps {
+  content: string;
+  regex: RegExp;
+}
+
+interface Rule {
+  name: string;
+  regex: RegExp;
+  process: (props: ProcessContentChunkProps) => PartialResult[];
+  check: (value: PartialResult[]) => { value: PartialResult[]; passed: boolean };
+}
+
 function extractAttributes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = [];
   let match;
@@ -33,19 +45,37 @@ function extractBuildingStoreys({ content }: { content: string }): PartialResult
   return storeyDetails;
 }
 
-function extractProxies({ content }: { content: string }): PartialResult[] {
-  const proxyRegex = /IFCBUILDINGELEMENTPROXY\('([^']+)',#\d+,'([^']*)'/g;
-  const proxies: PartialResult[] = [];
+function extractProxies({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const results: PartialResult[] = [];
   let match;
-  while ((match = proxyRegex.exec(content)) !== null) {
-    proxies.push({
-      globalId: match[1],
-      name: match[2] || 'Unnamed Proxy',
-      passed: false,
+
+  while ((match = regex.exec(content)) !== null) {
+    const type = match[1];
+    const globalId = match[2];
+    const name = match[3] || `Unnamed ${type}`;
+
+    results.push({
+      globalId,
+      name,
+      passed: type !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
     });
   }
-  return proxies;
+
+  for (const match of content.matchAll(regex)) {
+    const globalId = match[2];
+    const name = match[3] || `Unnamed ${match[1]}`;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: match[1] !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
+      });
+    }
+  }
+
+  return results;
 }
+
 
 function extractSpaceNames({ content }: { content: string }): PartialResult[] {
   const spaceRegex = /IFCSPACE\('([^']+)',#[^,]+,'([^']*)'/g;
@@ -53,10 +83,13 @@ function extractSpaceNames({ content }: { content: string }): PartialResult[] {
   let match;
 
   while ((match = spaceRegex.exec(content)) !== null) {
+    const globalId = match[1];
+    const name = match[2];
+    const passed = !!name && name.trim() !== ''; // Ensure name exists and is not empty
     spaces.push({
-      globalId: match[1],
-      name: match[2] || 'Unnamed Space',
-      passed: false,
+      globalId,
+      name,
+      passed,
     });
   }
   return spaces;
@@ -90,17 +123,147 @@ function checkObjectRelations({
   return results;
 }
 
-interface ProcessContentChunkProps {
-  content: string;
-  regex: RegExp;
+function checkDescriptions({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#\d+,'(?<name>[^']+)','(?<description>[^']*)','[^']*'/g;
+  const results: PartialResult[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = elementRegex.exec(content)) !== null) {
+    const { globalId, name, description } = match.groups!;
+    const passed = description !== '$' && description.trim() !== ''; // Ensure description is valid and not a dollar sign or empty
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  // Ensure all elements are checked even if no description is found
+  for (const match of content.matchAll(regex)) {
+    const { globalId, name } = match.groups!;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: false,
+      });
+    }
+  }
+
+  return results;
 }
 
-interface Rule {
-  name: string;
-  regex: RegExp;
-  process: (props: ProcessContentChunkProps) => PartialResult[];
-  check: (value: PartialResult[]) => { value: PartialResult[]; passed: boolean };
+
+function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#\d+,'(?<name>[^']+)','[^']*','(?<type>[^']*)'/g;
+  const results: PartialResult[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = elementRegex.exec(content)) !== null) {
+    const { globalId, name, type } = match.groups!;
+    const passed = type !== '$' && type.trim() !== ''; // Ensure type name is valid and not a dollar sign or empty
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  // Ensure all elements are checked even if no type name is found
+  for (const match of content.matchAll(regex)) {
+    const { globalId, name, type } = match.groups!;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: type !== '$' && type.trim() !== '', // Ensure type name is valid and not a dollar sign or empty
+      });
+    }
+  }
+
+  return results;
 }
+
+
+
+function checkMaterialNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const results: PartialResult[] = [];
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    const globalId = match[2];
+    const name = match[3];
+    const materialName = match[3];
+    const passed = !!materialName && materialName.trim() !== ''; // Ensure material name exists and is not empty
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  return results;
+}
+
+function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const results: PartialResult[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(content)) !== null) {
+    const { globalId, name, predefinedType } = match.groups!;
+    const passed = predefinedType !== undefined && predefinedType.trim() !== ''; // Ensure predefined type is filled out
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  // Ensure all elements are checked even if no predefined type is found
+  for (const match of content.matchAll(regex)) {
+    const { globalId, name, predefinedType } = match.groups!;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: predefinedType !== undefined && predefinedType.trim() !== '', // Ensure predefined type is filled out
+      });
+    }
+  }
+
+  return results;
+}
+
+function checkElementNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g;
+  const results: PartialResult[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = elementRegex.exec(content)) !== null) {
+    const { globalId, name } = match.groups!;
+    const passed = name !== '$' && name.trim() !== ''; // Ensure name is not '$' and not empty
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  // Ensure all elements are checked even if no name is found
+  for (const match of content.matchAll(regex)) {
+    const { globalId, name } = match.groups!;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: name !== '$' && name.trim() !== '', // Ensure name is not '$' and not empty
+      });
+    }
+  }
+
+  return results;
+}
+
 
 // Rule definitions
 export const rules: Rule[] = [
@@ -142,7 +305,7 @@ export const rules: Rule[] = [
   },
   {
     name: 'story-name',
-    regex: /IFCBUILDINGSTOREY\('([^']+)',#[^,]+,'([^']+)'/gi,
+    regex: /IFCBUILDINGSTOREY\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content }) => extractBuildingStoreys({ content }),
     check: (value) => ({ value, passed: value.length > 0 }),
   },
@@ -154,14 +317,44 @@ export const rules: Rule[] = [
   },
   {
     name: 'space-name',
-    regex: /IFCSPACE\('([^']+)',#[^,]+,'([^']+)'/gi,
+    regex: /IFCSPACE\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content }) => extractSpaceNames({ content }),
-    check: (spaces) => ({ value: spaces, passed: spaces.length === 0 }), // Passes if no spaces found
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all spaces have names
   },
   {
+    name: 'object-name',
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    process: ({ content, regex }) => checkElementNames({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all elements have valid names
+  },  
+  {
+    name: 'object-description',
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'([^']*)'/gi,
+    process: ({ content, regex }) => checkDescriptions({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid descriptions
+  },    
+  {
+    name: 'type-name',
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
+    process: ({ content, regex }) => checkTypeNames({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid type names
+  },
+  {
+    name: 'material-name',
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']*)',[^,]*,'([^']*)'/gi,
+    process: ({ content, regex }) => checkMaterialNames({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have material names
+  },
+  {
+    name: 'predefined-type',
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'[^']*',[^,]*,[^,]*,[^,]*\.(?<predefinedType>[A-Z_]+)\./gi,
+    process: ({ content, regex }) => checkPredefinedTypes({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if predefined types are filled out
+  },  
+  {
     name: 'object-count',
-    regex: /IFCBUILDINGELEMENTPROXY\('([^']+)',#[^,]+,'([^']+)'/gi,
-    process: ({ content }) => extractProxies({ content }),
-    check: (proxies) => ({ value: proxies, passed: proxies.length === 0 }),
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']*)'/gi,
+    process: ({ content, regex }) => extractProxies({ content, regex }),
+    check: (value) => ({ value, passed: value.every(element => element.passed) }), // Pass if all objects pass
   },
 ];
