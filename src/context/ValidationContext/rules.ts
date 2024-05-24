@@ -143,11 +143,11 @@ function checkDescriptions({ content, regex, allElements }: { content: string; r
   }
   
   for (const element of allElements) {
-    if (descriptionMap[element.globalId]) {
+    if (element.globalId && descriptionMap[element.globalId]) { 
       results.push(descriptionMap[element.globalId]);
     } else {
       results.push({
-        globalId: element.globalId,
+        globalId: element.globalId || '', // Fallback to empty string if globalId is not found
         name: element.name,
         passed: false,
       });
@@ -156,6 +156,7 @@ function checkDescriptions({ content, regex, allElements }: { content: string; r
   
   return results;
 }
+
 
 
 function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
