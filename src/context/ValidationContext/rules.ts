@@ -111,24 +111,54 @@ function checkObjectRelations({
     objectMatches.forEach((object) => {
       const match = object.match(/'([^']+)',#(\d+),'([^']*)'/);
       if (match) {
-        const objectId = match[1];
+        const globalId = match[1];
         const name = match[3];
-        const relationPattern = new RegExp(`#(${objectId}).*${relationRegex}`, 'gi');
+        const relationPattern = new RegExp(`#(${match[2]}).*[${relationRegex}]`, 'gi');
         const passed = relationPattern.test(content);
 
-        results.push({ globalId: objectId, name, passed });
+        results.push({ globalId, name, passed });
       }
     });
   }
   return results;
 }
 
+function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const results: PartialResult[] = [];
+  const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi;
+  const relatedEntities: { [key: string]: string } = {};
+
+  let match: RegExpExecArray | null;
+
+  while ((match = relContainedRegex.exec(content)) !== null) {
+    const entityList = match[2];
+    const storeyId = match[3];
+    const entities = entityList.match(/#(\d+)/g);
+    if (entities) {
+      entities.forEach(entity => {
+        relatedEntities[entity.replace('#', '')] = storeyId;
+      });
+    }
+  }
+
+  while ((match = regex.exec(content)) !== null) {
+    const { entityId, globalId, name } = match.groups!;
+    const passed = relatedEntities.hasOwnProperty(entityId);
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  return results;
+}
+
 function checkDescriptions({ content, regex }: ProcessContentChunkProps): PartialResult[] {
-  const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#\d+,'(?<name>[^']+)','(?<description>[^']*)','[^']*'/g;
   const results: PartialResult[] = [];
   let match: RegExpExecArray | null;
 
-  while ((match = elementRegex.exec(content)) !== null) {
+  while ((match = regex.exec(content)) !== null) {
     const { globalId, name, description } = match.groups!;
     const passed = description !== '$' && description.trim() !== ''; // Ensure description is valid and not a dollar sign or empty
     results.push({
@@ -140,12 +170,12 @@ function checkDescriptions({ content, regex }: ProcessContentChunkProps): Partia
 
   // Ensure all elements are checked even if no description is found
   for (const match of content.matchAll(regex)) {
-    const { globalId, name } = match.groups!;
+    const { globalId, name, description } = match.groups!;
     if (!results.some(result => result.globalId === globalId)) {
       results.push({
         globalId,
         name,
-        passed: false,
+        passed: description !== '$' && description.trim() !== '', // Ensure description is valid and not a dollar sign or empty
       });
     }
   }
@@ -154,12 +184,12 @@ function checkDescriptions({ content, regex }: ProcessContentChunkProps): Partia
 }
 
 
+
 function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
-  const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#\d+,'(?<name>[^']+)','[^']*','(?<type>[^']*)'/g;
   const results: PartialResult[] = [];
   let match: RegExpExecArray | null;
 
-  while ((match = elementRegex.exec(content)) !== null) {
+  while ((match = regex.exec(content)) !== null) {
     const { globalId, name, type } = match.groups!;
     const passed = type !== '$' && type.trim() !== ''; // Ensure type name is valid and not a dollar sign or empty
     results.push({
@@ -184,17 +214,13 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
   return results;
 }
 
-
-
 function checkMaterialNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = [];
-  let match;
+  let match: RegExpExecArray | null;
 
   while ((match = regex.exec(content)) !== null) {
-    const globalId = match[2];
-    const name = match[3];
-    const materialName = match[3];
-    const passed = !!materialName && materialName.trim() !== ''; // Ensure material name exists and is not empty
+    const { globalId, name, material } = match.groups!;
+    const passed = material !== '$' && material.trim() !== ''; // Ensure material name exists and is not empty
     results.push({
       globalId,
       name,
@@ -202,8 +228,21 @@ function checkMaterialNames({ content, regex }: ProcessContentChunkProps): Parti
     });
   }
 
+  // Ensure all elements are checked even if no material name is found
+  for (const match of content.matchAll(regex)) {
+    const { globalId, name, material } = match.groups!;
+    if (!results.some(result => result.globalId === globalId)) {
+      results.push({
+        globalId,
+        name,
+        passed: material !== '$' && material.trim() !== '', // Ensure material name exists and is not empty
+      });
+    }
+  }
+
   return results;
 }
+
 
 function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = [];
@@ -211,7 +250,7 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
 
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, predefinedType } = match.groups!;
-    const passed = predefinedType !== undefined && predefinedType.trim() !== ''; // Ensure predefined type is filled out
+    const passed = predefinedType !== 'NOTDEFINED'; // Only fail if predefined type is NOTDEFINED
     results.push({
       globalId,
       name,
@@ -219,20 +258,23 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
     });
   }
 
-  // Ensure all elements are checked even if no predefined type is found
+  // Ensure all elements with predefined types are checked even if no predefined type is found initially
   for (const match of content.matchAll(regex)) {
     const { globalId, name, predefinedType } = match.groups!;
     if (!results.some(result => result.globalId === globalId)) {
       results.push({
         globalId,
         name,
-        passed: predefinedType !== undefined && predefinedType.trim() !== '', // Ensure predefined type is filled out
+        passed: predefinedType !== 'NOTDEFINED', // Only fail if predefined type is NOTDEFINED
       });
     }
   }
 
   return results;
 }
+
+
+
 
 function checkElementNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const elementRegex = /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g;
@@ -266,16 +308,17 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
 
 
 // Rule definitions
+// Rules are intended to work only on valid IFC, non valid file structure and non-adherence to schema will cause certain rules to not function as intended
 export const rules: Rule[] = [
   {
     name: 'project-name',
     regex: /IFCPROJECT\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: extractAttributes,
-    check: (value) => ({ value, passed: value.length > 0 }), // Ensure value exists to pass
+    check: (value) => ({ value, passed: value.length > 0 }),
   },
   {
     name: 'project-relation',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']+)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCPROJECT' }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -283,11 +326,11 @@ export const rules: Rule[] = [
     name: 'site-name',
     regex: /IFCSITE\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: extractAttributes,
-    check: (value) => ({ value, passed: value.length > 0 }), // Ensure value exists to pass
+    check: (value) => ({ value, passed: value.length > 0 }),
   },
   {
     name: 'site-relation',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']+)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCSITE' }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -295,11 +338,11 @@ export const rules: Rule[] = [
     name: 'building-name',
     regex: /IFCBUILDING\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: extractAttributes,
-    check: (value) => ({ value, passed: value.length > 0 }), // Ensure value exists to pass
+    check: (value) => ({ value, passed: value.length > 0 }),
   },
   {
     name: 'building-relation',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']+)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCBUILDING' }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -311,8 +354,8 @@ export const rules: Rule[] = [
   },
   {
     name: 'story-relation',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']+)'/gi,
-    process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCBUILDING' }),
+    regex: /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    process: ({ content, regex }) => checkStoreyRelation({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
   {
@@ -323,38 +366,39 @@ export const rules: Rule[] = [
   },
   {
     name: 'object-name',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
     process: ({ content, regex }) => checkElementNames({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all elements have valid names
   },  
   {
     name: 'object-description',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'([^']*)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)','(?<description>[^']*)'/gi,
     process: ({ content, regex }) => checkDescriptions({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid descriptions
-  },    
+  },
   {
     name: 'type-name',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
     process: ({ content, regex }) => checkTypeNames({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid type names
   },
   {
     name: 'material-name',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']*)',[^,]*,'([^']*)'/gi,
+    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<material>[^']*)'/gi,
     process: ({ content, regex }) => checkMaterialNames({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have material names
-  },
+  },  
   {
     name: 'predefined-type',
-    regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'[^']*',[^,]*,[^,]*,[^,]*\.(?<predefinedType>[A-Z_]+)\./gi,
+    regex: /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^)]*?\.(?<predefinedType>[A-Z_]+)\.\);/gi,
     process: ({ content, regex }) => checkPredefinedTypes({ content, regex }),
-    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if predefined types are filled out
-  },  
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if predefined types are not UNDEFINED
+  }
+  ,  
   {
     name: 'object-count',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content, regex }) => extractProxies({ content, regex }),
-    check: (value) => ({ value, passed: value.every(element => element.passed) }), // Pass if all objects pass
+    check: (value) => ({ value, passed: value.every(element => element.passed) }), // Pass if all objects pass (no proxies found)
   },
 ];
