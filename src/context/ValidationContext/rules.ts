@@ -95,34 +95,6 @@ function extractSpaceNames({ content }: { content: string }): PartialResult[] {
   return spaces;
 }
 
-function checkObjectRelations({
-  content,
-  objectRegex,
-  relationRegex,
-}: {
-  content: string;
-  objectRegex: RegExp | string;
-  relationRegex: RegExp | string;
-}): PartialResult[] {
-  const results: PartialResult[] = [];
-  const objectMatches = content.match(objectRegex);
-
-  if (objectMatches) {
-    objectMatches.forEach((object) => {
-      const match = object.match(/'([^']+)',#(\d+),'([^']*)'/);
-      if (match) {
-        const globalId = match[1];
-        const name = match[3];
-        const relationPattern = new RegExp(`#(${match[2]}).*[${relationRegex}]`, 'gi');
-        const passed = relationPattern.test(content);
-
-        results.push({ globalId, name, passed });
-      }
-    });
-  }
-  return results;
-}
-
 function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = [];
   const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi;
@@ -154,35 +126,36 @@ function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): Part
   return results;
 }
 
-function checkDescriptions({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+function checkDescriptions({ content, regex, allElements }: { content: string; regex: RegExp; allElements: PartialResult[] }): PartialResult[] {
   const results: PartialResult[] = [];
   let match: RegExpExecArray | null;
-
+  
+  const descriptionMap: { [key: string]: PartialResult } = {};
+  
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, description } = match.groups!;
     const passed = description !== '$' && description.trim() !== ''; // Ensure description is valid and not a dollar sign or empty
-    results.push({
+    descriptionMap[globalId] = {
       globalId,
       name,
       passed,
-    });
+    };
   }
-
-  // Ensure all elements are checked even if no description is found
-  for (const match of content.matchAll(regex)) {
-    const { globalId, name, description } = match.groups!;
-    if (!results.some(result => result.globalId === globalId)) {
+  
+  for (const element of allElements) {
+    if (descriptionMap[element.globalId]) {
+      results.push(descriptionMap[element.globalId]);
+    } else {
       results.push({
-        globalId,
-        name,
-        passed: description !== '$' && description.trim() !== '', // Ensure description is valid and not a dollar sign or empty
+        globalId: element.globalId,
+        name: element.name,
+        passed: false,
       });
     }
   }
-
+  
   return results;
 }
-
 
 
 function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
@@ -307,6 +280,84 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
 }
 
 
+function getIfcRelationships(content: string): { [key: string]: string[] } {
+  const relAggregatesRegex = /#(\d+)=IFCRELAGGREGATES\([^,]*,[^,]*,.*?,#(\d+),\(([^)]*)\)\);/g;
+  const relationships: { [key: string]: string[] } = {};
+  let match: RegExpExecArray | null;
+
+  while ((match = relAggregatesRegex.exec(content)) !== null) {
+    const parentId = match[2];
+    const childrenIds = match[3].match(/#(\d+)/g)?.map(id => id.replace('#', '')) || [];
+    if (!relationships[parentId]) {
+      relationships[parentId] = [];
+    }
+    relationships[parentId].push(...childrenIds);
+  }
+
+  return relationships;
+}
+
+function getBuildingStoreys(content: string): string[] {
+  const buildingStoreysRegex = /#(\d+)=IFCBUILDINGSTOREY\(/g;
+  const storeyIds: string[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = buildingStoreysRegex.exec(content)) !== null) {
+    storeyIds.push(match[1]);
+  }
+
+  return storeyIds;
+}
+
+function getElementsInStoreys(content: string): { [key: string]: string } {
+  const storeyElementsRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g;
+  const elementsInStoreys: { [key: string]: string } = {};
+  let match: RegExpExecArray | null;
+
+  while ((match = storeyElementsRegex.exec(content)) !== null) {
+    const storeyId = match[3];
+    const elements = match[2].match(/#(\d+)/g)?.map(id => id.replace('#', '')) || [];
+    elements.forEach(element => {
+      elementsInStoreys[element] = storeyId;
+    });
+  }
+
+  return elementsInStoreys;
+}
+
+function checkBuildingRelation({ content }: ProcessContentChunkProps): PartialResult[] {
+  const storeyIds = getBuildingStoreys(content);
+  const storeyElements = getElementsInStoreys(content);
+  const relAggregates = getIfcRelationships(content);
+
+  const allStoreyIds = new Set<string>(storeyIds);
+  storeyIds.forEach(storeyId => {
+    if (relAggregates[storeyId]) {
+      relAggregates[storeyId].forEach(id => allStoreyIds.add(id));
+    }
+  });
+
+  const results: PartialResult[] = [];
+  const entityPattern = new RegExp(
+    /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT|JUNCTIONBOX|DUCTSEGMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
+  );
+
+  let match: RegExpExecArray | null;
+  while ((match = entityPattern.exec(content)) !== null) {
+    const { entityId, globalId, name } = match.groups!;
+    const storeyId = storeyElements[entityId];
+    const passed = Boolean(storeyId && allStoreyIds.has(storeyId));
+    results.push({
+      globalId,
+      name,
+      passed,
+    });
+  }
+
+  return results;
+}
+
+
 // Rule definitions
 // Rules are intended to work only on valid IFC, non valid file structure and non-adherence to schema will cause certain rules to not function as intended
 export const rules: Rule[] = [
@@ -319,7 +370,7 @@ export const rules: Rule[] = [
   {
     name: 'project-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
-    process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCPROJECT' }),
+    process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
   {
@@ -331,7 +382,7 @@ export const rules: Rule[] = [
   {
     name: 'site-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
-    process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCSITE' }),
+    process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
   {
@@ -343,7 +394,7 @@ export const rules: Rule[] = [
   {
     name: 'building-relation',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
-    process: ({ content, regex }) => checkObjectRelations({ content, objectRegex: regex, relationRegex: 'IFCBUILDING' }),
+    process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
   {
@@ -373,9 +424,12 @@ export const rules: Rule[] = [
   {
     name: 'object-description',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)','(?<description>[^']*)'/gi,
-    process: ({ content, regex }) => checkDescriptions({ content, regex }),
+    process: ({ content, regex }) => {
+      const allElements = checkElementNames({ content, regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi });
+      return checkDescriptions({ content, regex, allElements });
+    },
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid descriptions
-  },
+  },  
   {
     name: 'type-name',
     regex: /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
