@@ -14,7 +14,10 @@
     "status": "Status",
     "level-of-fulfilment": "Erfüllungsgrad",
     "passed": "Erfüllt",
-    "failed": "Nicht Erfüllt"
+    "failed": "Nicht Erfüllt",
+    "statistics": "Statistik",
+    "all-data": "Alle Daten",
+    "count": "Anzahl"
   },
   "rules": {
     "project-name": "Ist der IfcProject Name ausgefüllt?",

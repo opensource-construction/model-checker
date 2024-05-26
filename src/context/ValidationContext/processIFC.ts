@@ -1,40 +1,38 @@
-import { rules } from './rules.ts';
-import { PartialResult } from './interfaces.ts';
+import { rules } from './rules.ts'
+import { PartialResult } from './interfaces.ts'
 
 export interface RuleResult {
-  name: string;
-  partialResult: PartialResult[];
-  isLastChunk: boolean;
+  name: string
+  partialResult: PartialResult[]
+  isLastChunk: boolean
   result?: {
-    value: PartialResult[];
-    passed: boolean;
-  };
+    value: PartialResult[]
+    passed: boolean
+  }
 }
 
 interface CombineResultsProps {
-  prevResults: RuleResult[];
-  newResults: RuleResult[];
-  isLastChunk: boolean;
+  prevResults: RuleResult[]
+  newResults: RuleResult[]
+  isLastChunk: boolean
 }
 
 export const combineResults = ({ prevResults, newResults, isLastChunk }: CombineResultsProps): RuleResult[] => {
-  const updatedResults = prevResults.length > 0
-    ? [...prevResults]
-    : newResults.map(res => ({
-        name: res.name,
-        partialResult: [],
-        isLastChunk: res.isLastChunk,
-        result: { value: [], passed: false },
-      }));
+  const updatedResults =
+    prevResults.length > 0
+      ? [...prevResults]
+      : newResults.map((res) => ({
+          name: res.name,
+          partialResult: [],
+          isLastChunk: res.isLastChunk,
+          result: { value: [], passed: false },
+        }))
 
-  newResults.forEach(newResult => {
-    const existingResultIndex = updatedResults.findIndex(result => result.name === newResult.name);
+  newResults.forEach((newResult) => {
+    const existingResultIndex = updatedResults.findIndex((result) => result.name === newResult.name)
     if (existingResultIndex !== -1) {
-      const currentResult = updatedResults[existingResultIndex].result!;
-      currentResult.value = [
-        ...currentResult.value,
-        ...newResult.partialResult,
-      ];
+      const currentResult = updatedResults[existingResultIndex].result!
+      currentResult.value = [...currentResult.value, ...newResult.partialResult]
     } else {
       updatedResults.push({
         ...newResult,
@@ -42,21 +40,18 @@ export const combineResults = ({ prevResults, newResults, isLastChunk }: Combine
           value: newResult.partialResult,
           passed: false,
         },
-      });
+      })
     }
-  });
+  })
 
   if (isLastChunk) {
-    updatedResults.forEach(result => {
-      const rule = rules.find(rule => rule.name === result.name);
+    updatedResults.forEach((result) => {
+      const rule = rules.find((rule) => rule.name === result.name)
       if (rule) {
-        result.result = rule.check(result.result!.value as PartialResult[]);
+        result.result = rule.check(result.result!.value as PartialResult[])
       }
-    });
+    })
   }
 
-  return updatedResults;
-};
-
-// Example usage for console log
-console.log(combineResults({ prevResults: [], newResults: [], isLastChunk: false }));
+  return updatedResults
+}

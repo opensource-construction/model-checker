@@ -14,7 +14,10 @@
     "status": "Status",
     "level-of-fulfilment": "Level of Fulfilment",
     "passed": "Passed",
-    "failed": "Failed"
+    "failed": "Failed",
+    "statistics": "Statistics",
+    "all-data": "All Data",
+    "count": "Count"
   },
   "rules": {
     "project-name": "Is IfcProject Name filled out?",
