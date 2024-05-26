@@ -1,16 +1,16 @@
 import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineTheme } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
-import { PartialResult } from '../../context/ValidationContext/interfaces.ts'
 import { useTranslation } from 'react-i18next'
+import { PartialResult } from '@context'
+import { RowDetails } from '@components'
 
 interface ResultTableRowProps {
   name: string
   result: {
     passed: boolean
-    value: string[] | PartialResult[]
+    value: PartialResult[]
   }
-  fulfilment?: number
   inProgress: boolean
 }
 
@@ -18,13 +18,13 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   const {
     name,
     result: { passed, value },
-    fulfilment = 50,
     inProgress,
   } = props
   const [opened, { toggle }] = useDisclosure(false)
   const { t } = useTranslation()
   const theme = useMantineTheme()
   const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`)
+  const fulfilment = calculateFulfilment(value)
 
   return (
     <>
@@ -50,13 +50,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         </Table.Td>
         <Table.Td>{t(`rules.${name}`)}</Table.Td>
         <Table.Td>
-          <Progress.Root size='xxl'>
-            <Progress.Section value={fulfilment} color='#319555'>
-              <Progress.Label color='#ffff' py={4}>
-                {fulfilment}%
-              </Progress.Label>
-            </Progress.Section>
-          </Progress.Root>
+          <FulfilmentBar fulfilment={fulfilment} />
         </Table.Td>
         <Table.Td>
           {value.length ? (
@@ -66,42 +60,38 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
           ) : null}
         </Table.Td>
       </Table.Tr>
-      <Table.Tr key={`${name}_hidden`} style={opened ? undefined : { display: 'none' }}>
-        <Table.Td colSpan={1} />
-        <Table.Td colSpan={3}>
-          <ExpandedRow value={value} />
-        </Table.Td>
-      </Table.Tr>
+      <RowDetails show={opened} value={value} />
     </>
   )
 }
 
-const ExpandedRow = ({ value }: { value: string[] | PartialResult[] }) => {
-  if (typeof value[0] === 'object') {
-    return <SubTable rows={value as PartialResult[]} />
-  }
-  return <Text>{value.join(', ')}</Text>
+const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
+  return (
+    <Progress.Root size='xxl'>
+      {fulfilment > 15 ? (
+        <Progress.Section value={fulfilment} color='#319555'>
+          <Progress.Label color='#ffff' py={4}>
+            {fulfilment}%
+          </Progress.Label>
+        </Progress.Section>
+      ) : (
+        <>
+          <Progress.Section value={fulfilment} color='#319555' />
+          <Progress.Section value={100 - fulfilment} color='#E9ECEF'>
+            <Progress.Label color='#0000' py={4}>
+              {fulfilment}%
+            </Progress.Label>
+          </Progress.Section>
+        </>
+      )}
+    </Progress.Root>
+  )
 }
 
-const SubTable = ({ rows }: { rows: PartialResult[] }) => {
-  const _rows = rows.map(({ globalId, name }) => (
-    <Table.Tr key={globalId}>
-      <Table.Td>{globalId}</Table.Td>
-      <Table.Td>{name}</Table.Td>
-    </Table.Tr>
-  ))
-  return (
-    <Table.ScrollContainer minWidth={200}>
-      <Table verticalSpacing='xs'>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Global Id</Table.Th>
-            <Table.Th>Name</Table.Th>
-            <Table.Th></Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{_rows}</Table.Tbody>
-      </Table>
-    </Table.ScrollContainer>
-  )
+const calculateFulfilment = (value: PartialResult[]): number => {
+  const length = value.length
+  if (length === 0) return 0
+
+  const passed = value.filter((result) => result.passed).length
+  return Math.round((passed / length) * 100)
 }

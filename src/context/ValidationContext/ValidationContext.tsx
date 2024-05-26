@@ -1,47 +1,8 @@
-import { createContext, Dispatch, ReactNode, useReducer } from 'react'
-import { combineResults, RuleResult } from './processIFC.ts'
-import { PartialResult } from './interfaces.ts'
-
-interface ValidationState {
-  [key: string]: FileState
-}
-
-interface FileState {
-  results: FileResult[]
-  name: string
-  progress: number
-  fileProcessing: boolean
-}
-
-export interface FileResult {
-  name: string
-  result: {
-    value: PartialResult[] | string[]
-    passed: boolean
-  }
-}
-
-interface ValidationContextInterface {
-  state: ValidationState
-  dispatch: Dispatch<ValidationAction>
-}
+import { createContext, useReducer } from 'react'
+import { combineResults } from './processIFC.ts'
+import { ValidationAction, ValidationContextInterface, ValidationProps, ValidationState } from './interfaces.ts'
 
 export const ValidationContext = createContext({} as ValidationContextInterface)
-
-type ValidationProps = {
-  children: ReactNode
-}
-
-interface SetResultsPayload {
-  newResults: RuleResult[]
-  isLastChunk: boolean
-}
-
-export interface ValidationAction {
-  type: 'SET_FILE' | 'SET_PROGRESS' | 'SET_RESULTS' | 'SET_FILE_PROCESSING'
-  fileId: string
-  payload: string | number | boolean | SetResultsPayload
-}
 
 const validationReducer = (state: ValidationState, action: ValidationAction) => {
   const { type, payload, fileId } = action
@@ -57,7 +18,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction) => 
         [fileId]: { ...state[fileId], progress: payload as number },
       }
     case 'SET_RESULTS':
-      // console.log('RESULTS', fileId, payload, state[fileId].results)
+      //console.log('RESULTS', fileId, payload, state[fileId].results)
       return {
         ...state,
         [fileId]: {

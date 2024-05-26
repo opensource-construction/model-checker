@@ -81,6 +81,5 @@ interface WorkerProps {
 
 onmessage = (e: MessageEvent<WorkerProps>) => {
   const { file, fileId } = e.data
-  console.log('Worker received fileId: ', fileId)
   readInChunks({ file, fileId, dispatch: postMessage })
 }
