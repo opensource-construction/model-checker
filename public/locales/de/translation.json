@@ -30,7 +30,7 @@
     "project-relation": "Haben alle Objekte einen Bezug zu einem IfcProject?",
     "space-name": "Wenn Räume als IfcSpace vorhanden, sind deren Namen ausgefüllt?",
     "object-name": "Haben alle Objekte einen Namen?",
-    "type-name": "Haben alle Objekte einen Typennamen?",
+    "type-name": "Haben alle Objekte einen Typnamen?",
     "object-description": "Haben alle Objekte eine Beschreibung?",
     "material-name": "Haben alle Objekte eine Materialbezeichnung?",
     "predefined-type": "Wenn die Objekte einen PredefinedType haben, sind diese definiert?",

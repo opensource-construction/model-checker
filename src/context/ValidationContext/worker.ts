@@ -1,85 +1,95 @@
-import { rules } from './rules.ts'
-
+import { rules } from './rules';
 interface ReadInChunksProps {
-  file: File
-  dispatch: (message: object, options?: WindowPostMessageOptions) => void
-  fileId: string
+  file: File;
+  dispatch: (message: object, options?: WindowPostMessageOptions) => void;
+  fileId: string;
 }
 
-export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
-  const chunkSize = 1024 * 1024 * 5 // 5 MB
-  let offset = 0
-  const totalSize = file.size
+interface CollectedData {
+  content: string[];
+  storeyData: { [key: string]: string };
+}
 
-  const fileReader = new FileReader()
-
-  fileReader.onload = (e) => {
-    if (!e.target || !e.target.result) return
-    processContentChunk({
-      chunk: e.target.result as string,
-      isLastChunk: offset + chunkSize >= totalSize,
-      totalSize,
-      currentOffset: offset + chunkSize,
-      dispatch,
-      fileId,
-    })
-    offset += chunkSize
-    if (offset < totalSize) {
-      readNextChunk()
+const collectStoreyData = (content: string, storeyData: { [key: string]: string }) => {
+  const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi;
+  let match;
+  while ((match = relContainedRegex.exec(content)) !== null) {
+    const entityList = match[2];
+    const storeyId = match[3];
+    const entities = entityList.match(/#(\d+)/g);
+    if (entities) {
+      entities.forEach((entity) => {
+        storeyData[entity.replace('#', '')] = storeyId;
+      });
     }
   }
+};
 
-  fileReader.onerror = (e) => {
-    console.error('Error reading file', e)
-  }
+const collectDataFromChunks = (collectedData: CollectedData, chunk: string) => {
+  collectedData.content.push(chunk);
+  collectStoreyData(chunk, collectedData.storeyData);
+};
 
-  const readNextChunk = () => {
-    const slice = file.slice(offset, offset + chunkSize)
-    fileReader.readAsText(slice)
-  }
-
-  readNextChunk()
-}
-
-interface ProcessContentChunkProps {
-  chunk: string
-  isLastChunk: boolean
-  totalSize: number
-  currentOffset: number
-  dispatch: (message: object, options?: WindowPostMessageOptions) => void
-  fileId: string
-}
-
-const processContentChunk = ({
-  chunk,
-  isLastChunk,
-  totalSize,
-  currentOffset,
-  dispatch,
-  fileId,
-}: ProcessContentChunkProps) => {
+const processCollectedData = (collectedData: CollectedData, dispatch: any, fileId: string) => {
+  const fullContent = collectedData.content.join('');
   const combinedResults = rules.map((rule) => {
-    const partialResult = rule.process({ content: chunk, regex: rule.regex }) || []
+    const partialResult = rule.process({
+      content: fullContent,
+      regex: rule.regex,
+      storeyData: collectedData.storeyData,
+    }) || [];
     return {
       name: rule.name,
       partialResult: Array.isArray(partialResult) ? partialResult : [partialResult],
-      isLastChunk: isLastChunk,
-    }
-  })
+      isLastChunk: true,
+    };
+  });
 
-  dispatch({ type: 'SET_PROGRESS', fileId, payload: (currentOffset / totalSize) * 100 })
-  dispatch({ type: 'SET_RESULTS', fileId, payload: { newResults: combinedResults, isLastChunk } })
-  if (isLastChunk) {
-    dispatch({ type: 'SET_FILE_PROCESSING', fileId, payload: false })
-  }
-}
+  dispatch({ type: 'SET_RESULTS', fileId, payload: { newResults: combinedResults, isLastChunk: true } });
+  dispatch({ type: 'SET_FILE_PROCESSING', fileId, payload: false });
+};
+
+export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
+  const chunkSize = 1024 * 1024 * 5; // 5 MB
+  let offset = 0;
+  const totalSize = file.size;
+
+  const collectedData: CollectedData = { content: [], storeyData: {} };
+
+  const fileReader = new FileReader();
+
+  fileReader.onload = (e) => {
+    if (!e.target || !e.target.result) return;
+    const chunk = e.target.result as string;
+    collectDataFromChunks(collectedData, chunk);
+    offset += chunkSize;
+    dispatch({ type: 'SET_PROGRESS', fileId, payload: (offset / totalSize) * 100 });
+
+    if (offset < totalSize) {
+      readNextChunk();
+    } else {
+      processCollectedData(collectedData, dispatch, fileId);
+    }
+  };
+
+  fileReader.onerror = (e) => {
+    console.error('Error reading file', e);
+  };
+
+  const readNextChunk = () => {
+    const slice = file.slice(offset, offset + chunkSize);
+    fileReader.readAsText(slice);
+  };
+
+  readNextChunk();
+};
 
 interface WorkerProps {
-  file: File
-  fileId: string
+  file: File;
+  fileId: string;
 }
 
 onmessage = (e: MessageEvent<WorkerProps>) => {
-  const { file, fileId } = e.data
-  readInChunks({ file, fileId, dispatch: postMessage })
-}
+  const { file, fileId } = e.data;
+  readInChunks({ file, fileId, dispatch: postMessage });
+};
