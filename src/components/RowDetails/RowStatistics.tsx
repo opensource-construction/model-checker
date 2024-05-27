@@ -14,9 +14,9 @@ export const RowStatistics = ({ value }: RowStatisticsProps) => {
   const data = Object.entries(groupedResults).map(([name, values]) => ({ name, value: values?.length || 0 }))
   data.sort((prev, next) => next.value - prev.value)
 
-  const orderedData = data.slice(0, 4)
-  if (data.length > 4) {
-    orderedData.push({ name: 'other', value: data.slice(4, data.length).reduce((acc, { value }) => acc + value, 0) })
+  const orderedData = data.slice(0, 8)
+  if (data.length > 8) {
+    orderedData.push({ name: 'other', value: data.slice(8, data.length).reduce((acc, { value }) => acc + value, 0) })
   }
 
   return (
@@ -27,7 +27,7 @@ export const RowStatistics = ({ value }: RowStatisticsProps) => {
         dataKey='name'
         series={[{ name: 'value', color: '#4A5ABE' }]}
         yAxisLabel={t('result-table.count')}
-        withTooltip={false}
+        withTooltip={true}
         withBarValueLabel
         valueFormatter={(value) => new Intl.NumberFormat(i18n.resolvedLanguage).format(value)}
         tickLine='y'
