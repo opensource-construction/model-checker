@@ -1,10 +1,10 @@
 import { PartialResult } from './interfaces.ts'
 
 interface ProcessContentChunkProps {
-  content: string;
-  regex: RegExp;
-  storeyData?: { [key: string]: string };
-  typeRelations?: { [key: string]: string };
+  content: string
+  regex: RegExp
+  storeyData?: { [key: string]: string }
+  typeRelations?: { [key: string]: string }
 }
 
 interface Rule {
@@ -143,7 +143,7 @@ function checkDescriptions({
 
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, description } = match.groups!
-    const passed = description !== '$' && description.trim() !== '' // Ensure description is valid 
+    const passed = description !== '$' && description.trim() !== '' // Ensure description is valid
     descriptionMap[globalId] = {
       globalId,
       name: `${name} (${description})`, // Append description to name
@@ -173,7 +173,7 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, type } = match.groups!
     const validType = type.trim() !== '' && type !== '-'
-    const passed = validType && type !== '$' // Ensure type name is valid 
+    const passed = validType && type !== '$' // Ensure type name is valid
     results.push({
       globalId,
       name: `${name} (${type})`, // Append type to name
@@ -189,7 +189,7 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
       results.push({
         globalId,
         name: `${name} (${type})`, // Append type to name
-        passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid 
+        passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid
       })
     }
   }
@@ -198,59 +198,57 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
 }
 
 function getElementsWithMaterialAssociations(content: string): { [key: string]: string } {
-  const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g;
-  const elementRegex = /#(\d+)/g;
-  const elementToMaterial: { [key: string]: string } = {};
+  const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g
+  const elementRegex = /#(\d+)/g
+  const elementToMaterial: { [key: string]: string } = {}
 
-  let match: RegExpExecArray | null;
+  let match: RegExpExecArray | null
 
   while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
-    const materialId = match[3];
-    const elements = match[2].match(elementRegex) || [];
+    const materialId = match[3]
+    const elements = match[2].match(elementRegex) || []
 
     for (const element of elements) {
-      const elementId = element.replace('#', '');
-      elementToMaterial[elementId] = materialId;
+      const elementId = element.replace('#', '')
+      elementToMaterial[elementId] = materialId
     }
   }
 
-  return elementToMaterial;
+  return elementToMaterial
 }
 
 function getAllRelevantElements(content: string): { [key: string]: PartialResult } {
-  const elementRegex = /#(\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
-  const results: { [key: string]: PartialResult } = {};
-  let match: RegExpExecArray | null;
+  const elementRegex =
+    /#(\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
+  const results: { [key: string]: PartialResult } = {}
+  let match: RegExpExecArray | null
 
   while ((match = elementRegex.exec(content)) !== null) {
-    const elementId = match[1];
-    const globalId = match.groups!.globalId;
-    const name = match.groups!.name;
+    const elementId = match[1]
+    const globalId = match.groups!.globalId
+    const name = match.groups!.name
     results[elementId] = {
-      globalId: globalId, 
+      globalId: globalId,
       name: `${name}`,
       passed: false, // Initialize as false, will be updated later
-    };
-  }
-
-  return results;
-}
-
-function checkMaterialAssignments(content: string): PartialResult[] {
-  const elementToMaterial = getElementsWithMaterialAssociations(content);
-  const allElements = getAllRelevantElements(content);
-
-  for (const elementId in allElements) {
-    if (elementToMaterial.hasOwnProperty(elementId)) {
-      allElements[elementId].passed = true;
     }
   }
 
-  return Object.values(allElements);
+  return results
 }
 
+function checkMaterialAssignments(content: string): PartialResult[] {
+  const elementToMaterial = getElementsWithMaterialAssociations(content)
+  const allElements = getAllRelevantElements(content)
 
+  for (const elementId in allElements) {
+    if (Object.hasOwn(elementToMaterial, elementId)) {
+      allElements[elementId].passed = true
+    }
+  }
 
+  return Object.values(allElements)
+}
 
 function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = []
@@ -290,7 +288,7 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
   while ((match = elementRegex.exec(content)) !== null) {
     const { globalId, name } = match.groups!
     const validName = name.trim() !== ''
-    const passed = validName && name !== '$' // Ensure name is valid 
+    const passed = validName && name !== '$' // Ensure name is valid
     results.push({
       globalId,
       name: validName ? name : `Unnamed`,
@@ -306,7 +304,7 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
       results.push({
         globalId,
         name: validName ? name : `Unnamed`,
-        passed: validName && name !== '$' && name.trim() !== '', // Ensure name is valid 
+        passed: validName && name !== '$' && name.trim() !== '', // Ensure name is valid
       })
     }
   }
@@ -482,7 +480,8 @@ export const rules: Rule[] = [
   },
   {
     name: 'material-name',
-    regex: /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    regex:
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
     process: ({ content }) => checkMaterialAssignments(content),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have material names
   },
