@@ -3,6 +3,8 @@ import { PartialResult } from './interfaces.ts'
 interface ProcessContentChunkProps {
   content: string
   regex: RegExp
+  storeyData?: { [key: string]: string }
+  typeRelations?: { [key: string]: string }
 }
 
 interface Rule {
@@ -56,7 +58,7 @@ function extractProxies({ content, regex }: ProcessContentChunkProps): PartialRe
 
     results.push({
       globalId,
-      name,
+      name: `${name} (${type})`, // Append type to name
       passed: type !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
     })
   }
@@ -67,7 +69,7 @@ function extractProxies({ content, regex }: ProcessContentChunkProps): PartialRe
     if (!results.some((result) => result.globalId === globalId)) {
       results.push({
         globalId,
-        name,
+        name: `${name} (${match[1]})`, // Append type to name
         passed: match[1] !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
       })
     }
@@ -141,10 +143,10 @@ function checkDescriptions({
 
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, description } = match.groups!
-    const passed = description !== '$' && description.trim() !== '' // Ensure description is valid and not a dollar sign or empty
+    const passed = description !== '$' && description.trim() !== '' // Ensure description is valid
     descriptionMap[globalId] = {
       globalId,
-      name,
+      name: `${name} (${description})`, // Append description to name
       passed,
     }
   }
@@ -170,10 +172,11 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
 
   while ((match = regex.exec(content)) !== null) {
     const { globalId, name, type } = match.groups!
-    const passed = type !== '$' && type.trim() !== '' // Ensure type name is valid and not a dollar sign or empty
+    const validType = type.trim() !== '' && type !== '-'
+    const passed = validType && type !== '$' // Ensure type name is valid
     results.push({
       globalId,
-      name,
+      name: `${name} (${type})`, // Append type to name
       passed,
     })
   }
@@ -181,11 +184,12 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
   // Ensure all elements are checked even if no type name is found
   for (const match of content.matchAll(regex)) {
     const { globalId, name, type } = match.groups!
+    const validType = type.trim() !== '' && type !== '-'
     if (!results.some((result) => result.globalId === globalId)) {
       results.push({
         globalId,
-        name,
-        passed: type !== '$' && type.trim() !== '', // Ensure type name is valid and not a dollar sign or empty
+        name: `${name} (${type})`, // Append type to name
+        passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid
       })
     }
   }
@@ -193,33 +197,57 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
   return results
 }
 
-function checkMaterialNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
-  const results: PartialResult[] = []
+function getElementsWithMaterialAssociations(content: string): { [key: string]: string } {
+  const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g
+  const elementRegex = /#(\d+)/g
+  const elementToMaterial: { [key: string]: string } = {}
+
   let match: RegExpExecArray | null
 
-  while ((match = regex.exec(content)) !== null) {
-    const { globalId, name, material } = match.groups!
-    const passed = material !== '$' && material.trim() !== '' // Ensure material name exists and is not empty
-    results.push({
-      globalId,
-      name,
-      passed,
-    })
+  while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
+    const materialId = match[3]
+    const elements = match[2].match(elementRegex) || []
+
+    for (const element of elements) {
+      const elementId = element.replace('#', '')
+      elementToMaterial[elementId] = materialId
+    }
   }
 
-  // Ensure all elements are checked even if no material name is found
-  for (const match of content.matchAll(regex)) {
-    const { globalId, name, material } = match.groups!
-    if (!results.some((result) => result.globalId === globalId)) {
-      results.push({
-        globalId,
-        name,
-        passed: material !== '$' && material.trim() !== '', // Ensure material name exists and is not empty
-      })
+  return elementToMaterial
+}
+
+function getAllRelevantElements(content: string): { [key: string]: PartialResult } {
+  const elementRegex =
+    /#(\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
+  const results: { [key: string]: PartialResult } = {}
+  let match: RegExpExecArray | null
+
+  while ((match = elementRegex.exec(content)) !== null) {
+    const elementId = match[1]
+    const globalId = match.groups!.globalId
+    const name = match.groups!.name
+    results[elementId] = {
+      globalId: globalId,
+      name: `${name}`,
+      passed: false, // Initialize as false, will be updated later
     }
   }
 
   return results
+}
+
+function checkMaterialAssignments(content: string): PartialResult[] {
+  const elementToMaterial = getElementsWithMaterialAssociations(content)
+  const allElements = getAllRelevantElements(content)
+
+  for (const elementId in allElements) {
+    if (Object.hasOwn(elementToMaterial, elementId)) {
+      allElements[elementId].passed = true
+    }
+  }
+
+  return Object.values(allElements)
 }
 
 function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
@@ -231,7 +259,7 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
     const passed = predefinedType !== 'NOTDEFINED' // Only fail if predefined type is NOTDEFINED
     results.push({
       globalId,
-      name,
+      name: `${name} (${predefinedType})`, // Append predefinedType to name
       passed,
     })
   }
@@ -242,7 +270,7 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
     if (!results.some((result) => result.globalId === globalId)) {
       results.push({
         globalId,
-        name,
+        name: `${name} (${predefinedType})`, // Append predefinedType to name
         passed: predefinedType !== 'NOTDEFINED', // Only fail if predefined type is NOTDEFINED
       })
     }
@@ -253,16 +281,17 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
 
 function checkElementNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const elementRegex =
-    /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
+    /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g
   const results: PartialResult[] = []
   let match: RegExpExecArray | null
 
   while ((match = elementRegex.exec(content)) !== null) {
     const { globalId, name } = match.groups!
-    const passed = name !== '$' && name.trim() !== '' // Ensure name is not '$' and not empty
+    const validName = name.trim() !== ''
+    const passed = validName && name !== '$' // Ensure name is valid
     results.push({
       globalId,
-      name,
+      name: validName ? name : `Unnamed`,
       passed,
     })
   }
@@ -270,11 +299,12 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
   // Ensure all elements are checked even if no name is found
   for (const match of content.matchAll(regex)) {
     const { globalId, name } = match.groups!
+    const validName = name.trim() !== ''
     if (!results.some((result) => result.globalId === globalId)) {
       results.push({
         globalId,
-        name,
-        passed: name !== '$' && name.trim() !== '', // Ensure name is not '$' and not empty
+        name: validName ? name : `Unnamed`,
+        passed: validName && name !== '$' && name.trim() !== '', // Ensure name is valid
       })
     }
   }
@@ -341,7 +371,7 @@ function checkBuildingRelation({ content }: ProcessContentChunkProps): PartialRe
 
   const results: PartialResult[] = []
   const entityPattern = new RegExp(
-    /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT|JUNCTIONBOX|DUCTSEGMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g,
+    /#(?<entityId>\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/g,
   )
 
   let match: RegExpExecArray | null
@@ -371,7 +401,7 @@ export const rules: Rule[] = [
   {
     name: 'project-relation',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -384,7 +414,7 @@ export const rules: Rule[] = [
   {
     name: 'site-relation',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -397,7 +427,7 @@ export const rules: Rule[] = [
   {
     name: 'building-relation',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']+)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('([^']+)',#[^,]+,'([^']+)'/gi,
     process: checkBuildingRelation,
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -410,7 +440,7 @@ export const rules: Rule[] = [
   {
     name: 'story-relation',
     regex:
-      /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+      /#(?<entityId>\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
     process: ({ content, regex }) => checkStoreyRelation({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects pass
   },
@@ -423,19 +453,19 @@ export const rules: Rule[] = [
   {
     name: 'object-name',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
     process: ({ content, regex }) => checkElementNames({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all elements have valid names
   },
   {
     name: 'object-description',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)','(?<description>[^']*)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)','(?<description>[^']*)'/gi,
     process: ({ content, regex }) => {
       const allElements = checkElementNames({
         content,
         regex:
-          /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+          /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
       })
       return checkDescriptions({ content, regex, allElements })
     },
@@ -444,15 +474,15 @@ export const rules: Rule[] = [
   {
     name: 'type-name',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
     process: ({ content, regex }) => checkTypeNames({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid type names
   },
   {
     name: 'material-name',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<material>[^']*)'/gi,
-    process: ({ content, regex }) => checkMaterialNames({ content, regex }),
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    process: ({ content }) => checkMaterialAssignments(content),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have material names
   },
   {
@@ -465,7 +495,7 @@ export const rules: Rule[] = [
   {
     name: 'object-count',
     regex:
-      /IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT|SYSTEMFURNITUREELEMENT)\('([^']+)',#[^,]+,'([^']*)'/gi,
+      /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content, regex }) => extractProxies({ content, regex }),
     check: (value) => ({ value, passed: value.every((element) => element.passed) }), // Pass if all objects pass (no proxies found)
   },

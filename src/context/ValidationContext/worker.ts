@@ -1,9 +1,55 @@
-import { rules } from './rules.ts'
-
+import { rules } from './rules'
+import { Dispatch } from 'react'
+import { ValidationAction } from '@context'
 interface ReadInChunksProps {
   file: File
   dispatch: (message: object, options?: WindowPostMessageOptions) => void
   fileId: string
+}
+
+interface CollectedData {
+  content: string[]
+  storeyData: { [key: string]: string }
+}
+
+const collectStoreyData = (content: string, storeyData: { [key: string]: string }) => {
+  const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi
+  let match
+  while ((match = relContainedRegex.exec(content)) !== null) {
+    const entityList = match[2]
+    const storeyId = match[3]
+    const entities = entityList.match(/#(\d+)/g)
+    if (entities) {
+      entities.forEach((entity) => {
+        storeyData[entity.replace('#', '')] = storeyId
+      })
+    }
+  }
+}
+
+const collectDataFromChunks = (collectedData: CollectedData, chunk: string) => {
+  collectedData.content.push(chunk)
+  collectStoreyData(chunk, collectedData.storeyData)
+}
+
+const processCollectedData = (collectedData: CollectedData, dispatch: Dispatch<ValidationAction>, fileId: string) => {
+  const fullContent = collectedData.content.join('')
+  const combinedResults = rules.map((rule) => {
+    const partialResult =
+      rule.process({
+        content: fullContent,
+        regex: rule.regex,
+        storeyData: collectedData.storeyData,
+      }) || []
+    return {
+      name: rule.name,
+      partialResult: Array.isArray(partialResult) ? partialResult : [partialResult],
+      isLastChunk: true,
+    }
+  })
+
+  dispatch({ type: 'SET_RESULTS', fileId, payload: { newResults: combinedResults, isLastChunk: true } })
+  dispatch({ type: 'SET_FILE_PROCESSING', fileId, payload: false })
 }
 
 export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
@@ -11,21 +57,21 @@ export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
   let offset = 0
   const totalSize = file.size
 
+  const collectedData: CollectedData = { content: [], storeyData: {} }
+
   const fileReader = new FileReader()
 
   fileReader.onload = (e) => {
     if (!e.target || !e.target.result) return
-    processContentChunk({
-      chunk: e.target.result as string,
-      isLastChunk: offset + chunkSize >= totalSize,
-      totalSize,
-      currentOffset: offset + chunkSize,
-      dispatch,
-      fileId,
-    })
+    const chunk = e.target.result as string
+    collectDataFromChunks(collectedData, chunk)
     offset += chunkSize
+    dispatch({ type: 'SET_PROGRESS', fileId, payload: (offset / totalSize) * 100 })
+
     if (offset < totalSize) {
       readNextChunk()
+    } else {
+      processCollectedData(collectedData, dispatch, fileId)
     }
   }
 
@@ -39,39 +85,6 @@ export const readInChunks = ({ file, dispatch, fileId }: ReadInChunksProps) => {
   }
 
   readNextChunk()
-}
-
-interface ProcessContentChunkProps {
-  chunk: string
-  isLastChunk: boolean
-  totalSize: number
-  currentOffset: number
-  dispatch: (message: object, options?: WindowPostMessageOptions) => void
-  fileId: string
-}
-
-const processContentChunk = ({
-  chunk,
-  isLastChunk,
-  totalSize,
-  currentOffset,
-  dispatch,
-  fileId,
-}: ProcessContentChunkProps) => {
-  const combinedResults = rules.map((rule) => {
-    const partialResult = rule.process({ content: chunk, regex: rule.regex }) || []
-    return {
-      name: rule.name,
-      partialResult: Array.isArray(partialResult) ? partialResult : [partialResult],
-      isLastChunk: isLastChunk,
-    }
-  })
-
-  dispatch({ type: 'SET_PROGRESS', fileId, payload: (currentOffset / totalSize) * 100 })
-  dispatch({ type: 'SET_RESULTS', fileId, payload: { newResults: combinedResults, isLastChunk } })
-  if (isLastChunk) {
-    dispatch({ type: 'SET_FILE_PROCESSING', fileId, payload: false })
-  }
 }
 
 interface WorkerProps {
