@@ -17,7 +17,8 @@
     "failed": "Failed",
     "statistics": "Statistics",
     "all-data": "All Data",
-    "count": "Count"
+    "count": "Count",
+    "other": "Other"
   },
   "rules": {
     "project-name": "Is IfcProject Name filled out?",

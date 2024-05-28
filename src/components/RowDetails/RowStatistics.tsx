@@ -16,7 +16,7 @@ export const RowStatistics = ({ value }: RowStatisticsProps) => {
 
   const orderedData = data.slice(0, 8)
   if (data.length > 8) {
-    orderedData.push({ name: 'other', value: data.slice(8, data.length).reduce((acc, { value }) => acc + value, 0) })
+    orderedData.push({ name: t('other'), value: data.slice(8, data.length).reduce((acc, { value }) => acc + value, 0) })
   }
 
   return (

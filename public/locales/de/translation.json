@@ -17,7 +17,8 @@
     "failed": "Nicht Erfüllt",
     "statistics": "Statistik",
     "all-data": "Alle Daten",
-    "count": "Anzahl"
+    "count": "Anzahl",
+    "other": "Andere"
   },
   "rules": {
     "project-name": "Ist der IfcProject Name ausgefüllt?",
