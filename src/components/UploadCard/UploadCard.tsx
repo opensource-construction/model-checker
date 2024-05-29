@@ -1,13 +1,12 @@
-import { ActionIcon, Button, Divider, Group, rem, Stack, Text, Title } from '@mantine/core'
+import { Button, Divider, Group, rem, Stack, Text } from '@mantine/core'
 import { Paper } from '@components'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
-import { IconFile3d, IconInfoCircle, IconUpload, IconX } from '@tabler/icons-react'
+import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useValidationContext } from '@context'
 import { processFile } from './processFile.ts'
 import { useTranslation } from 'react-i18next'
-import { useDisclosure } from '@mantine/hooks'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
 
 interface FileError {
@@ -22,7 +21,6 @@ export const UploadCard = () => {
   const [files, setFiles] = useState<File[]>([])
   const [errors, setErrors] = useState<FileError[] | null>(null)
   const { t } = useTranslation()
-
 
   const handleClick = () => {
     if (!files.length) return
@@ -66,7 +64,7 @@ export const UploadCard = () => {
           multiple={true}
           validator={fileValidator}
         >
-          <Group justify="center" gap="xl" mih={220} style={{ pointerEvents: 'none' }}>
+          <Group justify='center' gap='xl' mih={220} style={{ pointerEvents: 'none' }}>
             <Dropzone.Accept>
               <IconUpload
                 style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-blue-6)' }}
@@ -84,8 +82,8 @@ export const UploadCard = () => {
             </Dropzone.Idle>
 
             <div>
-              <Text size="xl">{t('dropzone.drag')}</Text>
-              <Text size="sm" c="dimmed" mt={7}>
+              <Text size='xl'>{t('dropzone.drag')}</Text>
+              <Text size='sm' c='dimmed' mt={7}>
                 {t('dropzone.attach')}
               </Text>
             </div>
@@ -94,21 +92,21 @@ export const UploadCard = () => {
             {files?.map((file, index) => (
               <Group key={index}>
                 <IconFile3d stroke={0.7} />
-                <Text size="sm">{file.name}</Text>
+                <Text size='sm'>{file.name}</Text>
               </Group>
             ))}
           </div>
           {errors ? (
             <div>
               {errors.map((error) => (
-                <Text size="sm" c="red">
+                <Text size='sm' c='red'>
                   {t('dropzone.error-message')}: {error.file} - {error.message}
                 </Text>
               ))}
             </div>
           ) : null}
         </Dropzone>
-        <Button color="#319555" mt="md" radius="md" onClick={handleClick} disabled={!files.length}>
+        <Button color='#319555' mt='md' radius='md' onClick={handleClick} disabled={!files.length}>
           {t('validate')}
         </Button>
       </Paper>
