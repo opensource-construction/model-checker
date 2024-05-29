@@ -1,4 +1,4 @@
-import { Button, Center, Divider, Group, rem, Stack, Text, Title } from '@mantine/core'
+import { Button, Divider, Group, rem, Stack, Text } from '@mantine/core'
 import { Paper } from '@components'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
 import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useValidationContext } from '@context'
 import { processFile } from './processFile.ts'
 import { useTranslation } from 'react-i18next'
+import { UploadCardTitle } from './UploadCardTitle.tsx'
 
 interface FileError {
   code: string
@@ -54,9 +55,7 @@ export const UploadCard = () => {
   return (
     <Stack>
       <Paper>
-        <Center>
-          <Title order={2}>{t('upload-file')}</Title>
-        </Center>
+        <UploadCardTitle />
         <Divider py={8} />
         <Dropzone
           onDrop={handleDrop}

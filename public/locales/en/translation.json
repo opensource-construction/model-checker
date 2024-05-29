@@ -1,5 +1,28 @@
 {
   "upload-file": "Upload File",
+  "upload-card": {
+    "title": "Model Validation and Rules",
+    "description": "IFC Model Checker points to commonly found issues in .ifc files, leading to high quality data in the AEC industry. Checking your uploaded IFC files happens fully clientside, we don't save any data - nothing leaves your device and everything is deleted after session gets closed.",
+    "rules": "Rules:",
+    "info-card": {
+      "0": "Project Name Validation: Ensures every project has a meaningful and valid name.",
+      "1": "Project Associations: Verifies that all project-related elements are correctly linked.",
+      "2": "Site Name Validation: Confirms that site names are properly defined.",
+      "3": "Site Associations: Checks the proper linkage of site-related elements.",
+      "4": "Building Name Validation: Ensures buildings within the project have clear and valid names.",
+      "5": "Building Associations: Validates connections between buildings and other elements.",
+      "6": "Building Story Validation: Confirms that every building has a valid story structure.",
+      "7": "Story Name Validation: Ensures that every story or floor within a building is named correctly.",
+      "8": "Story Associations: Verifies that elements are appropriately associated with their respective stories.",
+      "9": "Space Name Validation: Ensures that all spaces are named clearly and accurately.",
+      "10": "Object Name Validation: Confirms that all objects in the project have valid names.",
+      "11": "Object Description Validation: Ensures that every object has a proper description.",
+      "12": "Type Name Validation: Verifies that types are named correctly, avoiding ambiguities.",
+      "13": "Material Associations: Ensures that all objects have associated material definitions.",
+      "14": "Predefined Type Check: Confirms that predefined types are valid (not UNDEFINED).",
+      "15": "Element Validation: Identifies BuildingElementProxies."
+    }
+  },
   "validate": "Validate",
   "dropzone": {
     "drag": "Drag IFC files here or click to select files",
