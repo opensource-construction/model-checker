@@ -8,17 +8,17 @@
     "4": "Legen Sie ein oder mehrere Modelle ab, und die Prüfungen werden automatisch durchgeführt. Alle Daten verbleiben auf Ihrem lokalen Rechner - es werden keine Daten an externe Server gesendet, alle Prüfungen werden lokal durchgeführt."
   },
   "upload-card": {
-    "title": "Model Validerung und Reglen",
+    "title": "Modell Validerung und Regeln",
     "description": "Der IFC Model Checker weist auf häufig auftretende Probleme in IFC-Dateien hin und sorgt so für qualitativ hochwertige Daten in der AEC-Branche. Die Überprüfung Ihrer hochgeladenen IFC-Dateien erfolgt vollständig clientseitig, wir speichern keine Daten – nichts verlässt Ihr Gerät und alles wird nach Schließen der Sitzung gelöscht.",
     "rules": "Reglen",
     "info-card": {
       "0": "Projektname-Validierung: Stellt sicher, dass IfcProject.Name einen Namen hat.",
-      "1": "Projektverbindung: Überprüft, ob alle  Elemente korrekt mit IfcProject verknüpft sind.",
+      "1": "Projektverbindung: Überprüft, ob alle Elemente korrekt mit IfcProject verknüpft sind.",
       "2": "Standortname-Validierung: Bestätigt, dass IfcSite.Name definiert ist.",
       "3": "Standortverbindungen: Prüft die ordnungsgemässe Verknüpfung von Entitäten und IfcSite.",
-      "4": "Gebäudename-Validierung: Stellt sicher, dass IfcBuilding",
-      "5": "Gebäudeverbindungen: Validiert Verbindungen zwischen IfcBuilding und  Entitäten.",
-      "6": "Geschossname-Validierung: Stellt sicher, dass jede Etage oder jeder Stockwerk korrekt benannt ist.",
+      "4": "Gebäudename-Validierung: Stellt sicher, dass IfcBuilding einen Namen hat.",
+      "5": "Gebäudeverbindungen: Validiert Verbindungen zwischen IfcBuilding und Entitäten.",
+      "6": "Geschossname-Validierung: Stellt sicher, dass jede Etage oder jedes Stockwerk gültige Namen hat.",
       "7": "Geschossverbindungen: Überprüft, ob Elemente korrekt mit IfcBuildingStorey verknüpft sind.",
       "8": "Raumverbindungen: Stellt sicher, dass alle Objekte korrekt mit IfcSpace verknüpft sind.",
       "9": "Objektname-Validierung: Bestätigt, dass alle Objekte im Projekt gültige Namen haben.",
@@ -26,26 +26,26 @@
       "11": "Typname-Validierung: Überprüft, ob Typen korrekt benannt sind, um Unklarheiten zu vermeiden.",
       "12": "Materialname-Validierung: Stellt sicher, dass alle Objekte Materialdefinitionen haben.",
       "13": "Predefined Types Check: Bestätigt, dass vordefinierte Typen gültig sind (keine UNDEFINED).",
-      "14": "Elementvalidierung: Identifiziert BuildingElementProxies."
+      "14": "Elementenvalidierung: Identifiziert BuildingElementProxies."
     }
   },
   "validate": "Validieren",
   "dropzone": {
-    "drag": "IFC Dateien hierher ziehen oder klicken, um auszuwählen",
+    "drag": "IFC Dateien hierher ziehen oder klicken, um eine Datei auszuwählen",
     "attach": "Hängen Sie so viele Dateien an, wie Sie möchten. Jede Datei sollte 500 MB nicht überschreiten",
     "error": "Dateityp ungültig. Nur .ifc Dateien sind erlaubt.",
     "error-message": "Datei"
   },
   "results": "Resultate",
-  "print": "Print",
+  "print": "Drucken",
   "result-table": {
     "rule": "Regel",
     "status": "Status",
     "level-of-fulfilment": "Erfüllungsgrad",
     "passed": "Erfüllt",
-    "failed": "Nicht Erfüllt",
+    "failed": "Nicht erfüllt",
     "statistics": "Statistik",
-    "all-data": "Alle Daten",
+    "all-data": "Alle Entitäten",
     "count": "Anzahl",
     "other": "Andere"
   },
@@ -58,13 +58,13 @@
     "building-relation": "Haben alle Objekte einen Bezug zu einem IfcBuilding?",
     "site-relation": "Haben alle Objekte einen Bezug zu einer IfcSite?",
     "project-relation": "Haben alle Objekte einen Bezug zu einem IfcProject?",
-    "space-name": "Wenn Räume als IfcSpace vorhanden, sind deren Namen ausgefüllt?",
+    "space-name": "Wenn Räume als IfcSpace vorhanden: Sind deren Namen ausgefüllt?",
     "object-name": "Haben alle Objekte einen Namen?",
     "type-name": "Haben alle Objekte einen Typnamen?",
     "object-description": "Haben alle Objekte eine Beschreibung?",
     "material-name": "Haben alle Objekte eine Materialbezeichnung?",
-    "predefined-type": "Wenn die Objekte einen PredefinedType haben, ist diese definiert?",
-    "object-count": "Möglichst keine BuildingElementProxy verwendet?",
+    "predefined-type": "Wenn die Objekte einen PredefinedType haben, ist dieser definiert?",
+    "object-count": "Sind möglichst keine BuildingElementProxy verwendet?",
     "project-names": "Welche IfcProject Namen wurden verwendet?",
     "site-names": "Welche IfcSite Namen wurden verwendet?",
     "building-names": "Welche IfcBuilding Namen wurden verwendet?",
@@ -77,5 +77,5 @@
     "building-element-proxies": "Welche IfcBuildingElementProxy Namen wurden verwendet?"
   },
   "sponsored-by": "Gesponsert von:",
-  "open-source": "Open Source bei:"
+  "open-source": "Open Source auf:"
 }
