@@ -63,7 +63,7 @@
     "type-name": "Haben alle Objekte einen Typnamen?",
     "object-description": "Haben alle Objekte eine Beschreibung?",
     "material-name": "Haben alle Objekte eine Materialbezeichnung?",
-    "predefined-type": "Wenn die Objekte einen PredefinedType haben, sind diese definiert?",
+    "predefined-type": "Wenn die Objekte einen PredefinedType haben, ist diese definiert?",
     "object-count": "Möglichst keine BuildingElementProxy verwendet?",
     "project-names": "Welche IfcProject Namen wurden verwendet?",
     "site-names": "Welche IfcSite Namen wurden verwendet?",
