@@ -24,7 +24,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   const { t } = useTranslation()
   const theme = useMantineTheme()
   const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`)
-  const fulfilment = calculateFulfilment(value)
+  const fulfilment = calculateFulfilment(value, passed)
 
   return (
     <>
@@ -34,15 +34,15 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
             <Skeleton height={24} circle />
           ) : passed ? (
             <Group>
-              <IconCircleCheck color='#319555' />
-              <Text c='#319555' style={matches ? { display: 'none' } : undefined}>
+              <IconCircleCheck color='blue' />
+              <Text c='blue' style={matches ? { display: 'none' } : undefined}>
                 {t('result-table.passed')}
               </Text>
             </Group>
           ) : (
             <Group>
-              <IconCircleX color='#BE4A5A' />
-              <Text c='#BE4A5A' style={matches ? { display: 'none' } : undefined}>
+              <IconCircleX color='violet' />
+              <Text c='violet' style={matches ? { display: 'none' } : undefined}>
                 {t('result-table.failed')}
               </Text>
             </Group>
@@ -54,7 +54,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         </Table.Td>
         <Table.Td>
           {value.length ? (
-            <ActionIcon variant='transparent' size='sm' onClick={toggle}>
+            <ActionIcon variant='transparent' size='sm' onClick={toggle} color='black'>
               {opened ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
           ) : null}
@@ -66,32 +66,37 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
 }
 
 const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
-  return (
-    <Progress.Root size='xxl'>
-      {fulfilment > 15 ? (
-        <Progress.Section value={fulfilment} color='#319555'>
-          <Progress.Label color='#ffff' py={4}>
-            {fulfilment}%
-          </Progress.Label>
+  const color = fulfilment === 100 ? 'blue' : 'violet'
+
+  if (fulfilment > 15) {
+    return (
+      <Progress.Root size='xxl' styles={{ label: { color: 'white' } }}>
+        <Progress.Section value={fulfilment} color={color}>
+          <Progress.Label py={4}>{fulfilment}%</Progress.Label>
         </Progress.Section>
-      ) : (
-        <>
-          <Progress.Section value={fulfilment} color='#319555' />
-          <Progress.Section value={100 - fulfilment} color='#E9ECEF'>
-            <Progress.Label color='#0000' py={4}>
-              {fulfilment}%
-            </Progress.Label>
-          </Progress.Section>
-        </>
-      )}
+      </Progress.Root>
+    )
+  }
+
+  return (
+    <Progress.Root size='xxl' styles={{ label: { color: 'black' } }}>
+      <Progress.Section value={fulfilment} color={color}>
+        <Progress.Label py={8}>
+          <div style={{ paddingBlock: 'calc(0.25rem * var(--mantine-scale))' }} />
+        </Progress.Label>
+      </Progress.Section>
+      <Progress.Section value={100 - fulfilment} color='#E9ECEF' py={4}>
+        <Progress.Label>{fulfilment}%</Progress.Label>
+      </Progress.Section>
     </Progress.Root>
   )
 }
 
-const calculateFulfilment = (value: PartialResult[]): number => {
+const calculateFulfilment = (value: PartialResult[], passed: boolean): number => {
   const length = value.length
-  if (length === 0) return 0
+  if (length === 0 && !passed) return 0
+  if (length === 0 && passed) return 100
 
-  const passed = value.filter((result) => result.passed).length
-  return Math.round((passed / length) * 100)
+  const _passed = value.filter((result) => result.passed).length
+  return Math.round((_passed / length) * 100)
 }

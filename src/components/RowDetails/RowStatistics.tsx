@@ -25,7 +25,7 @@ export const RowStatistics = ({ value }: RowStatisticsProps) => {
         h={300}
         data={orderedData}
         dataKey='name'
-        series={[{ name: 'value', color: '#4A5ABE' }]}
+        series={[{ name: 'value', color: 'blue.6' }]}
         yAxisLabel={t('result-table.count')}
         withTooltip={true}
         withBarValueLabel
