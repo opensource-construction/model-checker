@@ -11,7 +11,7 @@ export const SubTable = ({ rows }: { rows: PartialResult[] }) => {
       <Table.Tr key={`${globalId}-${index}`}>
         <Table.Td>{globalId}</Table.Td>
         <Table.Td>{name}</Table.Td>
-        <Table.Td>{passed ? <IconCircleCheck color='#319555' /> : <IconCircleX color='#BE4A5A' />}</Table.Td>
+        <Table.Td>{passed ? <IconCircleCheck color='blue' /> : <IconCircleX color='violet' />}</Table.Td>
       </Table.Tr>
     )),
     30,
