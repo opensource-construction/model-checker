@@ -1,5 +1,12 @@
 {
   "upload-file": "Upload File",
+  "upload-description": {
+    "0": "Model quality is at the center of successful BIM projects.",
+    "1": "The goal of this tool is to provide a quick check on the overall health of a model. It comes with a couple of standard tests – if these succeed, it's worth to look deeper into the model.",
+    "2": "Otherwise probably not.",
+    "3": "We designed it to be really easy AND secure.",
+    "4": "All data stays on your local machine – no data will be send anywhere, all checks are performed locally"
+  },
   "upload-card": {
     "title": "Model Validation and Rules",
     "description": "IFC Model Checker points to commonly found issues in .ifc files, leading to high quality data in the AEC industry. Checking your uploaded IFC files happens fully clientside, we don't save any data - nothing leaves your device and everything is deleted after session gets closed.",
@@ -69,5 +76,7 @@
     "material-names": "IFC Object MaterialName used",
     "predefined-types": "IFC Object Predefined Type used",
     "building-element-proxies": "IFC BuildingElementProxy Name used"
-  }
+  },
+  "sponsored-by": "Sponsored by:",
+  "open-source": "Open source at:"
 }

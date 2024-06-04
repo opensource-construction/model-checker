@@ -1,5 +1,12 @@
 {
   "upload-file": "Datei Hochladen",
+  "upload-description": {
+    "0": "Die Modellqualität ist zentral für erfolgreiche BIM-Projekte.",
+    "1": "Das Ziel dieses Tools ist es, eine schnelle Überprüfung des allgemeinen Zustands eines Modells zu ermöglichen.",
+    "2": "Betrachten Sie es als das erstes \"Quality Gate\".",
+    "3": "Wir haben es so konzipiert, dass es sehr einfach UND sehr sicher ist.",
+    "4": "Legen Sie ein oder mehrere Modelle ab, und die Prüfungen werden automatisch durchgeführt. Alle Daten verbleiben auf Ihrem lokalen Rechner - es werden keine Daten an externe Server gesendet, alle Prüfungen werden lokal durchgeführt."
+  },
   "upload-card": {
     "title": "Model Validerung und Reglen",
     "description": "Der IFC Model Checker weist auf häufig auftretende Probleme in IFC-Dateien hin und sorgt so für qualitativ hochwertige Daten in der AEC-Branche. Die Überprüfung Ihrer hochgeladenen IFC-Dateien erfolgt vollständig clientseitig, wir speichern keine Daten – nichts verlässt Ihr Gerät und alles wird nach Schließen der Sitzung gelöscht.",
@@ -68,5 +75,7 @@
     "material-names": "Welche Materialnamen wurden verwendet?",
     "predefined-types": "Welche PredefinedType wurden verwendet?",
     "building-element-proxies": "Welche IfcBuildingElementProxy Namen wurden verwendet?"
-  }
+  },
+  "sponsored-by": "Gesponsert von:",
+  "open-source": "Open Source bei:"
 }

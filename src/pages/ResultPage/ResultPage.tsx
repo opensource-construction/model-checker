@@ -27,7 +27,7 @@ export const ResultPage = () => {
       <Paper>
         <Group justify='space-between'>
           <Title order={2}>{t('results')}</Title>
-          <Button color='#B2B2B2' mt='md' radius='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>
+          <Button color='#B2B2B2' mt='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>
             {t('print')}
           </Button>
         </Group>
