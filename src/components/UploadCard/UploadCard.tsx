@@ -57,6 +57,15 @@ export const UploadCard = () => {
       <Paper>
         <UploadCardTitle />
         <Divider py={8} />
+        <Stack maw={650} mb='md' gap='xs'>
+          <Text size='sm'>{t('upload-description.0')}</Text>
+          <Text size='sm'>{t('upload-description.1')}</Text>
+          <Text size='sm'>{t('upload-description.2')}</Text>
+          <Text size='sm' fw={700}>
+            {t('upload-description.3')}
+          </Text>
+          <Text size='sm'>{t('upload-description.4')}</Text>
+        </Stack>
         <Dropzone
           onDrop={handleDrop}
           onReject={handleReject}
@@ -81,12 +90,12 @@ export const UploadCard = () => {
               />
             </Dropzone.Idle>
 
-            <div>
+            <Stack maw={500} gap='xs'>
               <Text size='xl'>{t('dropzone.drag')}</Text>
               <Text size='sm' c='dimmed' mt={7}>
                 {t('dropzone.attach')}
               </Text>
-            </div>
+            </Stack>
           </Group>
           <div>
             {files?.map((file, index) => (
@@ -106,7 +115,7 @@ export const UploadCard = () => {
             </div>
           ) : null}
         </Dropzone>
-        <Button color='#319555' mt='md' radius='md' onClick={handleClick} disabled={!files.length}>
+        <Button mt='md' onClick={handleClick} disabled={!files.length}>
           {t('validate')}
         </Button>
       </Paper>
