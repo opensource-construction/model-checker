@@ -58,7 +58,7 @@ function extractProxies({ content, regex }: ProcessContentChunkProps): PartialRe
     results.push({
       globalId,
       name: `${type}`, // Append type to name
-      passed: type !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
+      passed: type === 'BUILDINGELEMENTPROXY', // Proxies pass, others fail
     })
   }
 
@@ -68,7 +68,7 @@ function extractProxies({ content, regex }: ProcessContentChunkProps): PartialRe
       results.push({
         globalId,
         name: `${match[1]}`, // Append type to name
-        passed: match[1] !== 'BUILDINGELEMENTPROXY', // Proxies fail, others pass
+        passed: match[1] === 'BUILDINGELEMENTPROXY', // Proxies pass, others fail
       })
     }
   }
