@@ -208,13 +208,20 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
 
   return results
 }
-
-function getElementsWithMaterialAssociations(content: string): { [key: string]: string } {
+function getElementsWithMaterialAssociations(content: string): { [key: string]: { materialId: string, materialName: string } } {
   const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g
   const elementRegex = /#(\d+)/g
-  const elementToMaterial: { [key: string]: string } = {}
+  const materialNameRegex = /#(\d+)=IFCMATERIAL\('([^']*)'/g
+  const elementToMaterial: { [key: string]: { materialId: string, materialName: string } } = {}
 
   let match: RegExpExecArray | null
+  const materialNames: { [key: string]: string } = {}
+
+  while ((match = materialNameRegex.exec(content)) !== null) {
+    const materialId = match[1]
+    const materialName = match[2]
+    materialNames[materialId] = materialName
+  }
 
   while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
     const materialId = match[3]
@@ -222,11 +229,27 @@ function getElementsWithMaterialAssociations(content: string): { [key: string]: 
 
     for (const element of elements) {
       const elementId = element.replace('#', '')
-      elementToMaterial[elementId] = materialId
+      elementToMaterial[elementId] = { materialId, materialName: materialNames[materialId] }
     }
   }
 
   return elementToMaterial
+}
+
+function checkMaterialAssignments(content: string): PartialResult[] {
+  const elementToMaterial = getElementsWithMaterialAssociations(content)
+  const allElements = getAllRelevantElements(content)
+
+  for (const elementId in allElements) {
+    if (Object.hasOwn(elementToMaterial, elementId)) {
+      allElements[elementId].passed = true
+      allElements[elementId].name = elementToMaterial[elementId].materialName
+    } else {
+      allElements[elementId].name = allElements[elementId].name || ''
+    }
+  }
+
+  return Object.values(allElements)
 }
 
 function getAllRelevantElements(content: string): { [key: string]: PartialResult } {
@@ -238,10 +261,9 @@ function getAllRelevantElements(content: string): { [key: string]: PartialResult
   while ((match = elementRegex.exec(content)) !== null) {
     const elementId = match[1]
     const globalId = match.groups!.globalId
-    const name = match.groups!.name
     results[elementId] = {
       globalId: globalId,
-      name: `${name}`,
+      name: ``,
       passed: false, // Initialize as false, will be updated later
     }
   }
@@ -249,18 +271,7 @@ function getAllRelevantElements(content: string): { [key: string]: PartialResult
   return results
 }
 
-function checkMaterialAssignments(content: string): PartialResult[] {
-  const elementToMaterial = getElementsWithMaterialAssociations(content)
-  const allElements = getAllRelevantElements(content)
 
-  for (const elementId in allElements) {
-    if (Object.hasOwn(elementToMaterial, elementId)) {
-      allElements[elementId].passed = true
-    }
-  }
-
-  return Object.values(allElements)
-}
 
 function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = []
