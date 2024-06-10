@@ -11,7 +11,7 @@ interface Rule {
   name: string
   regex: RegExp
   process: (props: ProcessContentChunkProps) => PartialResult[]
-  check: (value: PartialResult[]) => { value: PartialResult[]; passed: boolean }
+  check: (value: PartialResult[]) => { value: PartialResult[]; passed: boolean | null }
 }
 
 function extractAttributes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
@@ -744,6 +744,6 @@ export const rules: Rule[] = [
     regex:
       /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content, regex }) => extractProxies({ content, regex }),
-    check: (value) => ({ value, passed: value.every((element) => element.passed) }), // Pass if all objects pass (no proxies found)
+    check: (value) => ({ value, passed: null }), // Pass if all objects pass (no proxies found)
   },
 ]

@@ -7,7 +7,7 @@ export interface RuleResult {
   isLastChunk: boolean
   result?: {
     value: PartialResult[]
-    passed: boolean
+    passed: boolean | null
   }
 }
 
