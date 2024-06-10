@@ -15,7 +15,7 @@ export const Header = () => {
           <Title order={3}>IFC Model Checker</Title>
         </Group>
       </UnstyledButton>
-      <UnstyledButton onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en' ? 'de' : 'en')} mr='md'>
+      <UnstyledButton onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en' ? 'en' : 'de')} mr='md'>
         {i18n.resolvedLanguage?.toUpperCase()}
       </UnstyledButton>
     </Group>
