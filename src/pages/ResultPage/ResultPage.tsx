@@ -1,5 +1,5 @@
 import { Paper, ProjectResult } from '@components'
-import { Button, Container, Divider, Group, Title } from '@mantine/core'
+import { Button, Container, Divider, Group, Title, useMatches } from '@mantine/core'
 import { useValidationContext } from '@context'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef } from 'react'
@@ -24,7 +24,7 @@ export const ResultPage = () => {
 
   return (
     <Container mt={36} size='xl'>
-      <Paper>
+      <Paper hide={useMatches({ base: true, sm: false })}>
         <Group justify='space-between'>
           <Title order={2}>{t('results')}</Title>
           <Button color='#B2B2B2' mt='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>

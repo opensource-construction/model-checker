@@ -8,15 +8,19 @@ export const PageLayout = () => {
     base: 40,
     lg: 60,
   })
+  const padding = useMatches({ base: 'xs', lg: 'xl' })
 
   return (
-    <AppShell header={{ height: { base: 40, lg: 60 } }} padding='xl' withBorder={false}>
+    <AppShell header={{ height: { base: 40, lg: 60 } }} padding={padding} withBorder={false}>
       <AppShell.Header pl={`calc(var(--mantine-spacing-xl))`} bg='yellow'>
         <ErrorBoundary>
           <Header />
         </ErrorBoundary>
       </AppShell.Header>
-      <AppShell.Main pt={`calc(${rem(headerHeight)} + var(--mantine-spacing-xl))`} bg={theme.other.backgroundColor}>
+      <AppShell.Main
+        pt={`calc(${rem(headerHeight)} + var(--mantine-spacing-${padding}))`}
+        bg={theme.other.backgroundColor}
+      >
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>

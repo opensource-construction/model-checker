@@ -1,6 +1,6 @@
-import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineTheme } from '@mantine/core'
+import { ActionIcon, Group, Progress, Skeleton, Table, Text } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
-import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
 import { PartialResult } from '@context'
 import { RowDetails } from '@components'
@@ -8,7 +8,7 @@ import { RowDetails } from '@components'
 interface ResultTableRowProps {
   name: string
   result: {
-    passed: boolean
+    passed: boolean | null
     value: PartialResult[]
   }
   inProgress: boolean
@@ -22,35 +22,16 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   } = props
   const [opened, { toggle }] = useDisclosure(false)
   const { t } = useTranslation()
-  const theme = useMantineTheme()
-  const matches = useMediaQuery(`(max-width: ${theme.breakpoints.lg})`)
-  const fulfilment = calculateFulfilment(value, passed)
 
   return (
     <>
       <Table.Tr key={name}>
         <Table.Td>
-          {inProgress ? (
-            <Skeleton height={24} circle />
-          ) : passed ? (
-            <Group>
-              <IconCircleCheck color='blue' />
-              <Text c='blue' style={matches ? { display: 'none' } : undefined}>
-                {t('result-table.passed')}
-              </Text>
-            </Group>
-          ) : (
-            <Group>
-              <IconCircleX color='violet' />
-              <Text c='violet' style={matches ? { display: 'none' } : undefined}>
-                {t('result-table.failed')}
-              </Text>
-            </Group>
-          )}
+          <Status inProgress={inProgress} passed={passed} />
         </Table.Td>
         <Table.Td>{t(`rules.${name}`)}</Table.Td>
         <Table.Td>
-          <FulfilmentBar fulfilment={fulfilment} />
+          <FulfilmentBar fulfilment={calculateFulfilment(value, passed)} />
         </Table.Td>
         <Table.Td>
           {value.length ? (
@@ -92,11 +73,46 @@ const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
   )
 }
 
-const calculateFulfilment = (value: PartialResult[], passed: boolean): number => {
+const calculateFulfilment = (value: PartialResult[], passed: boolean | null): number => {
   const length = value.length
   if (length === 0 && !passed) return 0
   if (length === 0 && passed) return 100
 
   const _passed = value.filter((result) => result.passed).length
   return Math.round((_passed / length) * 100)
+}
+
+interface StatusProps {
+  inProgress: boolean
+  passed: boolean | null
+}
+
+const Status = (props: StatusProps) => {
+  const { inProgress, passed } = props
+  const { t } = useTranslation()
+  if (inProgress) {
+    return <Skeleton height={24} circle />
+  }
+
+  if (passed === null) {
+    return null
+  } else if (passed) {
+    return (
+      <Group>
+        <IconCircleCheck color='blue' />
+        <Text c='blue' visibleFrom='lg'>
+          {t('result-table.passed')}
+        </Text>
+      </Group>
+    )
+  } else {
+    return (
+      <Group>
+        <IconCircleX color='violet' />
+        <Text c='violet' visibleFrom='lg'>
+          {t('result-table.failed')}
+        </Text>
+      </Group>
+    )
+  }
 }
