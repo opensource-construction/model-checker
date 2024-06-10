@@ -65,7 +65,7 @@
     "object-description": "Do all Objects have a Description?",
     "material-name": "Do all Objects have a Material Name?",
     "predefined-type": "If Objects have a Predefined Type, are they defined?",
-    "object-count": "No IfcBuildingElementProxy used?",
+    "object-count": "Share of IfcBuildingElementProxy used:",
     "project-names": "IFC Project Name used",
     "site-names": "IFC Site Name used",
     "building-names": "IFC Building Name used",
