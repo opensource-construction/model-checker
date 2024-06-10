@@ -138,7 +138,6 @@ function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): Part
   return results
 }
 
-
 function checkDescriptions({
   content,
   regex,
@@ -188,7 +187,7 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
     const passed = validType && type !== '$' // Ensure type name is valid
     results.push({
       globalId,
-      name: `${type}`, 
+      name: `${type}`,
       passed,
     })
   }
@@ -200,7 +199,7 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
     if (!results.some((result) => result.globalId === globalId)) {
       results.push({
         globalId,
-        name: `${type}`, 
+        name: `${type}`,
         passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid
       })
     }
@@ -208,11 +207,13 @@ function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialRe
 
   return results
 }
-function getElementsWithMaterialAssociations(content: string): { [key: string]: { materialId: string, materialName: string } } {
+function getElementsWithMaterialAssociations(content: string): {
+  [key: string]: { materialId: string; materialName: string }
+} {
   const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g
   const elementRegex = /#(\d+)/g
   const materialNameRegex = /#(\d+)=IFCMATERIAL\('([^']*)'/g
-  const elementToMaterial: { [key: string]: { materialId: string, materialName: string } } = {}
+  const elementToMaterial: { [key: string]: { materialId: string; materialName: string } } = {}
 
   let match: RegExpExecArray | null
   const materialNames: { [key: string]: string } = {}
@@ -271,8 +272,6 @@ function getAllRelevantElements(content: string): { [key: string]: PartialResult
   return results
 }
 
-
-
 function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = []
   let match: RegExpExecArray | null
@@ -294,7 +293,7 @@ function checkPredefinedTypes({ content, regex }: ProcessContentChunkProps): Par
       results.push({
         globalId,
         name: `${predefinedType}`,
-        passed: predefinedType !== 'NOTDEFINED' && predefinedType !== 'USERDEFINED' // Only fail if predefined type is NOTDEFINED or USERDEFINED
+        passed: predefinedType !== 'NOTDEFINED' && predefinedType !== 'USERDEFINED', // Only fail if predefined type is NOTDEFINED or USERDEFINED
       })
     }
   }
@@ -334,7 +333,6 @@ function checkElementNames({ content, regex }: ProcessContentChunkProps): Partia
 
   return results
 }
-
 
 function extractProjects(content: string): { [key: string]: string } {
   const projectRegex = /#(\d+)=IFCPROJECT\('([^']+)',#[^,]+,'([^']*)'/g
@@ -466,14 +464,15 @@ function checkProjectRelation({ content }: ProcessContentChunkProps): PartialRes
   const roomToBuildingMap = mapRoomsToBuildings(content)
 
   const results: PartialResult[] = []
-  const entityPattern = /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/gi
+  const entityPattern =
+    /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/gi
 
   let match: RegExpExecArray | null
   while ((match = entityPattern.exec(content)) !== null) {
     const { entityId, globalId } = match.groups!
     const storeyId = elementToStoreyMap[entityId]
     const roomId = elementToRoomMap[entityId]
-    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : (roomId ? roomToBuildingMap[roomId] : undefined)
+    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : roomId ? roomToBuildingMap[roomId] : undefined
     const siteId = buildingId ? buildingToSiteMap[buildingId] : undefined
     const projectId = siteId ? siteToProjectMap[siteId] : undefined
 
@@ -503,14 +502,15 @@ function checkSiteRelation({ content }: ProcessContentChunkProps): PartialResult
   const roomToBuildingMap = mapRoomsToBuildings(content)
 
   const results: PartialResult[] = []
-  const entityPattern = /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/g
+  const entityPattern =
+    /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/g
 
   let match: RegExpExecArray | null
   while ((match = entityPattern.exec(content)) !== null) {
     const { entityId, globalId } = match.groups!
     const storeyId = elementToStoreyMap[entityId]
     const roomId = elementToRoomMap[entityId]
-    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : (roomId ? roomToBuildingMap[roomId] : undefined)
+    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : roomId ? roomToBuildingMap[roomId] : undefined
     const siteId = buildingId ? buildingToSiteMap[buildingId] : firstSiteId
 
     // Use default site if none found
@@ -539,7 +539,7 @@ function checkBuildingRelation({ content }: ProcessContentChunkProps): PartialRe
 
   const results: PartialResult[] = []
   const entityPattern = new RegExp(
-    /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/g
+    /#(?<entityId>\d+)=IFC(?:AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE)\('(?<globalId>[^']+)',#[^,]+,'[^']*'/g,
   )
 
   let match: RegExpExecArray | null
@@ -547,7 +547,7 @@ function checkBuildingRelation({ content }: ProcessContentChunkProps): PartialRe
     const { entityId, globalId } = match.groups!
     const storeyId = elementToStoreyMap[entityId]
     const roomId = elementToRoomMap[entityId]
-    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : (roomId ? roomToBuildingMap[roomId] : firstBuildingId)
+    const buildingId = storeyId ? storeyToBuildingMap[storeyId] : roomId ? roomToBuildingMap[roomId] : firstBuildingId
 
     // Use default building if none found
     const buildingName = buildingId ? buildingMap[buildingId] : firstBuildingName
@@ -562,7 +562,6 @@ function checkBuildingRelation({ content }: ProcessContentChunkProps): PartialRe
 
   return results
 }
-
 
 function mapElementsToStoreys(content: string): { [key: string]: string } {
   const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,\((#[^)]*)\),#(\d+)\);/gi
@@ -602,7 +601,6 @@ function mapElementsToRooms(content: string): { [key: string]: string } {
   return elementToRoomMap
 }
 
-
 function mapRoomsToBuildings(content: string): { [key: string]: string } {
   const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi
   const roomToBuildingMap: { [key: string]: string } = {}
@@ -637,7 +635,6 @@ function getFirstBuilding(content: string): string {
   const match = /#(\d+)=IFCBUILDING\('([^']+)',#[^,]+,'([^']+)'/g.exec(content)
   return match ? match[1] : ''
 }
-
 
 // Rule definitions
 // Rules are intended to work only on valid IFC, non valid file structure and non-adherence to schema will cause certain rules to not function as intended
