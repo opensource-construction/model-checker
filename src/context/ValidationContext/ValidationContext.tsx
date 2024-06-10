@@ -1,6 +1,12 @@
 import { createContext, useReducer } from 'react'
 import { combineResults } from './processIFC.ts'
-import { ValidationAction, ValidationContextInterface, ValidationProps, ValidationState } from './interfaces.ts'
+import {
+  FileMetadata,
+  ValidationAction,
+  ValidationContextInterface,
+  ValidationProps,
+  ValidationState,
+} from './interfaces.ts'
 
 export const ValidationContext = createContext({} as ValidationContextInterface)
 
@@ -12,13 +18,17 @@ const validationReducer = (state: ValidationState, action: ValidationAction) => 
         ...state,
         [fileId]: { results: [], name: payload as string, progress: 0, fileProcessing: true },
       }
+    case 'SET_METADATA':
+      return {
+        ...state,
+        [fileId]: { ...state[fileId], ...(payload as FileMetadata) },
+      }
     case 'SET_PROGRESS':
       return {
         ...state,
         [fileId]: { ...state[fileId], progress: payload as number },
       }
     case 'SET_RESULTS':
-      //console.log('RESULTS', fileId, payload, state[fileId].results)
       return {
         ...state,
         [fileId]: {

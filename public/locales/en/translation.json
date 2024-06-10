@@ -78,5 +78,7 @@
     "building-element-proxies": "IFC BuildingElementProxy Name used"
   },
   "sponsored-by": "Sponsored by:",
-  "open-source": "Open source at:"
+  "open-source": "Open source at:",
+  "author": "Author",
+  "exported": "Exported"
 }

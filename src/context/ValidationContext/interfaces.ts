@@ -16,10 +16,15 @@ export interface SetResultsPayload {
   isLastChunk: boolean
 }
 
+export interface FileMetadata {
+  author: string | null
+  exported: string | null
+}
+
 export interface ValidationAction {
-  type: 'SET_FILE' | 'SET_PROGRESS' | 'SET_RESULTS' | 'SET_FILE_PROCESSING'
+  type: 'SET_FILE' | 'SET_PROGRESS' | 'SET_RESULTS' | 'SET_FILE_PROCESSING' | 'SET_METADATA'
   fileId: string
-  payload: string | number | boolean | SetResultsPayload
+  payload: string | number | boolean | SetResultsPayload | FileMetadata
 }
 
 export interface ValidationState {
@@ -29,6 +34,8 @@ export interface ValidationState {
 export interface FileState {
   results: FileResult[]
   name: string
+  author: string
+  exported: string
   progress: number
   fileProcessing: boolean
 }
