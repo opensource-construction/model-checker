@@ -54,7 +54,7 @@ export const UploadCard = () => {
 
   return (
     <Stack>
-      <Paper>
+      <Paper hide={false}>
         <UploadCardTitle />
         <Divider py={8} />
         <Stack maw={650} mb='md' gap='xs'>

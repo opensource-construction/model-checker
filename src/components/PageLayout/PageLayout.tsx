@@ -8,7 +8,7 @@ export const PageLayout = () => {
     base: 40,
     lg: 60,
   })
-  const padding = useMatches({ base: 'xs', lg: 'xl' })
+  const padding = useMatches({ base: 'lg', lg: 'xl' })
 
   return (
     <AppShell header={{ height: { base: 40, lg: 60 } }} padding={padding} withBorder={false}>
@@ -18,7 +18,7 @@ export const PageLayout = () => {
         </ErrorBoundary>
       </AppShell.Header>
       <AppShell.Main
-        pt={`calc(${rem(headerHeight)} + var(--mantine-spacing-${padding}))`}
+        py={`calc(${rem(headerHeight)} + var(--mantine-spacing-${padding}))`}
         bg={theme.other.backgroundColor}
       >
         <ErrorBoundary>

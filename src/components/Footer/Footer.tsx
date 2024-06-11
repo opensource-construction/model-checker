@@ -20,7 +20,14 @@ export const Footer = () => {
       </Group>
       <Group>
         <Text size={textSize}>{t('open-source')}</Text>
-        <ActionIcon component='a' href={githubLink} target='_blank' variant='transparent' color='black'>
+        <ActionIcon
+          component='a'
+          href={githubLink}
+          target='_blank'
+          variant='transparent'
+          color='black'
+          size={useMatches({ base: 16, lg: 32 })}
+        >
           <IconBrandGithub />
         </ActionIcon>
       </Group>

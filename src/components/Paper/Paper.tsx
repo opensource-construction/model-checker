@@ -13,7 +13,7 @@ export const Paper = (props: PaperProps) => {
   if (hide) return children
 
   return (
-    <Card shadow='sm' padding='lg' withBorder data-testid={props['data-testid']} visibleFrom='sm'>
+    <Card shadow='sm' padding='lg' withBorder data-testid={props['data-testid']}>
       {children}
     </Card>
   )
