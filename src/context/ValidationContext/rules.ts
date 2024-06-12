@@ -5,6 +5,7 @@ interface ProcessContentChunkProps {
   regex: RegExp
   storeyData?: { [key: string]: string }
   typeRelations?: { [key: string]: string }
+  relatedTypeNames?: { [key: string]: string }
 }
 
 interface Rule {
@@ -177,36 +178,77 @@ function checkDescriptions({
   return results
 }
 
-function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+function extractDirectTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
   const results: PartialResult[] = []
   let match: RegExpExecArray | null
 
   while ((match = regex.exec(content)) !== null) {
-    const { globalId, type } = match.groups!
-    const validType = type.trim() !== '' && type !== '-'
-    const passed = validType && type !== '$' // Ensure type name is valid
+    const globalId = match.groups!.globalId
+    const name = match.groups!.name || 'Unnamed'
     results.push({
       globalId,
-      name: `${type}`,
-      passed,
+      name,
+      passed: !!name,
     })
-  }
-
-  // Ensure all elements are checked even if no type name is found
-  for (const match of content.matchAll(regex)) {
-    const { globalId, type } = match.groups!
-    const validType = type.trim() !== '' && type !== '-'
-    if (!results.some((result) => result.globalId === globalId)) {
-      results.push({
-        globalId,
-        name: `${type}`,
-        passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid
-      })
-    }
   }
 
   return results
 }
+
+function extractRelatedTypeNames({
+  content,
+  relatedTypeNames = {},
+  typeRelations = {},
+}: ProcessContentChunkProps): PartialResult[] {
+  const relDefinesByTypeRegex =
+    /#(?<relId>\d+)=IFCRELDEFINESBYTYPE\('[^']*',#\d+,\$,\$,\((?<relatedEntities>#\d+(?:,#\d+)*)\),#(?<relatedType>\d+)\);/gi
+  const typeRegex = /#(?<typeId>\d+)=IFC[A-Z0-9]+\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi
+  let match: RegExpExecArray | null
+
+  // First, populate typeRelations with actual type names
+  while ((match = typeRegex.exec(content)) !== null) {
+    const typeId = match.groups!.typeId
+    const typeName = match.groups!.name
+    typeRelations[typeId] = typeName
+  }
+
+  // Then process relationships to gather related type names
+  while ((match = relDefinesByTypeRegex.exec(content)) !== null) {
+    const relatedEntities = match.groups!.relatedEntities?.match(/#(\d+)/g) || []
+    const relatedTypeId = match.groups!.relatedType
+
+    relatedEntities.forEach((entity) => {
+      const entityId = entity.replace('#', '')
+      relatedTypeNames[entityId] = typeRelations[relatedTypeId] || 'Unknown'
+    })
+  }
+
+  return Object.keys(relatedTypeNames).map((entityId) => ({
+    globalId: entityId,
+    name: relatedTypeNames[entityId] || '',
+    passed: true,
+  }))
+}
+
+function combineTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const directTypeResults = extractDirectTypeNames({ content, regex })
+  const relatedTypeResults = extractRelatedTypeNames({ content, regex })
+
+  // Combine results, avoiding duplicates
+  const combinedResults: { [key: string]: PartialResult } = {}
+  ;[...directTypeResults, ...relatedTypeResults].forEach((result) => {
+    const globalId = result.globalId || '' // Ensure globalId is not undefined
+    if (!combinedResults[globalId]) {
+      combinedResults[globalId] = result
+    } else {
+      // Prefer related type name if available
+      combinedResults[globalId].name = combinedResults[globalId].name || result.name
+    }
+  })
+
+  return Object.values(combinedResults)
+}
+
 function getElementsWithMaterialAssociations(content: string): {
   [key: string]: { materialId: string; materialName: string }
 } {
@@ -218,19 +260,22 @@ function getElementsWithMaterialAssociations(content: string): {
   let match: RegExpExecArray | null
   const materialNames: { [key: string]: string } = {}
 
+  // Populate material names
   while ((match = materialNameRegex.exec(content)) !== null) {
     const materialId = match[1]
-    const materialName = match[2]
+    const materialName = match[2].trim() || 'Unnamed Material' // Default to 'Unnamed Material' if empty
     materialNames[materialId] = materialName
   }
 
+  // Map elements to materials
   while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
     const materialId = match[3]
-    const elements = match[2].match(elementRegex) || []
+    const materialName = materialNames[materialId] || 'Unnamed Material' // Handle missing material name
 
+    const elements = match[2].match(elementRegex) || []
     for (const element of elements) {
       const elementId = element.replace('#', '')
-      elementToMaterial[elementId] = { materialId, materialName: materialNames[materialId] }
+      elementToMaterial[elementId] = { materialId, materialName }
     }
   }
 
@@ -243,10 +288,12 @@ function checkMaterialAssignments(content: string): PartialResult[] {
 
   for (const elementId in allElements) {
     if (Object.hasOwn(elementToMaterial, elementId)) {
-      allElements[elementId].passed = true
-      allElements[elementId].name = elementToMaterial[elementId].materialName
+      const materialName = elementToMaterial[elementId].materialName
+      allElements[elementId].passed = materialName !== 'Unnamed Material' // Fail if the material name is 'Unnamed Material'
+      allElements[elementId].name = materialName
     } else {
-      allElements[elementId].name = allElements[elementId].name || ''
+      allElements[elementId].name = 'No Material' // Explicitly state no material found
+      allElements[elementId].passed = false // Fail if no material is associated
     }
   }
 
@@ -722,8 +769,8 @@ export const rules: Rule[] = [
     name: 'type-name',
     regex:
       /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
-    process: ({ content, regex }) => checkTypeNames({ content, regex }),
-    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid type names
+    process: ({ content, regex }) => combineTypeNames({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all elements have valid type names
   },
   {
     name: 'material-name',
@@ -735,7 +782,7 @@ export const rules: Rule[] = [
   {
     name: 'predefined-type',
     regex:
-      /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^)]*?\.(?<predefinedType>[A-Z_]+)\.\);/gi,
+      /#(?<entityId>\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^)]*?\.(?<predefinedType>[A-Z_]+)\.\);/gi,
     process: ({ content, regex }) => checkPredefinedTypes({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if predefined types are not UNDEFINED
   },
@@ -745,5 +792,30 @@ export const rules: Rule[] = [
       /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content, regex }) => extractProxies({ content, regex }),
     check: (value) => ({ value, passed: null }), // Pass if all objects pass (no proxies found)
+  },
+  {
+    name: 'building-element-proxies',
+    regex: /#(?<entityId>\d+)=IFCBUILDINGELEMENTPROXY\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    process: ({ content, regex }) => {
+      const results: PartialResult[] = []
+      let match: RegExpExecArray | null
+
+      while ((match = regex.exec(content)) !== null) {
+        const globalId = match.groups!.globalId
+        const name = match.groups!.name
+        results.push({
+          globalId,
+          name,
+          passed: !!name && name.trim() !== '', // Ensure name exists and is not empty
+        })
+      }
+
+      return results
+    },
+    check: (value) => {
+      // Check if all `passed` are `true`, then set `passed: null` to avoid icon display
+      const allNamed = value.every((result) => result.passed)
+      return { value, passed: allNamed ? null : false }
+    },
   },
 ]

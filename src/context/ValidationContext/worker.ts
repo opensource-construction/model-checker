@@ -1,6 +1,8 @@
 import { rules } from './rules'
 import { Dispatch } from 'react'
 import { ValidationAction } from '@context'
+import { processIFCContent } from './processIFC'
+
 interface ReadInChunksProps {
   file: File
   dispatch: (message: object, options?: WindowPostMessageOptions) => void
@@ -13,7 +15,8 @@ interface CollectedData {
 }
 
 const collectStoreyData = (content: string, storeyData: { [key: string]: string }) => {
-  const relContainedRegex = /#(\d+)=IFCRELCONTAINEDINSPATIALSTRUCTURE\([^,]*,[^,]*,.*?,(\(#[^)]*\)),#(\d+)\);/gi
+  const relContainedRegex =
+    /#\s*(\d+)\s*=\s*IFCRELCONTAINEDINSPATIALSTRUCTURE\s*\(\s*[^,]*\s*,\s*[^,]*\s*,\s*.*?\s*,\s*(\([^)]*\))\s*,\s*#\s*(\d+)\s*\);/gi
   let match
   while ((match = relContainedRegex.exec(content)) !== null) {
     const entityList = match[2]
@@ -28,8 +31,9 @@ const collectStoreyData = (content: string, storeyData: { [key: string]: string 
 }
 
 const collectDataFromChunks = (collectedData: CollectedData, chunk: string) => {
-  collectedData.content.push(chunk)
-  collectStoreyData(chunk, collectedData.storeyData)
+  const sanitizedChunk = processIFCContent(chunk)
+  collectedData.content.push(sanitizedChunk)
+  collectStoreyData(sanitizedChunk, collectedData.storeyData)
 }
 
 const processCollectedData = (collectedData: CollectedData, dispatch: Dispatch<ValidationAction>, fileId: string) => {

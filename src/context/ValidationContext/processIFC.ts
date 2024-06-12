@@ -17,6 +17,10 @@ interface CombineResultsProps {
   isLastChunk: boolean
 }
 
+const sanitizeIFCContent = (content: string): string => {
+  return content.replace(/=\s+/g, '=') // Remove space right after '='
+}
+
 export const combineResults = ({ prevResults, newResults, isLastChunk }: CombineResultsProps): RuleResult[] => {
   const updatedResults =
     prevResults.length > 0
@@ -54,4 +58,8 @@ export const combineResults = ({ prevResults, newResults, isLastChunk }: Combine
   }
 
   return updatedResults
+}
+
+export const processIFCContent = (content: string): string => {
+  return sanitizeIFCContent(content)
 }

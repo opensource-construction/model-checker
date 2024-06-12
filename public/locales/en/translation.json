@@ -75,7 +75,7 @@
     "descriptions": "IFC Object Description used",
     "material-names": "IFC Object MaterialName used",
     "predefined-types": "IFC Object Predefined Type used",
-    "building-element-proxies": "IFC BuildingElementProxy Name used"
+    "building-element-proxies": "Do all BuildingElementProxy have a Name?"
   },
   "sponsored-by": "Sponsored by:",
   "open-source": "Open source at:",
