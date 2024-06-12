@@ -21,43 +21,43 @@ export const processFile = async (props: processFileProps) => {
 
 // Function to sanitize IFC content
 const sanitizeIFCContent = (content: string): string => {
-  return content.replace(/=\s+/g, '='); // Remove space right after '='
-};
+  return content.replace(/=\s+/g, '=') // Remove space right after '='
+}
 
 // Function to extract author and export date
-const getAuthorAndExported = async (file: File): Promise<{ author: string | null, exported: string | null }> => {
+const getAuthorAndExported = async (file: File): Promise<{ author: string | null; exported: string | null }> => {
   // Assume author and exported are in the first 64kB of the file
-  const fileSlice = file.slice(0, 1024 * 64);
-  const chunk = await fileSlice.text();
+  const fileSlice = file.slice(0, 1024 * 64)
+  const chunk = await fileSlice.text()
 
   // Sanitize the chunk to remove spaces after '='
-  const sanitizedChunk = sanitizeIFCContent(chunk);
+  const sanitizedChunk = sanitizeIFCContent(chunk)
 
   // Extract the person and organization IDs from IFCPERSONANDORGANIZATION
-  const personOrgMatch = sanitizedChunk.match(/\d+=IFCPERSONANDORGANIZATION\(#(\d+),#(\d+)/);
-  const personId = personOrgMatch ? personOrgMatch[1] : null;
-  const organizationId = personOrgMatch ? personOrgMatch[2] : null;
+  const personOrgMatch = sanitizedChunk.match(/\d+=IFCPERSONANDORGANIZATION\(#(\d+),#(\d+)/)
+  const personId = personOrgMatch ? personOrgMatch[1] : null
+  const organizationId = personOrgMatch ? personOrgMatch[2] : null
 
-  let author: string | null = null;
+  let author: string | null = null
 
   if (personId && organizationId) {
     // Extract second attribute for personId
-    const personRegex = new RegExp(`#${personId}=IFCPERSON\\([^,]*,'([^']*)'`, 'i');
-    const personMatch = sanitizedChunk.match(personRegex);
-    const personName = personMatch ? personMatch[1] : null;
+    const personRegex = new RegExp(`#${personId}=IFCPERSON\\([^,]*,'([^']*)'`, 'i')
+    const personMatch = sanitizedChunk.match(personRegex)
+    const personName = personMatch ? personMatch[1] : null
 
     // Extract second attribute for organizationId
-    const organizationRegex = new RegExp(`#${organizationId}=IFCORGANIZATION\\([^,]*,'([^']*)'`, 'i');
-    const orgMatch = sanitizedChunk.match(organizationRegex);
-    const organizationName = orgMatch ? orgMatch[1] : null;
+    const organizationRegex = new RegExp(`#${organizationId}=IFCORGANIZATION\\([^,]*,'([^']*)'`, 'i')
+    const orgMatch = sanitizedChunk.match(organizationRegex)
+    const organizationName = orgMatch ? orgMatch[1] : null
 
     // Combine personName and organizationName
-    author = [personName, organizationName].filter(Boolean).join(', ');
+    author = [personName, organizationName].filter(Boolean).join(', ')
   }
 
   // Extract exported date
-  const exportedMatch = sanitizedChunk.match(/FILE_NAME\('[^']+','([^']+)'/);
-  const exported = exportedMatch ? exportedMatch[1] : null;
+  const exportedMatch = sanitizedChunk.match(/FILE_NAME\('[^']+','([^']+)'/)
+  const exported = exportedMatch ? exportedMatch[1] : null
 
-  return { author, exported };
-};
+  return { author, exported }
+}

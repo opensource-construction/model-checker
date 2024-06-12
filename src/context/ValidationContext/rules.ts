@@ -735,7 +735,7 @@ export const rules: Rule[] = [
   {
     name: 'predefined-type',
     regex:
-      /#(?<entityId>\d+)=IFC(WALLSTANDARDCASE|DOOR|WINDOW|SLAB|COLUMN|BEAM|BUILDINGELEMENTPROXY|JUNCTIONBOX|DUCTSEGMENT)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^)]*?\.(?<predefinedType>[A-Z_]+)\.\);/gi,
+      /#(?<entityId>\d+)=IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^)]*?\.(?<predefinedType>[A-Z_]+)\.\);/gi,
     process: ({ content, regex }) => checkPredefinedTypes({ content, regex }),
     check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if predefined types are not UNDEFINED
   },
@@ -745,5 +745,30 @@ export const rules: Rule[] = [
       /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('([^']+)',#[^,]+,'([^']*)'/gi,
     process: ({ content, regex }) => extractProxies({ content, regex }),
     check: (value) => ({ value, passed: null }), // Pass if all objects pass (no proxies found)
+  },
+  {
+    name: 'building-element-proxies',
+    regex: /#(?<entityId>\d+)=IFCBUILDINGELEMENTPROXY\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi,
+    process: ({ content, regex }) => {
+      const results: PartialResult[] = []
+      let match: RegExpExecArray | null
+
+      while ((match = regex.exec(content)) !== null) {
+        const globalId = match.groups!.globalId
+        const name = match.groups!.name
+        results.push({
+          globalId,
+          name,
+          passed: !!name && name.trim() !== '', // Ensure name exists and is not empty
+        })
+      }
+
+      return results
+    },
+    check: (value) => {
+      // Check if all `passed` are `true`, then set `passed: null` to avoid icon display
+      const allNamed = value.every((result) => result.passed)
+      return { value, passed: allNamed ? null : false }
+    },
   },
 ]

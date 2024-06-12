@@ -18,8 +18,8 @@ interface CombineResultsProps {
 }
 
 const sanitizeIFCContent = (content: string): string => {
-  return content.replace(/=\s+/g, '='); // Remove space right after '='
-};
+  return content.replace(/=\s+/g, '=') // Remove space right after '='
+}
 
 export const combineResults = ({ prevResults, newResults, isLastChunk }: CombineResultsProps): RuleResult[] => {
   const updatedResults =
@@ -61,5 +61,5 @@ export const combineResults = ({ prevResults, newResults, isLastChunk }: Combine
 }
 
 export const processIFCContent = (content: string): string => {
-  return sanitizeIFCContent(content);
-};
+  return sanitizeIFCContent(content)
+}

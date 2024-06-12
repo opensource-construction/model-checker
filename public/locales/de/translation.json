@@ -74,7 +74,7 @@
     "descriptions": "Welche Beschreibungen wurden verwendet?",
     "material-names": "Welche Materialnamen wurden verwendet?",
     "predefined-types": "Welche PredefinedType wurden verwendet?",
-    "building-element-proxies": "Welche IfcBuildingElementProxy Namen wurden verwendet?"
+    "building-element-proxies": "Haben alle BuildingElementProxy einen Namen?"
   },
   "sponsored-by": "Gesponsert von:",
   "open-source": "Open Source auf:",

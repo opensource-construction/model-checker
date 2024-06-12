@@ -1,7 +1,7 @@
 import { rules } from './rules'
 import { Dispatch } from 'react'
 import { ValidationAction } from '@context'
-import { processIFCContent } from './processIFC';
+import { processIFCContent } from './processIFC'
 
 interface ReadInChunksProps {
   file: File
@@ -15,7 +15,8 @@ interface CollectedData {
 }
 
 const collectStoreyData = (content: string, storeyData: { [key: string]: string }) => {
-  const relContainedRegex = /#\s*(\d+)\s*=\s*IFCRELCONTAINEDINSPATIALSTRUCTURE\s*\(\s*[^,]*\s*,\s*[^,]*\s*,\s*.*?\s*,\s*(\([^)]*\))\s*,\s*#\s*(\d+)\s*\);/gi;
+  const relContainedRegex =
+    /#\s*(\d+)\s*=\s*IFCRELCONTAINEDINSPATIALSTRUCTURE\s*\(\s*[^,]*\s*,\s*[^,]*\s*,\s*.*?\s*,\s*(\([^)]*\))\s*,\s*#\s*(\d+)\s*\);/gi
   let match
   while ((match = relContainedRegex.exec(content)) !== null) {
     const entityList = match[2]
@@ -30,10 +31,10 @@ const collectStoreyData = (content: string, storeyData: { [key: string]: string 
 }
 
 const collectDataFromChunks = (collectedData: CollectedData, chunk: string) => {
-  const sanitizedChunk = processIFCContent(chunk);
-  collectedData.content.push(sanitizedChunk);
-  collectStoreyData(sanitizedChunk, collectedData.storeyData);
-};
+  const sanitizedChunk = processIFCContent(chunk)
+  collectedData.content.push(sanitizedChunk)
+  collectStoreyData(sanitizedChunk, collectedData.storeyData)
+}
 
 const processCollectedData = (collectedData: CollectedData, dispatch: Dispatch<ValidationAction>, fileId: string) => {
   const fullContent = collectedData.content.join('')
