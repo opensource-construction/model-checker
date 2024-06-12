@@ -1,10 +1,11 @@
 import { PartialResult } from './interfaces.ts'
 
 interface ProcessContentChunkProps {
-  content: string
-  regex: RegExp
-  storeyData?: { [key: string]: string }
-  typeRelations?: { [key: string]: string }
+  content: string;
+  regex: RegExp;
+  storeyData?: { [key: string]: string };
+  typeRelations?: { [key: string]: string };
+  relatedTypeNames?: { [key: string]: string };
 }
 
 interface Rule {
@@ -177,36 +178,80 @@ function checkDescriptions({
   return results
 }
 
-function checkTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
-  const results: PartialResult[] = []
-  let match: RegExpExecArray | null
+function extractDirectTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const results: PartialResult[] = [];
+  let match: RegExpExecArray | null;
 
   while ((match = regex.exec(content)) !== null) {
-    const { globalId, type } = match.groups!
-    const validType = type.trim() !== '' && type !== '-'
-    const passed = validType && type !== '$' // Ensure type name is valid
+    const globalId = match.groups!.globalId;
+    const name = match.groups!.name || 'Unnamed';
     results.push({
       globalId,
-      name: `${type}`,
-      passed,
-    })
+      name,
+      passed: !!name,
+    });
   }
 
-  // Ensure all elements are checked even if no type name is found
-  for (const match of content.matchAll(regex)) {
-    const { globalId, type } = match.groups!
-    const validType = type.trim() !== '' && type !== '-'
-    if (!results.some((result) => result.globalId === globalId)) {
-      results.push({
-        globalId,
-        name: `${type}`,
-        passed: validType && type !== '$' && type.trim() !== '', // Ensure type name is valid
-      })
-    }
-  }
-
-  return results
+  return results;
 }
+
+function extractRelatedTypeNames({
+  content,
+  relatedTypeNames = {},
+  typeRelations = {},
+}: ProcessContentChunkProps): PartialResult[] {
+  const relDefinesByTypeRegex = /#(?<relId>\d+)=IFCRELDEFINESBYTYPE\('[^']*',#\d+,\$,\$,\((?<relatedEntities>#\d+(?:,#\d+)*)\),#(?<relatedType>\d+)\);/gi;
+  const typeRegex = /#(?<typeId>\d+)=IFC[A-Z0-9]+\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi;
+  let match: RegExpExecArray | null;
+
+  // First, populate typeRelations with actual type names
+  while ((match = typeRegex.exec(content)) !== null) {
+    const typeId = match.groups!.typeId;
+    const typeName = match.groups!.name;
+    typeRelations[typeId] = typeName;
+  }
+
+  // Then process relationships to gather related type names
+  while ((match = relDefinesByTypeRegex.exec(content)) !== null) {
+    const relatedEntities = match.groups!.relatedEntities?.match(/#(\d+)/g) || [];
+    const relatedTypeId = match.groups!.relatedType;
+
+    relatedEntities.forEach((entity) => {
+      const entityId = entity.replace('#', '');
+      relatedTypeNames[entityId] = typeRelations[relatedTypeId] || 'Unknown';
+    });
+  }
+
+  return Object.keys(relatedTypeNames).map((entityId) => ({
+    globalId: entityId,
+    name: relatedTypeNames[entityId] || '',
+    passed: true,
+  }));
+}
+
+function combineTypeNames({
+  content,
+  regex,
+}: ProcessContentChunkProps): PartialResult[] {
+  const directTypeResults = extractDirectTypeNames({ content, regex });
+  const relatedTypeResults = extractRelatedTypeNames({ content, regex });
+
+  // Combine results, avoiding duplicates
+  const combinedResults: { [key: string]: PartialResult } = {};
+  [...directTypeResults, ...relatedTypeResults].forEach((result) => {
+    const globalId = result.globalId || ''; // Ensure globalId is not undefined
+    if (!combinedResults[globalId]) {
+      combinedResults[globalId] = result;
+    } else {
+      // Prefer related type name if available
+      combinedResults[globalId].name = combinedResults[globalId].name || result.name;
+    }
+  });
+
+  return Object.values(combinedResults);
+}
+
+
 function getElementsWithMaterialAssociations(content: string): {
   [key: string]: { materialId: string; materialName: string }
 } {
@@ -722,8 +767,8 @@ export const rules: Rule[] = [
     name: 'type-name',
     regex:
       /IFC(AIRTERMINAL|ALARM|BEAM|CABLECARRIERFITTING|CABLECARRIERSEGMENT|COLUMN|COVERING|CURTAINWALL|DAMPER|DOOR|DUCTFITTING|DUCTSEGMENT|DUCTSILENCER|ELECTRICAPPLIANCE|ELECTRICDISTRIBUTIONBOARD|FAN|FIRESUPPRESSIONTERMINAL|FLOWMETER|FLOWSEGMENT|FOOTING|JUNCTIONBOX|LIGHTFIXTURE|MEMBER|OUTLET|PILE|PIPEFITTING|PIPESEGMENT|PUMP|RAILING|RAMPFLIGHT|SLAB|STAIRFLIGHT|SWITCHINGDEVICE|SYSTEMFURNITUREELEMENT|TANK|VALVE|WALL|WASTETERMINAL|WINDOW|WALLSTANDARDCASE|BUILDINGELEMENTPROXY)\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)',[^,]*,'(?<type>[^']*)'/gi,
-    process: ({ content, regex }) => checkTypeNames({ content, regex }),
-    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all objects have valid type names
+    process: ({ content, regex }) => combineTypeNames({ content, regex }),
+    check: (value) => ({ value, passed: value.every((result) => result.passed) }), // Pass if all elements have valid type names
   },
   {
     name: 'material-name',
