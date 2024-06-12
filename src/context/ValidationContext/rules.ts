@@ -1,11 +1,11 @@
 import { PartialResult } from './interfaces.ts'
 
 interface ProcessContentChunkProps {
-  content: string;
-  regex: RegExp;
-  storeyData?: { [key: string]: string };
-  typeRelations?: { [key: string]: string };
-  relatedTypeNames?: { [key: string]: string };
+  content: string
+  regex: RegExp
+  storeyData?: { [key: string]: string }
+  typeRelations?: { [key: string]: string }
+  relatedTypeNames?: { [key: string]: string }
 }
 
 interface Rule {
@@ -179,20 +179,20 @@ function checkDescriptions({
 }
 
 function extractDirectTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
-  const results: PartialResult[] = [];
-  let match: RegExpExecArray | null;
+  const results: PartialResult[] = []
+  let match: RegExpExecArray | null
 
   while ((match = regex.exec(content)) !== null) {
-    const globalId = match.groups!.globalId;
-    const name = match.groups!.name || 'Unnamed';
+    const globalId = match.groups!.globalId
+    const name = match.groups!.name || 'Unnamed'
     results.push({
       globalId,
       name,
       passed: !!name,
-    });
+    })
   }
 
-  return results;
+  return results
 }
 
 function extractRelatedTypeNames({
@@ -200,57 +200,54 @@ function extractRelatedTypeNames({
   relatedTypeNames = {},
   typeRelations = {},
 }: ProcessContentChunkProps): PartialResult[] {
-  const relDefinesByTypeRegex = /#(?<relId>\d+)=IFCRELDEFINESBYTYPE\('[^']*',#\d+,\$,\$,\((?<relatedEntities>#\d+(?:,#\d+)*)\),#(?<relatedType>\d+)\);/gi;
-  const typeRegex = /#(?<typeId>\d+)=IFC[A-Z0-9]+\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi;
-  let match: RegExpExecArray | null;
+  const relDefinesByTypeRegex =
+    /#(?<relId>\d+)=IFCRELDEFINESBYTYPE\('[^']*',#\d+,\$,\$,\((?<relatedEntities>#\d+(?:,#\d+)*)\),#(?<relatedType>\d+)\);/gi
+  const typeRegex = /#(?<typeId>\d+)=IFC[A-Z0-9]+\('(?<globalId>[^']+)',#[^,]+,'(?<name>[^']*)'/gi
+  let match: RegExpExecArray | null
 
   // First, populate typeRelations with actual type names
   while ((match = typeRegex.exec(content)) !== null) {
-    const typeId = match.groups!.typeId;
-    const typeName = match.groups!.name;
-    typeRelations[typeId] = typeName;
+    const typeId = match.groups!.typeId
+    const typeName = match.groups!.name
+    typeRelations[typeId] = typeName
   }
 
   // Then process relationships to gather related type names
   while ((match = relDefinesByTypeRegex.exec(content)) !== null) {
-    const relatedEntities = match.groups!.relatedEntities?.match(/#(\d+)/g) || [];
-    const relatedTypeId = match.groups!.relatedType;
+    const relatedEntities = match.groups!.relatedEntities?.match(/#(\d+)/g) || []
+    const relatedTypeId = match.groups!.relatedType
 
     relatedEntities.forEach((entity) => {
-      const entityId = entity.replace('#', '');
-      relatedTypeNames[entityId] = typeRelations[relatedTypeId] || 'Unknown';
-    });
+      const entityId = entity.replace('#', '')
+      relatedTypeNames[entityId] = typeRelations[relatedTypeId] || 'Unknown'
+    })
   }
 
   return Object.keys(relatedTypeNames).map((entityId) => ({
     globalId: entityId,
     name: relatedTypeNames[entityId] || '',
     passed: true,
-  }));
+  }))
 }
 
-function combineTypeNames({
-  content,
-  regex,
-}: ProcessContentChunkProps): PartialResult[] {
-  const directTypeResults = extractDirectTypeNames({ content, regex });
-  const relatedTypeResults = extractRelatedTypeNames({ content, regex });
+function combineTypeNames({ content, regex }: ProcessContentChunkProps): PartialResult[] {
+  const directTypeResults = extractDirectTypeNames({ content, regex })
+  const relatedTypeResults = extractRelatedTypeNames({ content, regex })
 
   // Combine results, avoiding duplicates
-  const combinedResults: { [key: string]: PartialResult } = {};
-  [...directTypeResults, ...relatedTypeResults].forEach((result) => {
-    const globalId = result.globalId || ''; // Ensure globalId is not undefined
+  const combinedResults: { [key: string]: PartialResult } = {}
+  ;[...directTypeResults, ...relatedTypeResults].forEach((result) => {
+    const globalId = result.globalId || '' // Ensure globalId is not undefined
     if (!combinedResults[globalId]) {
-      combinedResults[globalId] = result;
+      combinedResults[globalId] = result
     } else {
       // Prefer related type name if available
-      combinedResults[globalId].name = combinedResults[globalId].name || result.name;
+      combinedResults[globalId].name = combinedResults[globalId].name || result.name
     }
-  });
+  })
 
-  return Object.values(combinedResults);
+  return Object.values(combinedResults)
 }
-
 
 function getElementsWithMaterialAssociations(content: string): {
   [key: string]: { materialId: string; materialName: string }
@@ -263,19 +260,22 @@ function getElementsWithMaterialAssociations(content: string): {
   let match: RegExpExecArray | null
   const materialNames: { [key: string]: string } = {}
 
+  // Populate material names
   while ((match = materialNameRegex.exec(content)) !== null) {
     const materialId = match[1]
-    const materialName = match[2]
+    const materialName = match[2].trim() || 'Unnamed Material' // Default to 'Unnamed Material' if empty
     materialNames[materialId] = materialName
   }
 
+  // Map elements to materials
   while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
     const materialId = match[3]
-    const elements = match[2].match(elementRegex) || []
+    const materialName = materialNames[materialId] || 'Unnamed Material' // Handle missing material name
 
+    const elements = match[2].match(elementRegex) || []
     for (const element of elements) {
       const elementId = element.replace('#', '')
-      elementToMaterial[elementId] = { materialId, materialName: materialNames[materialId] }
+      elementToMaterial[elementId] = { materialId, materialName }
     }
   }
 
@@ -288,10 +288,12 @@ function checkMaterialAssignments(content: string): PartialResult[] {
 
   for (const elementId in allElements) {
     if (Object.hasOwn(elementToMaterial, elementId)) {
-      allElements[elementId].passed = true
-      allElements[elementId].name = elementToMaterial[elementId].materialName
+      const materialName = elementToMaterial[elementId].materialName
+      allElements[elementId].passed = materialName !== 'Unnamed Material' // Fail if the material name is 'Unnamed Material'
+      allElements[elementId].name = materialName
     } else {
-      allElements[elementId].name = allElements[elementId].name || ''
+      allElements[elementId].name = 'No Material' // Explicitly state no material found
+      allElements[elementId].passed = false // Fail if no material is associated
     }
   }
 
