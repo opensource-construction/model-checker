@@ -250,34 +250,47 @@ function combineTypeNames({ content, regex }: ProcessContentChunkProps): Partial
 }
 
 function getElementsWithMaterialAssociations(content: string): {
-  [key: string]: { materialId: string; materialName: string }
+  [key: string]: { materialId: string; materialName: string }[]
 } {
   const relAssociatesMaterialRegex = /#(\d+)=IFCRELASSOCIATESMATERIAL\([^,]*,[^,]*,.*?,\(([^)]*)\),#(\d+)\);/g
   const elementRegex = /#(\d+)/g
   const materialNameRegex = /#(\d+)=IFCMATERIAL\('([^']*)'/g
-  const elementToMaterial: { [key: string]: { materialId: string; materialName: string } } = {}
+  const elementToMaterial: { [key: string]: { materialId: string; materialName: string }[] } = {}
+  const materialNames: { [key: string]: string } = {}
 
   let match: RegExpExecArray | null
-  const materialNames: { [key: string]: string } = {}
+
+  console.log('Starting to populate material names...')
 
   // Populate material names
   while ((match = materialNameRegex.exec(content)) !== null) {
     const materialId = match[1]
     const materialName = match[2].trim() || 'Unnamed Material' // Default to 'Unnamed Material' if empty
     materialNames[materialId] = materialName
+    console.log(`Found material: ID=${materialId}, Name=${materialName}`)
   }
+
+  console.log('Starting to map elements to materials...')
 
   // Map elements to materials
   while ((match = relAssociatesMaterialRegex.exec(content)) !== null) {
     const materialId = match[3]
     const materialName = materialNames[materialId] || 'Unnamed Material' // Handle missing material name
 
+    console.log(`Processing relation: Material ID=${materialId}, Material Name=${materialName}`)
+
     const elements = match[2].match(elementRegex) || []
     for (const element of elements) {
       const elementId = element.replace('#', '')
-      elementToMaterial[elementId] = { materialId, materialName }
+      if (!elementToMaterial[elementId]) {
+        elementToMaterial[elementId] = []
+      }
+      elementToMaterial[elementId].push({ materialId, materialName })
+      console.log(`Mapped element: ID=${elementId} to Material ID=${materialId}, Name=${materialName}`)
     }
   }
+
+  console.log('Final element to material mapping:', JSON.stringify(elementToMaterial, null, 2))
 
   return elementToMaterial
 }
@@ -288,9 +301,10 @@ function checkMaterialAssignments(content: string): PartialResult[] {
 
   for (const elementId in allElements) {
     if (Object.hasOwn(elementToMaterial, elementId)) {
-      const materialName = elementToMaterial[elementId].materialName
-      allElements[elementId].passed = materialName !== 'Unnamed Material' // Fail if the material name is 'Unnamed Material'
-      allElements[elementId].name = materialName
+      const materials = elementToMaterial[elementId]
+      const passed = materials.every((material) => material.materialName !== 'Unnamed Material')
+      allElements[elementId].passed = passed
+      allElements[elementId].name = materials.map((material) => material.materialName).join(', ')
     } else {
       allElements[elementId].name = 'No Material' // Explicitly state no material found
       allElements[elementId].passed = false // Fail if no material is associated
