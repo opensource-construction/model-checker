@@ -23,6 +23,7 @@
     "@mantine/dropzone": "^7.10.0",
     "@mantine/hooks": "^7.10.0",
     "@tabler/icons-react": "^3.5.0",
+    "comlink": "^4.4.1",
     "i18next": "^23.11.4",
     "i18next-browser-languagedetector": "^8.0.0",
     "i18next-http-backend": "^2.5.2",
@@ -31,7 +32,9 @@
     "react-i18next": "^14.1.1",
     "react-router-dom": "^6.23.0",
     "react-to-print": "^2.15.1",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "web-ifc": "^0.0.51",
+    "web-ifc-three": "^0.0.125"
   },
   "devDependencies": {
     "@testing-library/react": "^15.0.7",
