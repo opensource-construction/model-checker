@@ -21,56 +21,46 @@ export const theme = createTheme({
     xl: '88em',
     xxl: '120em',
   },
-  defaultRadius: '0',
+  defaultRadius: rem(4),  // Slight default rounding
   primaryColor: 'yellow',
-  primaryShade: 6,
+  primaryShade: 5,
   colors: {
     yellow: [
-      '#ffffe2',
-      '#fffccc',
-      '#fff89b',
-      '#fff464',
-      '#fff139',
-      '#ffef1d',
-      '#ffee09',
-      '#e3d300',
-      '#c9bb00',
-      '#ada100',
+      '#fff9d9',
+      '#fff7cc',
+      '#fff4b0',
+      '#fff193',
+      '#ffee76',
+      '#ffee09',  // Primary yellow
+      '#e6d608',
+      '#ccbe07',
+      '#b3a706',
+      '#999005',
     ],
-    blue: [
-      '#eaeaff',
-      '#cfd0ff',
-      '#9c9cff',
-      '#6464ff',
-      '#3736fe',
-      '#1b19fe',
-      '#0909ff',
-      '#0000e4',
-      '#0000cc',
-      '#0000b4',
+    dark: [
+      '#C1C2C5',
+      '#A6A7AB',
+      '#909296',
+      '#5c5f66',
+      '#373A40',
+      '#2C2E33',
+      '#1a1b26',  // Tokyo Night dark background
+      '#24283b',  // Tokyo Night secondary background
+      '#16161e',  // Tokyo Night darker shade
+      '#13131a',  // Tokyo Night darkest shade
     ],
-    violet: [
-      '#ffe9ff',
-      '#ffd0ff',
-      '#fc9efc',
-      '#fa6afa',
-      '#f83ef8',
-      '#f824f8',
-      '#f715f7',
-      '#dd06dd',
-      '#c500c5',
-      '#ac00ad',
-    ],
-  },
-  other: {
-    backgroundColor: '#fafbff',
   },
   components: {
     Button: Button.extend({
       defaultProps: {
-        variant: 'filled',
-        autoContrast: true,
+        color: 'yellow',
       },
     }),
+    Paper: {
+      defaultProps: {
+        p: 'md',  // Default padding for all Paper components (including cards)
+        radius: 'sm',  // Slight rounding
+      },
+    },
   },
 })

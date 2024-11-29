@@ -187,7 +187,7 @@ export const UploadCard = () => {
   const [processingLogs, setProcessingLogs] = useState<string[]>([])
 
   const addLog = (message: string) => {
-    setProcessingLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
+    setProcessingLogs(prev => [...prev, message])
   }
 
   useEffect(() => {
@@ -229,8 +229,10 @@ export const UploadCard = () => {
 
         const result = await new Promise((resolve, reject) => {
           worker.onmessage = (event) => {
-            if (event.data.error) {
-              reject(new Error(event.data.error))
+            if (event.data.type === 'progress') {
+              addLog(event.data.message)
+            } else if (event.data.type === 'error') {
+              reject(new Error(event.data.message))
             } else if (event.data.result) {
               resolve(event.data.result)
             } else {

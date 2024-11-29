@@ -5,28 +5,36 @@ let pyodide
 
 async function initPyodide() {
     try {
-      console.debug('Loading Pyodide...')
+      self.postMessage({ type: 'progress', message: 'Loading Pyodide...' })
       pyodide = await loadPyodide({
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/',
         memory: 1024 * 1024 * 1024,
       })
   
+      self.postMessage({ type: 'progress', message: 'Setting up package manager...' })
       await pyodide.loadPackage(['micropip'])
       
+      self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' })
       await pyodide.runPythonAsync(`
         import micropip
-        print("Installing IfcOpenShell WASM version...")
         await micropip.install('https://ifcopenshell.github.io/wasm-preview/IfcOpenShell-0.7.0-py3-none-any.whl')
-        print("Installing ifctester...")
+      `)
+
+      self.postMessage({ type: 'progress', message: 'Installing IFC validation tools...' })
+      await pyodide.runPythonAsync(`
         await micropip.install('ifctester')
-        print("Installing pystache...")
+      `)
+
+      self.postMessage({ type: 'progress', message: 'Installing template engine...' })
+      await pyodide.runPythonAsync(`
         await micropip.install('pystache')
       `)
   
-      console.debug('All packages installed successfully')
+      self.postMessage({ type: 'progress', message: 'Setup complete!' })
       return true
     } catch (error) {
       console.error('Failed to load Pyodide:', error)
+      self.postMessage({ type: 'error', message: `Failed to load Pyodide: ${error.message}` })
       throw new Error(`Failed to load Pyodide: ${error.message}`)
     }
 }
