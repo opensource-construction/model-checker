@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button, Divider, Group, rem, Stack, Text, Switch, Progress, Alert, Modal, Loader, Center, Paper, Grid, SimpleGrid, Title, ScrollArea, Code } from '@mantine/core'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
 import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
+import { useNavigate } from 'react-router-dom'
+import { useValidationContext } from '@context'
+import { processFile } from './processFile.ts'
 
 interface FileError {
   code: string
@@ -80,14 +83,14 @@ const ValidationResultsModal = ({ opened, onClose, results }: ValidationResultsM
                     <Stack spacing="xs">
                       <Group position="apart">
                         <Text weight={700} size="lg">{spec.name}</Text>
-                        <Text 
+                        <Text
                           weight={700}
                           color={spec.status === true ? "green" : "red"}
                         >
                           {spec.status ? "True" : "False"}
                         </Text>
                       </Group>
-                      
+
                       {spec.description && (
                         <Text size="sm">{spec.description}</Text>
                       )}
@@ -99,10 +102,10 @@ const ValidationResultsModal = ({ opened, onClose, results }: ValidationResultsM
                           if (req.description) {
                             reqText = req.description;
                           } else if (req.type === 'Property') {
-                            const constraints = req.value && typeof req.value === 'object' 
+                            const constraints = req.value && typeof req.value === 'object'
                               ? Object.entries(req.value)
-                                  .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-                                  .join(', ')
+                                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+                                .join(', ')
                               : '';
                             reqText = `${req.propertyName || ''} ${constraints}`;
                           }
@@ -114,7 +117,7 @@ const ValidationResultsModal = ({ opened, onClose, results }: ValidationResultsM
                           <Group key={reqIndex} position="apart" spacing="xl">
                             <Text size="sm" style={{ flex: 1 }}>{reqText}</Text>
                             {req.status !== undefined && (
-                              <Text 
+                              <Text
                                 weight={500}
                                 color={req.status === true ? "green" : "red"}
                                 size="sm"
@@ -168,6 +171,8 @@ const ValidationResultsModal = ({ opened, onClose, results }: ValidationResultsM
 };
 
 export const UploadCard = () => {
+  const navigate = useNavigate()
+  const { dispatch } = useValidationContext()
   const [ifcFiles, setIfcFiles] = useState<File[]>([])
   const [idsFile, setIdsFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<FileError[] | null>(null)
@@ -236,10 +241,10 @@ export const UploadCard = () => {
           worker.onerror = (error) => {
             reject(new Error(error.message || 'Unknown worker error'))
           }
-          
-          worker.postMessage({ 
-            arrayBuffer, 
-            idsContent: currentIdsContent 
+
+          worker.postMessage({
+            arrayBuffer,
+            idsContent: currentIdsContent
           })
         })
 
@@ -249,12 +254,12 @@ export const UploadCard = () => {
         const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''
         const errorMessage = `Error processing ${file.name}: ${error.message || 'Unknown error'}${errorDetails}`
         setUploadError(errorMessage)
-        results.push({ 
-          fileName: file.name, 
-          result: { 
+        results.push({
+          fileName: file.name,
+          result: {
             error: error.message,
             details: error.details
-          } 
+          }
         })
       }
     }
@@ -274,7 +279,11 @@ export const UploadCard = () => {
       await processFiles(ifcFiles, idsFile)
     } else {
       if (!ifcFiles.length) return
-      await processFiles(ifcFiles, null)
+      // Use standard validation for each file
+      ifcFiles.forEach((file) => {
+        processFile({ file, dispatch, fileId: file.name })
+      })
+      navigate('/results')
     }
 
     // Clear files after processing
@@ -346,7 +355,7 @@ export const UploadCard = () => {
               </Text>
               <Text size='sm'>{t('upload-description.4')}</Text>
             </Stack>
-            
+
             {isIdsValidation ? (
               <Stack maw={650}>
                 <Grid gutter="md" style={{ width: '100%' }}>
@@ -504,9 +513,9 @@ export const UploadCard = () => {
                 <Text size='sm' color='dimmed'>
                   {Math.round(uploadProgress)}% complete
                 </Text>
-                <Paper withBorder p="xs" style={{ 
-                  width: '100%', 
-                  maxHeight: '200px', 
+                <Paper withBorder p="xs" style={{
+                  width: '100%',
+                  maxHeight: '200px',
                   overflowY: 'auto',
                   backgroundColor: '#1e1e1e',
                   fontFamily: 'monospace'
