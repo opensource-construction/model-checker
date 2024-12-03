@@ -324,8 +324,29 @@ try:
     # Add schema identifier to file object
     ifc.schema_identifier = schema_version
     
-    # Basic statistics
+    # Parse IDS content to get target schema version
+    import xml.etree.ElementTree as ET
+    ids_root = ET.fromstring(idsContent)
+    ids_version = ids_root.get('ifcVersion', 'IFC4')  # Default to IFC4 if not specified
+    
+    # Check version compatibility
+    version_compatible = False
+    if isinstance(ids_version, str):
+        # Handle multiple versions separated by spaces
+        target_versions = ids_version.split()
+        version_compatible = schema_version in target_versions
+    else:
+        version_compatible = schema_version == ids_version
+    
+    logger.info(f"IFC Schema Version: {schema_version}")
+    logger.info(f"IDS Target Version(s): {ids_version}")
+    logger.info(f"Version Compatible: {version_compatible}")
+    
+    # Add version info to stats
     stats = {
+        'schema_version': schema_version,
+        'ids_version': ids_version,
+        'version_compatible': version_compatible,
         'total_entities': len(list(ifc)),
         'products': len(list(ifc.by_type('IfcProduct'))),
         'walls': len(list(ifc.by_type('IfcWall'))),
@@ -352,8 +373,17 @@ try:
     for i, spec in enumerate(validator.specifications):
         logger.debug(f"Specification {i+1}: {spec.name}")
     
-    # Perform validation with schema filtering disabled
-    validation_result = validator.validate(ifc, should_filter_version=False)
+    # Perform validation with version compatibility check
+    if version_compatible:
+        validation_result = validator.validate(ifc, should_filter_version=False)
+    else:
+        logger.warning(f"Schema version mismatch: IFC file is {schema_version} but IDS requires {ids_version}")
+        # Create a dummy validation result for incompatible versions
+        validation_result = {
+            'status': 'version_mismatch',
+            'specifications': [],
+            'message': f"Schema version mismatch: IFC file is {schema_version} but IDS requires {ids_version}. Some validations may fail or be skipped."
+        }
     
     # Clean up temporary file
     try:
@@ -401,23 +431,30 @@ try:
             .header h1 {{
                 margin: 0;
                 font-size: 24px;
+                text-align: center;
+                margin-bottom: 20px;
+            }}
+            .header-content {{
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }}
+            .header-section {{
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+            }}
+            .header-section h2 {{
+                margin: 0 0 10px 0;
+                font-size: 18px;
+                color: #ecf0f1;
             }}
             .meta-info {{
                 font-size: 14px;
                 color: #ecf0f1;
-                margin-top: 10px;
             }}
-            .summary-stats {{
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 20px;
-                margin-bottom: 30px;
-            }}
-            .stat-box {{
-                background: white;
-                border-radius: 4px;
-                padding: 20px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            .meta-info div {{
+                margin-bottom: 5px;
             }}
             .specification {{
                 background: white;
@@ -604,36 +641,38 @@ try:
     <body>
         <div class="header">
             <h1>IFC Model Checker Report</h1>
-            <button id="print-button" class="print-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
-                </svg>
-                Print Report
-            </button>
-            <div class="meta-info">
-                <div>Schema Version: {ifc.schema}</div>
-                <div>Validation Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
-                <div>File: {ifc_path if 'ifc_path' in locals() else 'Uploaded File'}</div>
-            </div>
-        </div>
-        
-        <div class="summary-stats">
-            <div class="stat-box">
-                <h2>Model Statistics</h2>
-                <div>Total Entities: {stats['total_entities']}</div>
-                <div>Products: {stats['products']}</div>
-                <div>Walls: {stats['walls']}</div>
-                <div>Spaces: {stats['spaces']}</div>
-                <div>Storeys: {stats['storeys']}</div>
-            </div>
-            
-            <div class="stat-box">
-                <h2>Validation Summary</h2>
-                <div>Total Specifications: {validation_results['total_specifications']}</div>
-                <div>Total Checks: {validation_results['total_checks']}</div>
-                <div style="color: #2ecc71">Passed: {validation_results['total_checks_pass']}</div>
-                <div style="color: #e74c3c">Failed: {validation_results['total_checks_fail']}</div>
-                <div>Pass Rate: {validation_results['percent_checks_pass']:.1f}%</div>
+            <div class="header-content">
+                <div class="header-section">
+                    <h2>File Information</h2>
+                    <div class="meta-info">
+                        <div>Schema Version: {ifc.schema}</div>
+                        <div>IDS Target Version: {ids_version}</div>
+                        <div style="color: {'#2ecc71' if version_compatible else '#e74c3c'}">
+                            Version Compatibility: {'Compatible' if version_compatible else 'Incompatible - Some checks may fail'}
+                        </div>
+                        <div>File: {ifc_path if 'ifc_path' in locals() else 'Uploaded File'}</div>
+                    </div>
+                </div>
+                <div class="header-section">
+                    <h2>Basic Statistics</h2>
+                    <div class="meta-info">
+                        <div>Total Entities: {stats['total_entities']}</div>
+                        <div>Products: {stats['products']}</div>
+                        <div>Walls: {stats['walls']}</div>
+                        <div>Spaces: {stats['spaces']}</div>
+                        <div>Storeys: {stats['storeys']}</div>
+                    </div>
+                </div>
+                <div class="header-section">
+                    <h2>Validation Status</h2>
+                    <div class="meta-info">
+                        <div>Validation Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
+                        <div>Total Specifications: {validation_results['total_specifications']}</div>
+                        <div>Total Checks: {validation_results['total_checks']}</div>
+                        <div style="color: #2ecc71">Passed: {validation_results['total_checks_pass']}</div>
+                        <div style="color: #e74c3c">Failed: {validation_results['total_checks_fail']}</div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -788,7 +827,8 @@ try:
         'specifications': processed_specs,
         'validation_status': 'complete',
         'timestamp': datetime.now().isoformat(),
-        'log': logger.handlers[0].stream.getvalue()
+        'log': logger.handlers[0].stream.getvalue(),
+        'open_in_tab': True  # Flag to indicate the report should open in new tab
     }
         
 except Exception as e:

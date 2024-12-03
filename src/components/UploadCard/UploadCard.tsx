@@ -19,157 +19,6 @@ interface ProcessedResult {
   result: any
 }
 
-interface ValidationResultsModalProps {
-  opened: boolean
-  onClose: () => void
-  results: ProcessedResult
-}
-
-const ValidationResultsModal = ({ opened, onClose, results }: ValidationResultsModalProps) => {
-  if (!results) return null;
-
-  const { schema, basic_stats, ids_stats, specifications, failed_constraints, html_report, log } = results.result;
-
-  return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="IFC Validation Results"
-      size="xl"
-      padding="md"
-    >
-      <Stack spacing="md">
-        {/* Schema Information */}
-        <Paper p="sm" withBorder>
-          <Title order={4}>Schema Information</Title>
-          <Text>IFC Schema Version: {schema}</Text>
-        </Paper>
-
-        {/* Basic Statistics */}
-        <Paper p="sm" withBorder>
-          <Title order={4}>Basic Statistics</Title>
-          <SimpleGrid cols={3} spacing="sm">
-            <Paper p="xs" withBorder>
-              <Text size="sm" color="dimmed">Total Entities</Text>
-              <Text weight={700}>{basic_stats?.total_entities || 0}</Text>
-            </Paper>
-            <Paper p="xs" withBorder>
-              <Text size="sm" color="dimmed">Products</Text>
-              <Text weight={700}>{basic_stats?.products || 0}</Text>
-            </Paper>
-            <Paper p="xs" withBorder>
-              <Text size="sm" color="dimmed">Walls</Text>
-              <Text weight={700}>{basic_stats?.walls || 0}</Text>
-            </Paper>
-            <Paper p="xs" withBorder>
-              <Text size="sm" color="dimmed">Spaces</Text>
-              <Text weight={700}>{basic_stats?.spaces || 0}</Text>
-            </Paper>
-            <Paper p="xs" withBorder>
-              <Text size="sm" color="dimmed">Storeys</Text>
-              <Text weight={700}>{basic_stats?.storeys || 0}</Text>
-            </Paper>
-          </SimpleGrid>
-        </Paper>
-
-        {/* Specifications */}
-        {specifications && specifications.length > 0 && (
-          <Paper p="sm" withBorder>
-            <Title order={4}>IDS Specifications</Title>
-            <ScrollArea style={{ height: 200 }}>
-              <Stack spacing="md">
-                {specifications.map((spec, index) => (
-                  <Paper key={index} p="xs" withBorder>
-                    <Stack spacing="xs">
-                      <Group position="apart">
-                        <Text weight={700} size="lg">{spec.name}</Text>
-                        <Text
-                          weight={700}
-                          color={spec.status === true ? "green" : "red"}
-                        >
-                          {spec.status ? "True" : "False"}
-                        </Text>
-                      </Group>
-
-                      {spec.description && (
-                        <Text size="sm">{spec.description}</Text>
-                      )}
-
-                      {spec.requirements && spec.requirements.map((req, reqIndex) => {
-                        // Format requirement text
-                        let reqText = '';
-                        if (typeof req === 'object') {
-                          if (req.description) {
-                            reqText = req.description;
-                          } else if (req.type === 'Property') {
-                            const constraints = req.value && typeof req.value === 'object'
-                              ? Object.entries(req.value)
-                                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-                                .join(', ')
-                              : '';
-                            reqText = `${req.propertyName || ''} ${constraints}`;
-                          }
-                        } else {
-                          reqText = req.toString();
-                        }
-
-                        return (
-                          <Group key={reqIndex} position="apart" spacing="xl">
-                            <Text size="sm" style={{ flex: 1 }}>{reqText}</Text>
-                            {req.status !== undefined && (
-                              <Text
-                                weight={500}
-                                color={req.status === true ? "green" : "red"}
-                                size="sm"
-                              >
-                                {req.status ? "True" : "False"}
-                              </Text>
-                            )}
-                          </Group>
-                        );
-                      })}
-                    </Stack>
-                  </Paper>
-                ))}
-              </Stack>
-            </ScrollArea>
-          </Paper>
-        )}
-
-        {/* Failed Constraints */}
-        {failed_constraints && failed_constraints.length > 0 && (
-          <Paper p="sm" withBorder>
-            <Title order={4}>Failed Constraints</Title>
-            <ScrollArea style={{ height: 200 }}>
-              <Stack spacing="xs">
-                {failed_constraints.map((constraint, index) => (
-                  <Text key={index} color="red" size="sm">{constraint}</Text>
-                ))}
-              </Stack>
-            </ScrollArea>
-          </Paper>
-        )}
-
-        {/* Detailed Report */}
-        <Paper p="sm" withBorder>
-          <Title order={4}>Detailed Report</Title>
-          <ScrollArea style={{ height: 400 }}>
-            <div dangerouslySetInnerHTML={{ __html: html_report || 'No detailed report available' }} />
-          </ScrollArea>
-        </Paper>
-
-        {/* Log Output */}
-        <Paper p="sm" withBorder>
-          <Title order={4}>Log Output</Title>
-          <ScrollArea style={{ height: 200 }}>
-            <Code block>{log || 'No logs available'}</Code>
-          </ScrollArea>
-        </Paper>
-      </Stack>
-    </Modal>
-  );
-};
-
 export const UploadCard = () => {
   const navigate = useNavigate()
   const { dispatch } = useValidationContext()
@@ -181,7 +30,6 @@ export const UploadCard = () => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [processedResults, setProcessedResults] = useState<ProcessedResult[]>([])
-  const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(null)
   const [idsContent, setIdsContent] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingLogs, setProcessingLogs] = useState<string[]>([])
@@ -190,16 +38,48 @@ export const UploadCard = () => {
     setProcessingLogs(prev => [...prev, message])
   }
 
-  useEffect(() => {
-    if (processedResults.length > 0 && currentModalIndex === null) {
-      setCurrentModalIndex(0)
+  // Function to open HTML report in new tab
+  const openReportInNewTab = (htmlContent: string, fileName: string) => {
+    try {
+      // Create data URL from HTML content
+      const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
+
+      // Try to open in new tab
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(htmlContent);
+        newWindow.document.title = `Report - ${fileName}`;
+        newWindow.document.close();
+        console.log(`Successfully opened report for ${fileName}`);
+      } else {
+        console.warn(`Popup blocked for ${fileName} - manual button will be available`);
+      }
+    } catch (error) {
+      console.error(`Failed to open report for ${fileName}:`, error);
     }
-  }, [processedResults])
+  };
+
+  // Render manual open button for a result
+  const renderResultActions = (result: ProcessedResult) => {
+    if (!result.result?.html_report) return null;
+
+    return (
+      <Button
+        onClick={() => openReportInNewTab(result.result.html_report, result.fileName)}
+        size="sm"
+        variant="light"
+        mt="xs"
+      >
+        Open Report for {result.fileName}
+      </Button>
+    );
+  };
 
   const processFiles = useCallback(async (ifcFiles: File[], idsFile: File | null) => {
     setIsProcessing(true)
     setUploadProgress(0)
     setProcessingLogs([])
+    console.log('Starting file processing...')
     const totalFiles = ifcFiles.length
     const results: ProcessedResult[] = []
 
@@ -224,6 +104,7 @@ export const UploadCard = () => {
     for (let i = 0; i < totalFiles; i++) {
       const file = ifcFiles[i]
       try {
+        console.log(`Processing file ${i + 1}/${totalFiles}: ${file.name}`)
         const arrayBuffer = await file.arrayBuffer()
         const worker = new Worker('/pyodideWorker.js')
 
@@ -234,6 +115,7 @@ export const UploadCard = () => {
             } else if (event.data.type === 'error') {
               reject(new Error(event.data.message))
             } else if (event.data.result) {
+              console.log('Received worker result:', event.data.result)
               resolve(event.data.result)
             } else {
               reject(new Error('Invalid response from worker'))
@@ -250,9 +132,11 @@ export const UploadCard = () => {
           })
         })
 
+        console.log(`Adding result for file ${file.name}`)
         results.push({ fileName: file.name, result })
         setUploadProgress(((i + 1) / totalFiles) * 100)
       } catch (error: any) {
+        console.error(`Error processing file ${file.name}:`, error)
         const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''
         const errorMessage = `Error processing ${file.name}: ${error.message || 'Unknown error'}${errorDetails}`
         setUploadError(errorMessage)
@@ -266,9 +150,21 @@ export const UploadCard = () => {
       }
     }
 
+    console.log('All files processed, results:', results)
     setProcessedResults(results)
     setUploadProgress(100)
     setIsProcessing(false)
+
+    // Attempt to open HTML reports automatically
+    console.log('Attempting to open HTML reports...')
+    results.forEach(result => {
+      console.log(`Checking result for ${result.fileName}:`, result)
+      if (result.result?.html_report) {
+        openReportInNewTab(result.result.html_report, result.fileName)
+      } else {
+        console.log(`No HTML report found for ${result.fileName}`)
+      }
+    })
   }, [isIdsValidation])
 
   const handleClick = async () => {
@@ -317,20 +213,6 @@ export const UploadCard = () => {
     return file && file.name && file.name.endsWith('.ids')
       ? null
       : { code: 'file-invalid-type', message: t('dropzone.error.ids') }
-  }
-
-  const renderResultModal = () => {
-    if (currentModalIndex === null || processedResults.length === 0) return null
-
-    const currentResult = processedResults[currentModalIndex]
-
-    return (
-      <ValidationResultsModal
-        opened={true}
-        onClose={() => setCurrentModalIndex(null)}
-        results={currentResult}
-      />
-    )
   }
 
   return (
@@ -539,10 +421,14 @@ export const UploadCard = () => {
           )}
           {processedResults.length > 0 && (
             <Alert color='green' title='Processing Complete' mb='md'>
-              <Text>Your files have been processed. Click the button below to view results.</Text>
-              <Button onClick={() => setCurrentModalIndex(0)} mt='sm'>
-                View Results
-              </Button>
+              <Text>Your files have been processed.</Text>
+              <Stack mt="sm">
+                {processedResults.map((result, index) => (
+                  <div key={index}>
+                    {renderResultActions(result)}
+                  </div>
+                ))}
+              </Stack>
             </Alert>
           )}
           <Button
@@ -554,7 +440,6 @@ export const UploadCard = () => {
           </Button>
         </Stack>
       </Paper>
-      {renderResultModal()}
     </Stack>
   )
 }
