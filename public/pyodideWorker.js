@@ -5,65 +5,65 @@ let pyodide
 
 async function initPyodide() {
     try {
-      self.postMessage({ type: 'progress', message: 'Loading Pyodide...' })
-      pyodide = await loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/',
-        memory: 1024 * 1024 * 1024,
-      })
-  
-      self.postMessage({ type: 'progress', message: 'Setting up package manager...' })
-      await pyodide.loadPackage(['micropip'])
-      
-      self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' })
-      await pyodide.runPythonAsync(`
+        self.postMessage({ type: 'progress', message: 'Loading Pyodide...' })
+        pyodide = await loadPyodide({
+            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/',
+            memory: 1024 * 1024 * 1024,
+        })
+
+        self.postMessage({ type: 'progress', message: 'Setting up package manager...' })
+        await pyodide.loadPackage(['micropip'])
+
+        self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' })
+        await pyodide.runPythonAsync(`
         import micropip
         await micropip.install('https://ifcopenshell.github.io/wasm-preview/IfcOpenShell-0.7.0-py3-none-any.whl')
       `)
 
-      self.postMessage({ type: 'progress', message: 'Installing IFC validation tools...' })
-      await pyodide.runPythonAsync(`
+        self.postMessage({ type: 'progress', message: 'Installing IFC validation tools...' })
+        await pyodide.runPythonAsync(`
         await micropip.install('ifctester')
       `)
 
-      self.postMessage({ type: 'progress', message: 'Installing template engine...' })
-      await pyodide.runPythonAsync(`
+        self.postMessage({ type: 'progress', message: 'Installing template engine...' })
+        await pyodide.runPythonAsync(`
         await micropip.install('pystache')
       `)
-  
-      self.postMessage({ type: 'progress', message: 'Setup complete!' })
-      return true
+
+        self.postMessage({ type: 'progress', message: 'Setup complete!' })
+        return true
     } catch (error) {
-      console.error('Failed to load Pyodide:', error)
-      self.postMessage({ type: 'error', message: `Failed to load Pyodide: ${error.message}` })
-      throw new Error(`Failed to load Pyodide: ${error.message}`)
+        console.error('Failed to load Pyodide:', error)
+        self.postMessage({ type: 'error', message: `Failed to load Pyodide: ${error.message}` })
+        throw new Error(`Failed to load Pyodide: ${error.message}`)
     }
 }
 
 let pyodideReady = false
 
 self.onmessage = async (event) => {
-  const { arrayBuffer, idsContent } = event.data
+    const { arrayBuffer, idsContent } = event.data
 
-  try {
-    // Load Pyodide if not already loaded
-    if (!pyodideReady) {
-      pyodideReady = await initPyodide()
-    }
+    try {
+        // Load Pyodide if not already loaded
+        if (!pyodideReady) {
+            pyodideReady = await initPyodide()
+        }
 
-    // Debug input data
-    console.debug('Worker received:', {
-      arrayBufferSize: arrayBuffer?.byteLength,
-      idsContentLength: idsContent?.length,
-      idsContentStart: idsContent?.substring(0, 100)
-    })
+        // Debug input data
+        console.debug('Worker received:', {
+            arrayBufferSize: arrayBuffer?.byteLength,
+            idsContentLength: idsContent?.length,
+            idsContentStart: idsContent?.substring(0, 100)
+        })
 
-    // Create Uint8Array from array buffer and set Python variables
-    const uint8Array = new Uint8Array(arrayBuffer)
-    pyodide.globals.set('uint8Array', uint8Array)
-    pyodide.globals.set('idsContent', idsContent)
+        // Create Uint8Array from array buffer and set Python variables
+        const uint8Array = new Uint8Array(arrayBuffer)
+        pyodide.globals.set('uint8Array', uint8Array)
+        pyodide.globals.set('idsContent', idsContent)
 
-    // Updated Python validation code
-    const result = await pyodide.runPythonAsync(`
+        // Updated Python validation code
+        const result = await pyodide.runPythonAsync(`
 import json
 import logging
 import io
@@ -291,12 +291,39 @@ def process_specification(spec):
                             if entity:
                                 logger.debug(f"      Entity ID: {entity.id() if hasattr(entity, 'id') else 'Unknown'}")
                                 logger.debug(f"      Entity Type: {entity.is_a() if hasattr(entity, 'is_a') else 'Unknown'}")
+                                # Extract GlobalId from IFC entity
+                                global_id = None
+                                try:
+                                    if hasattr(entity, 'GlobalId'):
+                                        global_id = entity.GlobalId
+                                    elif hasattr(entity, 'get_info'):
+                                        info = entity.get_info()
+                                        global_id = info.get('GlobalId')
+                                except:
+                                    global_id = None
+                                
+                                logger.debug(f"      GlobalId: {global_id if global_id else 'Unknown'}")
                                 logger.debug(f"      Reason: {failure['reason']}")
-                                requirement['failed_entities'].append({
+                                
+                                entity_data = {
                                     'id': entity.id() if hasattr(entity, 'id') else 'Unknown',
                                     'type': entity.is_a() if hasattr(entity, 'is_a') else 'Unknown',
+                                    'global_id': global_id if global_id else 'Unknown',
                                     'reason': failure['reason']
-                                })
+                                }
+                                
+                                # Try to get additional attributes if available
+                                try:
+                                    if hasattr(entity, 'Name'):
+                                        entity_data['name'] = entity.Name
+                                    if hasattr(entity, 'Description'):
+                                        entity_data['description'] = entity.Description
+                                    if hasattr(entity, 'Tag'):
+                                        entity_data['tag'] = entity.Tag
+                                except:
+                                    pass
+                                
+                                requirement['failed_entities'].append(entity_data)
                 
                 result['requirements'].append(requirement)
     
@@ -745,10 +772,12 @@ try:
                 for entity in req['failed_entities']:
                     detailed_report += f"""
                         <div class="failed-entity">
-                            <div><strong>{entity['class']} | {entity['name']}</strong></div>
-                            <div>GUID: {entity.get('guid', 'N/A')}</div>
-                            <div>ID: {entity['id']}</div>
-                            <div>Reason: {entity['reason']}</div>
+                            <div><strong>{entity.get('type', 'Unknown')} | {entity.get('name', 'Unnamed')}</strong></div>
+                            <div>GlobalId: {entity.get('global_id', 'Unknown')}</div>
+                            <div>ID: {entity.get('id', 'Unknown')}</div>
+                            <div>Tag: {entity.get('tag', 'N/A')}</div>
+                            <div>Description: {entity.get('description', 'N/A')}</div>
+                            <div>Reason: {entity.get('reason', 'Unknown')}</div>
                         </div>
                     """
                 
@@ -801,6 +830,7 @@ try:
                     requirement['failed_entities'].append({
                         'id': entity.get('id', 'Unknown'),
                         'type': entity.get('type', 'Unknown'),
+                        'global_id': entity.get('global_id', 'Unknown'),
                         'reason': entity.get('reason', 'Unknown reason')
                     })
             
@@ -842,44 +872,44 @@ logger.info("Validation complete")
 json.dumps(result_json, cls=IdsEncoder)
 `)
 
-    // Parse and validate the result
-    if (!result) {
-      throw new Error('No result returned from Python code')
-    }
-
-    try {
-      // Parse the JSON result
-      const parsedResult = JSON.parse(result)
-      console.debug('Validation results:', parsedResult)
-      
-      // Send the parsed result back to the main thread
-      self.postMessage({ 
-        success: true, 
-        result: parsedResult,
-        debug: {
-          resultType: typeof result,
-          resultLength: result.length,
-          parsedKeys: Object.keys(parsedResult)
+        // Parse and validate the result
+        if (!result) {
+            throw new Error('No result returned from Python code')
         }
-      })
-    } catch (error) {
-      throw new Error(`Failed to parse Python result: ${error.message}. Raw result: ${result.substring(0, 200)}...`)
-    }
 
-  } catch (error) {
-    console.error('Worker error:', error)
-    self.postMessage({
-      success: false,
-      error: error.message,
-      details: {
-        message: error.message,
-        stack: error.stack,
-        idsContentPresent: !!idsContent,
-        idsContentLength: idsContent?.length,
-        idsContentStart: idsContent?.substring(0, 100),
-        arrayBufferPresent: !!arrayBuffer,
-        arrayBufferSize: arrayBuffer?.byteLength
-      }
-    })
-  }
+        try {
+            // Parse the JSON result
+            const parsedResult = JSON.parse(result)
+            console.debug('Validation results:', parsedResult)
+
+            // Send the parsed result back to the main thread
+            self.postMessage({
+                success: true,
+                result: parsedResult,
+                debug: {
+                    resultType: typeof result,
+                    resultLength: result.length,
+                    parsedKeys: Object.keys(parsedResult)
+                }
+            })
+        } catch (error) {
+            throw new Error(`Failed to parse Python result: ${error.message}. Raw result: ${result.substring(0, 200)}...`)
+        }
+
+    } catch (error) {
+        console.error('Worker error:', error)
+        self.postMessage({
+            success: false,
+            error: error.message,
+            details: {
+                message: error.message,
+                stack: error.stack,
+                idsContentPresent: !!idsContent,
+                idsContentLength: idsContent?.length,
+                idsContentStart: idsContent?.substring(0, 100),
+                arrayBufferPresent: !!arrayBuffer,
+                arrayBufferSize: arrayBuffer?.byteLength
+            }
+        })
+    }
 }
