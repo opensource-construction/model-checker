@@ -302,8 +302,7 @@ def process_specification(spec):
                                 except:
                                     global_id = None
                                 
-                                logger.debug(f"      GlobalId: {global_id if global_id else 'Unknown'}")
-                                logger.debug(f"      Reason: {failure['reason']}")
+
                                 
                                 entity_data = {
                                     'id': entity.id() if hasattr(entity, 'id') else 'Unknown',
@@ -772,7 +771,7 @@ try:
                 for entity in req['failed_entities']:
                     detailed_report += f"""
                         <div class="failed-entity">
-                            <div><strong>{entity.get('type', 'Unknown')} | {entity.get('name', 'Unnamed')}</strong></div>
+                            <div><strong>{entity.get('class', 'Unknown')} | {entity.get('name', 'Unnamed')}</strong></div>
                             <div>GlobalId: {entity.get('global_id', 'Unknown')}</div>
                             <div>ID: {entity.get('id', 'Unknown')}</div>
                             <div>Tag: {entity.get('tag', 'N/A')}</div>
