@@ -3,7 +3,11 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
 
-export const UploadCardTitle = () => {
+interface UploadCardTitleProps {
+  isIdsValidation: boolean
+}
+
+export const UploadCardTitle = ({ isIdsValidation }: UploadCardTitleProps) => {
   const [opened, { open, close }] = useDisclosure(false)
   const { t } = useTranslation()
 
@@ -28,14 +32,18 @@ export const UploadCardTitle = () => {
         }}
       >
         <Text>{t('upload-card.description')}</Text>
-        <Text fw={700} mt='md'>
-          {t('upload-card.rules')}
-        </Text>
-        <ol>
-          {[...Array(15)].map((_, i) => (
-            <li key={i}>{t(`upload-card.info-card.${i}`)}</li>
-          ))}
-        </ol>
+        {!isIdsValidation && (
+          <>
+            <Text fw={700} mt='md'>
+              {t('upload-card.rules')}
+            </Text>
+            <ol>
+              {[...Array(15)].map((_, i) => (
+                <li key={i}>{t(`upload-card.info-card.${i}`)}</li>
+              ))}
+            </ol>
+          </>
+        )}
       </Modal>
     </>
   )

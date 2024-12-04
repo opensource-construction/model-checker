@@ -1,11 +1,19 @@
 {
   "upload-file": "Datei Hochladen",
   "upload-description": {
-    "0": "Die Modellqualität ist zentral für erfolgreiche BIM-Projekte.",
-    "1": "Das Ziel dieses Tools ist es, eine schnelle Überprüfung des allgemeinen Zustands eines Modells zu ermöglichen.",
-    "2": "Betrachten Sie es als das erstes \"Quality Gate\".",
-    "3": "Wir haben es so konzipiert, dass es sehr einfach UND sehr sicher ist.",
-    "4": "Legen Sie ein oder mehrere Modelle ab, und die Prüfungen werden automatisch durchgeführt. Alle Daten verbleiben auf Ihrem lokalen Rechner - es werden keine Daten an externe Server gesendet, alle Prüfungen werden lokal durchgeführt."
+    "0": "Willkommen beim IFC Model Checker!",
+    "1": "Das Ziel dieses Tools ist es, einen schnellen Überblick über den Zustand eines Modells zu erhalten. Es kommt mit einigen Standardtests - wenn diese erfolgreich sind, lohnt es sich, tiefer in das Modell einzusteigen.",
+    "2": "Andernfalls wahrscheinlich nicht.",
+    "3": "Wir haben es so konzipiert, dass es wirklich einfach UND sicher ist.",
+    "4": "Alle Daten bleiben auf Ihrem lokalen Rechner – es werden keine Daten irgendwohin gesendet, alle Überprüfungen werden lokal durchgeführt."
+  },
+  "upload-description-ids": {
+    "0": "Willkommen beim IDS-Validator!",
+    "1": "Mit diesem Tool können Sie überprüfen, ob Ihre IFC-Modelle den IDS-Anforderungen (Information Delivery Specification) entsprechen. Es führt eine umfassende Prüfung anhand der in der IDS-Datei definierten Regeln durch.",
+    "2": "Nicht konforme Modelle werden frühzeitig erkannt.",
+    "3": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
+    "4": "Die gesamte Validierung erfolgt lokal in Ihrem Browser mittels WASM - Ihre Daten verlassen niemals Ihr Gerät.",
+    "5": "Die Ergebnisse werden in einem detaillierten Bericht bereitgestellt, den Sie online ansehen, als HTML herunterladen, als PDF drucken oder als BCF für die weitere Verwendung in Ihrem BIM-Workflow exportieren können."
   },
   "upload-card": {
     "title": "Modell Validerung und Regeln",
@@ -31,10 +39,13 @@
   },
   "validate": "Validieren",
   "dropzone": {
-    "drag": "IFC Dateien hierher ziehen oder klicken, um eine Datei auszuwählen",
-    "attach": "Hängen Sie so viele Dateien an, wie Sie möchten. Jede Datei sollte 500 MB nicht überschreiten",
-    "error": "Dateityp ungültig. Nur .ifc Dateien sind erlaubt.",
-    "error-message": "Datei"
+    "drag": {
+      "ifc": "IFC-Dateien hier ablegen oder zum Auswählen klicken",
+      "ids": "IDS-Datei hier ablegen oder zum Auswählen klicken"
+    },
+    "error-message": "Fehler",
+    "attach": "Sie können mehrere Dateien hinzufügen",
+    "attach-single": "Es kann nur eine Datei hinzugefügt werden"
   },
   "results": "Resultate",
   "print": "Drucken",
@@ -79,5 +90,13 @@
   "sponsored-by": "Gesponsert von:",
   "open-source": "Open Source auf:",
   "author": "Autor(in)",
-  "exported": "Exportiert"
+  "exported": "Exportiert",
+  "validation-type": "Validierungstyp",
+  "ids-validation": "IDS-Validierung",
+  "standard-validation": "Standard-Validierung",
+  "Upload": {
+    "idsValidation": "IDS-Validierung aktivieren",
+    "dropIdsFile": "IDS-Datei hier ablegen",
+    "dropIdsFileDescription": "Ziehen Sie Ihre IDS-Datei (Information Delivery Specification) hierher"
+  }
 }

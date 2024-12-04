@@ -45,7 +45,7 @@
 .sun-icon {
     opacity: 1;
     transform: rotate(0) scale(1);
-    color: #ffee09; /* Updated to match theme */
+    color: #1a1b26; /* Changed from #ffee09 to a dark color for better contrast */
 }
 
 .moon-icon {
