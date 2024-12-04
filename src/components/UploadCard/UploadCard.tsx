@@ -1,5 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Divider, Group, rem, Stack, Text, Switch, Progress, Alert, Modal, Loader, Center, Paper, Grid, SimpleGrid, Title, ScrollArea, Code, Box } from '@mantine/core'
+import {
+  Button,
+  Divider,
+  Group,
+  rem,
+  Stack,
+  Text,
+  Switch,
+  Progress,
+  Alert,
+  Modal,
+  Loader,
+  Center,
+  Paper,
+  Grid,
+  SimpleGrid,
+  Title,
+  ScrollArea,
+  Code,
+  Box,
+} from '@mantine/core'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
 import { IconFile3d, IconFileText, IconUpload, IconX } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +27,7 @@ import { UploadCardTitle } from './UploadCardTitle.tsx'
 import { useNavigate } from 'react-router-dom'
 import { useValidationContext } from '@context'
 import { processFile } from './processFile.ts'
-import Mustache from 'mustache';
+import Mustache from 'mustache'
 
 interface FileError {
   code: string
@@ -35,226 +55,223 @@ export const UploadCard = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingLogs, setProcessingLogs] = useState<string[]>([])
   const [templateContent, setTemplateContent] = useState<string | null>(null)
-  const [loadingDots, setLoadingDots] = useState('');
+  const [loadingDots, setLoadingDots] = useState('')
 
   useEffect(() => {
     if (isProcessing) {
       const interval = setInterval(() => {
-        setLoadingDots(dots => dots.length >= 3 ? '' : dots + '.');
-      }, 500);
-      return () => clearInterval(interval);
+        setLoadingDots((dots) => (dots.length >= 3 ? '' : dots + '.'))
+      }, 500)
+      return () => clearInterval(interval)
     }
-  }, [isProcessing]);
+  }, [isProcessing])
 
   useEffect(() => {
     // Load the HTML template
     fetch('/report.html')
-      .then(response => response.text())
-      .then(content => {
-        console.log('Template loaded, length:', content.length);
-        setTemplateContent(content);
+      .then((response) => response.text())
+      .then((content) => {
+        console.log('Template loaded, length:', content.length)
+        setTemplateContent(content)
       })
-      .catch(error => console.error('Error loading template:', error));
-  }, []);
+      .catch((error) => console.error('Error loading template:', error))
+  }, [])
 
   const addLog = (message: string) => {
-    setProcessingLogs(prev => [...prev, message])
+    setProcessingLogs((prev) => [...prev, message])
   }
-
-  const generateReport = (result: any, fileName: string) => {
-    if (!templateContent) {
-      console.error('No template content available');
-      return null;
-    }
-
-    let html = templateContent;
-
-    // Replace basic placeholders
-    html = html.replace('{{title}}', result.title || 'IFC Validation Report');
-    html = html.replace('{{date}}', result.date || new Date().toLocaleString());
-    html = html.replace('{{filename}}', fileName || 'Unknown');
-
-    // Generate stats HTML
-    const statsHtml = `
-      <div class="stats">
-        <div class="stat-box">
-          <h4>Specifications</h4>
-          <p>${result.total_specifications_pass}/${result.total_specifications} passed</p>
-          <div class="progress-bar">
-            <div class="fill" style="width: ${result.percent_specifications_pass}%"></div>
-          </div>
-        </div>
-        <div class="stat-box">
-          <h4>Requirements</h4>
-          <p>${result.total_requirements_pass}/${result.total_requirements} passed</p>
-          <div class="progress-bar">
-            <div class="fill" style="width: ${result.percent_requirements_pass}%"></div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Generate specifications HTML
-    const specificationsHtml = result.specifications?.map((spec: any) => {
-      const statusClass = spec.status ? 'pass' : 'fail';
-      const statusText = spec.status ? 'PASS' : 'FAIL';
-
-      const requirementsHtml = spec.requirements?.map((req: any) => {
-        const reqStatusClass = req.status ? 'pass' : 'fail';
-        const entitiesHtml = req.entities?.map((entity: string) =>
-          `<div class="entity">${entity}</div>`
-        ).join('') || '';
-
-        return `
-          <div class="requirement ${reqStatusClass}">
-            <span class="status-badge ${reqStatusClass}">${req.status ? 'PASS' : 'FAIL'}</span>
-            <p>${req.description || ''}</p>
-            <div class="entities-list">
-              ${entitiesHtml}
-            </div>
-          </div>
-        `;
-      }).join('') || '';
-
-      return `
-        <div class="specification ${statusClass}">
-          <h3>${spec.name}</h3>
-          <span class="status-badge ${statusClass}">${statusText}</span>
-          <p>${spec.description || ''}</p>
-          ${spec.instructions ? `<p><strong>Instructions:</strong> ${spec.instructions}</p>` : ''}
-          <div class="requirements">
-            ${requirementsHtml}
-          </div>
-        </div>
-      `;
-    }).join('') || '';
-
-    // Insert dynamic content
-    html = html.replace('<div id="stats">', `<div id="stats">${statsHtml}`);
-    html = html.replace('<div id="specifications">', `<div id="specifications">${specificationsHtml}`);
-
-    return html;
-  };
 
   const openReportInNewTab = (result: any, fileName: string) => {
     try {
       if (!templateContent) {
-        console.error('No template content available');
-        return;
+        console.error('No template content available')
+        return
+      }
+
+      // Prepare the data for Mustache templating
+      const templateData = {
+        title: result.title || 'IFC Validation Report',
+        date: result.date || new Date().toLocaleString(),
+        filename: fileName || 'Unknown',
+        status: result.status,
+        specifications: result.specifications?.map((spec: any) => ({
+          name: spec.name,
+          status: spec.status,
+          description: spec.description || '',
+          instructions: spec.instructions,
+          percent_checks_pass: spec.percent_checks_pass,
+          total_checks: spec.total_checks,
+          total_checks_pass: spec.total_checks_pass,
+          total_applicable: spec.total_applicable,
+          total_applicable_pass: spec.total_applicable_pass,
+          requirements: spec.requirements?.map((req: any) => ({
+            description: req.description,
+            status: req.status,
+            // Important: Add these flags for both passed and failed
+            total_pass: req.passed_entities?.length > 0,
+            total_fail: req.failed_entities?.length > 0,
+            // Pass through all entities data
+            passed_entities: req.passed_entities?.map((entity: any) => ({
+              class: entity.class || '',
+              predefined_type: entity.predefined_type || '',
+              name: entity.name || '',
+              description: entity.description || '',
+              global_id: entity.global_id || '',
+              tag: entity.tag || '',
+              type_name: entity.type_name,
+              type_tag: entity.type_tag,
+              type_global_id: entity.type_global_id,
+              extra_of_type: entity.extra_of_type,
+            })),
+            failed_entities: req.failed_entities?.map((entity: any) => ({
+              class: entity.class || '',
+              predefined_type: entity.predefined_type || '',
+              name: entity.name || '',
+              description: entity.description || '',
+              reason: entity.reason || '',
+              global_id: entity.global_id || '',
+              tag: entity.tag || '',
+              type_name: entity.type_name,
+              type_tag: entity.type_tag,
+              type_global_id: entity.type_global_id,
+              extra_of_type: entity.extra_of_type,
+            })),
+            // Add all the necessary flags for both passed and failed
+            has_omitted_passes: req.has_omitted_passes,
+            total_omitted_passes: req.total_omitted_passes,
+            total_passed_entities: req.total_passed_entities,
+            has_omitted_failures: req.has_omitted_failures,
+            total_omitted_failures: req.total_omitted_failures,
+            total_failed_entities: req.total_failed_entities,
+            extra_of_type: req.extra_of_type,
+          })),
+        })),
+        // Add summary stats
+        total_specifications: result.total_specifications,
+        total_specifications_pass: result.total_specifications_pass,
+        percent_specifications_pass: result.percent_specifications_pass,
+        total_requirements: result.total_requirements,
+        total_requirements_pass: result.total_requirements_pass,
+        percent_requirements_pass: result.percent_requirements_pass,
+        total_checks: result.total_checks,
+        total_checks_pass: result.total_checks_pass,
+        percent_checks_pass: result.percent_checks_pass,
       }
 
       // Render the template with Mustache
-      const htmlContent = Mustache.render(templateContent, result);
+      const htmlContent = Mustache.render(templateContent, templateData)
 
-      const newWindow = window.open();
+      const newWindow = window.open()
       if (newWindow) {
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-        newWindow.document.title = `Report - ${fileName}`;
-        console.log('Successfully opened report for', fileName);
+        newWindow.document.write(htmlContent)
+        newWindow.document.close()
+        newWindow.document.title = `Report - ${fileName}`
       }
     } catch (error) {
-      console.error('Error opening report:', error);
+      console.error('Error generating report:', error, error.stack)
     }
-  };
+  }
 
   useEffect(() => {
-    if (!processedResults.length) return;
-    console.log('Results ready for report generation');
-  }, [processedResults, templateContent]);
+    if (!processedResults.length) return
+    console.log('Results ready for report generation')
+  }, [processedResults, templateContent])
 
-  const processFiles = useCallback(async (ifcFiles: File[], idsFile: File | null) => {
-    setIsProcessing(true)
-    setUploadProgress(0)
-    setProcessingLogs([])
-    console.log('Starting file processing...')
+  const processFiles = useCallback(
+    async (ifcFiles: File[], idsFile: File | null) => {
+      setIsProcessing(true)
+      setUploadProgress(0)
+      setProcessingLogs([])
+      console.log('Starting file processing...')
 
-    if (!idsFile && isIdsValidation) {
-      setUploadError('IDS file is required for validation')
-      setIsProcessing(false)
-      return
-    }
+      if (!idsFile && isIdsValidation) {
+        setUploadError('IDS file is required for validation')
+        setIsProcessing(false)
+        return
+      }
 
-    let currentIdsContent: string | null = null;
-    if (isIdsValidation && idsFile) {
+      let currentIdsContent: string | null = null
+      if (isIdsValidation && idsFile) {
+        try {
+          currentIdsContent = await idsFile.text()
+        } catch (error) {
+          const errorMsg = `Failed to read IDS file: ${error.message}`
+          setUploadError(errorMsg)
+          setIsProcessing(false)
+          return
+        }
+      }
+
+      // Fetch the reporter code
+      let reporterCode: string | null = null
       try {
-        currentIdsContent = await idsFile.text()
+        const response = await fetch('/reporter.py')
+        reporterCode = await response.text()
       } catch (error) {
-        const errorMsg = `Failed to read IDS file: ${error.message}`
+        const errorMsg = `Failed to load reporter module: ${error.message}`
         setUploadError(errorMsg)
         setIsProcessing(false)
         return
       }
-    }
 
-    // Fetch the reporter code
-    let reporterCode: string | null = null;
-    try {
-      const response = await fetch('/reporter.py');
-      reporterCode = await response.text();
-    } catch (error) {
-      const errorMsg = `Failed to load reporter module: ${error.message}`;
-      setUploadError(errorMsg);
-      setIsProcessing(false);
-      return;
-    }
+      const processedResults = await Promise.all(
+        ifcFiles.map(async (file) => {
+          try {
+            const arrayBuffer = await file.arrayBuffer()
+            const worker = new Worker('/pyodideWorker.js')
 
-    const processedResults = await Promise.all(
-      ifcFiles.map(async (file) => {
-        try {
-          const arrayBuffer = await file.arrayBuffer()
-          const worker = new Worker('/pyodideWorker.js')
-
-          const result = await new Promise((resolve, reject) => {
-            worker.onmessage = (event) => {
-              if (event.data.type === 'progress') {
-                addLog(event.data.message)
-              } else if (event.data.type === 'error') {
-                reject(new Error(event.data.message))
-              } else if (event.data.type === 'complete') {
-                console.log('Received worker result:', event.data.results)
-                resolve(event.data.results)
-              } else {
-                reject(new Error('Invalid response from worker'))
+            const result = await new Promise((resolve, reject) => {
+              worker.onmessage = (event) => {
+                if (event.data.type === 'progress') {
+                  addLog(event.data.message)
+                } else if (event.data.type === 'error') {
+                  reject(new Error(event.data.message))
+                } else if (event.data.type === 'complete') {
+                  console.log('Received worker result:', event.data.results)
+                  resolve(event.data.results)
+                } else {
+                  reject(new Error('Invalid response from worker'))
+                }
               }
-            }
 
-            worker.onerror = (error) => {
-              reject(new Error(error.message || 'Unknown worker error'))
-            }
+              worker.onerror = (error) => {
+                reject(new Error(error.message || 'Unknown worker error'))
+              }
 
-            worker.postMessage({
-              arrayBuffer,
-              idsContent: currentIdsContent,
-              reporterCode,
-              templateContent,
-              fileName: file.name
+              worker.postMessage({
+                arrayBuffer,
+                idsContent: currentIdsContent,
+                reporterCode,
+                templateContent,
+                fileName: file.name,
+              })
             })
-          })
 
-          console.log(`Adding result for file ${file.name}`)
-          return { fileName: file.name, result }
-        } catch (error: any) {
-          console.error(`Error processing file ${file.name}:`, error)
-          const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''
-          const errorMessage = `Error processing ${file.name}: ${error.message || 'Unknown error'}${errorDetails}`
-          setUploadError(errorMessage)
-          return {
-            fileName: file.name,
-            result: {
-              error: error.message,
-              details: error.details
+            console.log(`Adding result for file ${file.name}`)
+            return { fileName: file.name, result }
+          } catch (error: any) {
+            console.error(`Error processing file ${file.name}:`, error)
+            const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''
+            const errorMessage = `Error processing ${file.name}: ${error.message || 'Unknown error'}${errorDetails}`
+            setUploadError(errorMessage)
+            return {
+              fileName: file.name,
+              result: {
+                error: error.message,
+                details: error.details,
+              },
             }
           }
-        }
-      })
-    )
+        }),
+      )
 
-    console.log('All files processed, results:', processedResults)
-    setProcessedResults(processedResults)
-    setUploadProgress(100)
-    setIsProcessing(false)
-  }, [isIdsValidation, templateContent])
+      console.log('All files processed, results:', processedResults)
+      setProcessedResults(processedResults)
+      setUploadProgress(100)
+      setIsProcessing(false)
+    },
+    [isIdsValidation, templateContent],
+  )
 
   const handleClick = async () => {
     setUploadError(null)
@@ -304,8 +321,8 @@ export const UploadCard = () => {
 
   return (
     <Stack>
-      <Paper hide={false} p="xl">
-        <Stack spacing="md">
+      <Paper hide={false} p='xl'>
+        <Stack spacing='md'>
           <Stack>
             <UploadCardTitle isIdsValidation={isIdsValidation} />
             <Divider py={8} />
@@ -326,13 +343,15 @@ export const UploadCard = () => {
               </Text>
               <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.4`)}</Text>
               {isIdsValidation && (
-                <Text size='sm' c="blue.7">{t('upload-description-ids.5')}</Text>
+                <Text size='sm' c='blue.7'>
+                  {t('upload-description-ids.5')}
+                </Text>
               )}
             </Stack>
 
             {isIdsValidation ? (
               <Stack maw={650}>
-                <Grid gutter="md" style={{ width: '100%' }}>
+                <Grid gutter='md' style={{ width: '100%' }}>
                   <Grid.Col span={6}>
                     <Dropzone
                       onDrop={handleIfcDrop}
@@ -342,9 +361,9 @@ export const UploadCard = () => {
                       validator={ifcValidator}
                       style={{ width: '100%', height: '400px' }}
                     >
-                      <Stack h="100%" spacing="xs">
+                      <Stack h='100%' spacing='xs'>
                         <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '180px' }}>
-                          <Stack align="center" justify="center" gap='xs'>
+                          <Stack align='center' justify='center' gap='xs'>
                             <Dropzone.Accept>
                               <IconUpload
                                 style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-blue-6)' }}
@@ -352,7 +371,10 @@ export const UploadCard = () => {
                               />
                             </Dropzone.Accept>
                             <Dropzone.Reject>
-                              <IconX style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
+                              <IconX
+                                style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }}
+                                stroke={1.5}
+                              />
                             </Dropzone.Reject>
                             <Dropzone.Idle>
                               <IconFile3d
@@ -389,9 +411,9 @@ export const UploadCard = () => {
                       validator={idsValidator}
                       style={{ width: '100%', height: '400px' }}
                     >
-                      <Stack h="100%" spacing="xs">
+                      <Stack h='100%' spacing='xs'>
                         <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '180px' }}>
-                          <Stack align="center" justify="center" gap='xs'>
+                          <Stack align='center' justify='center' gap='xs'>
                             <Dropzone.Accept>
                               <IconUpload
                                 style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-blue-6)' }}
@@ -399,7 +421,10 @@ export const UploadCard = () => {
                               />
                             </Dropzone.Accept>
                             <Dropzone.Reject>
-                              <IconX style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
+                              <IconX
+                                style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }}
+                                stroke={1.5}
+                              />
                             </Dropzone.Reject>
                             <Dropzone.Idle>
                               <IconFileText
@@ -437,9 +462,9 @@ export const UploadCard = () => {
                 validator={ifcValidator}
                 style={{ width: '100%', height: '400px', maxWidth: 650 }}
               >
-                <Stack h="100%" spacing="xs">
+                <Stack h='100%' spacing='xs'>
                   <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '180px' }}>
-                    <Stack align="center" justify="center" gap='xs'>
+                    <Stack align='center' justify='center' gap='xs'>
                       <Dropzone.Accept>
                         <IconUpload
                           style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-blue-6)' }}
@@ -447,7 +472,10 @@ export const UploadCard = () => {
                         />
                       </Dropzone.Accept>
                       <Dropzone.Reject>
-                        <IconX style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
+                        <IconX
+                          style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-red-6)' }}
+                          stroke={1.5}
+                        />
                       </Dropzone.Reject>
                       <Dropzone.Idle>
                         <IconFile3d
@@ -498,31 +526,42 @@ export const UploadCard = () => {
                 pointerEvents: 'none',
               }}
             >
-              <Paper withBorder p="xs" style={{
-                width: '100%',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                backgroundColor: 'var(--mantine-color-dark-4)',
-                fontFamily: 'monospace',
-                pointerEvents: 'auto',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              }}>
+              <Paper
+                withBorder
+                p='xs'
+                style={{
+                  width: '100%',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  backgroundColor: 'var(--mantine-color-dark-4)',
+                  fontFamily: 'monospace',
+                  pointerEvents: 'auto',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                }}
+              >
                 {processingLogs.map((log, index) => (
-                  <Text key={index} size="sm" style={{
-                    color: '#fff',
-                    padding: '2px 0',
-                    borderBottom: index !== processingLogs.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
-                  }}>
+                  <Text
+                    key={index}
+                    size='sm'
+                    style={{
+                      color: '#fff',
+                      padding: '2px 0',
+                      borderBottom: index !== processingLogs.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                    }}
+                  >
                     {log}
                   </Text>
                 ))}
                 {isProcessing && (
-                  <Text size="sm" style={{
-                    color: '#fff',
-                    padding: '2px 0',
-                    opacity: 0.7
-                  }}>
+                  <Text
+                    size='sm'
+                    style={{
+                      color: '#fff',
+                      padding: '2px 0',
+                      opacity: 0.7,
+                    }}
+                  >
                     {loadingDots}
                   </Text>
                 )}
@@ -539,16 +578,16 @@ export const UploadCard = () => {
             <Alert color='green' title='Processing Complete' mb='md'>
               <Text>Your files have been processed.</Text>
               <Box maw={650}>
-                <Group mt="sm" gap="xs" wrap="wrap">
+                <Group mt='sm' gap='xs' wrap='wrap'>
                   {processedResults.map((result, index) => (
                     <Button
                       key={index}
                       onClick={() => openReportInNewTab(result.result, result.fileName)}
-                      color="yellow"
-                      variant="outline"
-                      size="sm"
+                      color='yellow'
+                      variant='outline'
+                      size='sm'
                       fw={500}
-                      className="report-button"
+                      className='report-button'
                       styles={{
                         root: {
                           border: '2px solid var(--mantine-color-yellow-filled)',
@@ -563,8 +602,8 @@ export const UploadCard = () => {
                           '&:active': {
                             transform: 'translateY(-2px)',
                             boxShadow: '0 2px 4px rgba(255, 213, 0, 0.35)',
-                          }
-                        }
+                          },
+                        },
                       }}
                     >
                       {t('results')} - {result.fileName}
@@ -580,8 +619,8 @@ export const UploadCard = () => {
             disabled={!ifcFiles.length || (isIdsValidation && !idsFile) || isProcessing}
             styles={(theme) => ({
               label: {
-                color: theme.colors.dark[9]
-              }
+                color: theme.colors.dark[9],
+              },
             })}
           >
             {isProcessing ? 'Processing...' : t('validate')}

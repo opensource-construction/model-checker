@@ -417,11 +417,15 @@ class Html(Json):
         super().__init__(ids)
 
     def report(self) -> None:
+        # Call Json's report() first to get base results
         super().report()
+        
+        # Then process for HTML-specific formatting
         for spec in self.results["specifications"]:
             for requirement in spec["requirements"]:
                 total_passed_entities = len(requirement["passed_entities"])
                 total_failed_entities = len(requirement["failed_entities"])
+                # Add pagination info
                 requirement["passed_entities"] = self.limit_entities(requirement["passed_entities"])
                 requirement["failed_entities"] = self.limit_entities(requirement["failed_entities"])
                 requirement["total_failed_entities"] = total_failed_entities
@@ -470,13 +474,11 @@ class Html(Json):
 
     def to_string(self) -> str:
         import pystache
-
         with open(os.path.join(cwd, "templates", "report.html"), "r") as file:
             return pystache.render(file.read(), self.results)
 
     def to_file(self, filepath: str) -> None:
         import pystache
-
         with open(os.path.join(cwd, "templates", "report.html"), "r") as file:
             with open(filepath, "w", encoding="utf-8") as outfile:
                 return outfile.write(pystache.render(file.read(), self.results))

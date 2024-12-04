@@ -1,83 +1,83 @@
-importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js');
+importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js')
 
-let pyodide = null;
+let pyodide = null
 
 async function loadPyodide() {
-    if (pyodide !== null) {
-        return pyodide;
-    }
+  if (pyodide !== null) {
+    return pyodide
+  }
 
-    try {
-        self.postMessage({ type: 'progress', message: 'Loading Pyodide...' });
-        pyodide = await loadPyodide({
-            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/'
-        });
+  try {
+    self.postMessage({ type: 'progress', message: 'Loading Pyodide...' })
+    pyodide = await loadPyodide({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
+    })
 
-        self.postMessage({ type: 'progress', message: 'Pyodide loaded successfully' });
-        return pyodide;
-    } catch (error) {
-        self.postMessage({
-            type: 'error',
-            message: `Failed to load Pyodide: ${error.message}`
-        });
-        throw error;
-    }
+    self.postMessage({ type: 'progress', message: 'Pyodide loaded successfully' })
+    return pyodide
+  } catch (error) {
+    self.postMessage({
+      type: 'error',
+      message: `Failed to load Pyodide: ${error.message}`,
+    })
+    throw error
+  }
 }
 
 self.onmessage = async (event) => {
-    const { arrayBuffer, idsContent, reporterCode, templateContent, fileName } = event.data;
+  const { arrayBuffer, idsContent, reporterCode, templateContent, fileName } = event.data
 
-    try {
-        // Ensure pyodide is loaded
-        pyodide = await loadPyodide();
-        if (!pyodide) {
-            throw new Error('Failed to initialize Pyodide');
-        }
+  try {
+    // Ensure pyodide is loaded
+    pyodide = await loadPyodide()
+    if (!pyodide) {
+      throw new Error('Failed to initialize Pyodide')
+    }
 
-        // Create the reporter module
-        if (!reporterCode) {
-            throw new Error('Reporter code is required but was not provided');
-        }
+    // Create the reporter module
+    if (!reporterCode) {
+      throw new Error('Reporter code is required but was not provided')
+    }
 
-        // Import required packages
-        self.postMessage({ type: 'progress', message: 'Installing required packages...' });
-        await pyodide.loadPackage(['micropip']);
+    // Import required packages
+    self.postMessage({ type: 'progress', message: 'Installing required packages...' })
+    await pyodide.loadPackage(['micropip'])
 
-        // Install IfcOpenShell and dependencies
-        self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' });
-        await pyodide.runPythonAsync(`
+    // Install IfcOpenShell and dependencies
+    self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' })
+    await pyodide.runPythonAsync(`
 import micropip
 await micropip.install('https://ifcopenshell.github.io/wasm-preview/IfcOpenShell-0.7.0-py3-none-any.whl')
-        `);
+        `)
 
-        self.postMessage({ type: 'progress', message: 'Installing additional dependencies...' });
-        await pyodide.runPythonAsync(`
+    self.postMessage({ type: 'progress', message: 'Installing additional dependencies...' })
+    await pyodide.runPythonAsync(`
 await micropip.install('lark')
 await micropip.install('ifctester')
-        `);
+        `)
 
-        // Create virtual files for IFC and IDS data
-        self.postMessage({ type: 'progress', message: 'Processing input files...' });
-        const uint8Array = new Uint8Array(arrayBuffer);
-        pyodide.FS.writeFile('model.ifc', uint8Array);
+    // Create virtual files for IFC and IDS data
+    self.postMessage({ type: 'progress', message: 'Processing input files...' })
+    const uint8Array = new Uint8Array(arrayBuffer)
+    pyodide.FS.writeFile('model.ifc', uint8Array)
 
-        if (idsContent) {
-            pyodide.FS.writeFile('spec.ids', idsContent);
-        }
+    if (idsContent) {
+      pyodide.FS.writeFile('spec.ids', idsContent)
+    }
 
-        // Run the validation
-        self.postMessage({ type: 'progress', message: 'Running validation...' });
+    // Run the validation
+    self.postMessage({ type: 'progress', message: 'Running validation...' })
 
-        // A global namespace for our variables
-        pyodide.runPython(`
+    // A global namespace for our variables
+    pyodide.runPython(`
 global validation_result_json
 validation_result_json = None
 global template_content
 template_content = '''${templateContent || ''}'''
-        `);
+        `)
 
-        // Run the validation in a separate step
-        pyodide.runPython(`
+    // Run the validation in a separate step
+    pyodide.runPython(`
 import sys
 sys.path.append('.')
 
@@ -291,23 +291,23 @@ try:
 except Exception as e:
     print(f"Error during validation: {str(e)}")
     raise e
-        `);
+        `)
 
-        // Get the JSON string from Python's global namespace
-        const resultJson = pyodide.globals.get('validation_result_json');
+    // Get the JSON string from Python's global namespace
+    const resultJson = pyodide.globals.get('validation_result_json')
 
-        // Parse the JSON string into a JavaScript object
-        const results = JSON.parse(resultJson);
+    // Parse the JSON string into a JavaScript object
+    const results = JSON.parse(resultJson)
 
-        self.postMessage({
-            type: 'complete',
-            results: results
-        });
-    } catch (error) {
-        console.error('Worker error:', error);
-        self.postMessage({
-            type: 'error',
-            message: error.message || 'Unknown error occurred'
-        });
-    }
-};
+    self.postMessage({
+      type: 'complete',
+      results: results,
+    })
+  } catch (error) {
+    console.error('Worker error:', error)
+    self.postMessage({
+      type: 'error',
+      message: error.message || 'Unknown error occurred',
+    })
+  }
+}
