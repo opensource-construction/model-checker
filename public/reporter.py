@@ -746,7 +746,6 @@ class OdsSummary(Json):
 
         self.doc.save(filepath, addsuffix=not filepath.lower().endswith(".ods"))
 
-
 class Bcf(Json):
     def report_failed_entities(self, requirement: Facet) -> list[FacetFailure]:
         return [FacetFailure(f) for f in requirement.failures]

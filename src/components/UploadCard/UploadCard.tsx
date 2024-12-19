@@ -82,13 +82,28 @@ export const UploadCard = () => {
 
   const openReportInNewTab = async (result: any, fileName: string) => {
     try {
-      // Always generate HTML if selected
-      if (reportFormats.html) {
-        if (!templateContent) {
-          console.error('No template content available')
-          return
-        }
+      // Check if BCF data is available
+      if (result.bcf_data) {
+        // Create a Blob from the BCF data
+        const bcfBlob = new Blob([result.bcf_data], { type: 'application/octet-stream' })
 
+        // Create a download link
+        const downloadUrl = window.URL.createObjectURL(bcfBlob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.bcf`
+
+        // Trigger download
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        // Clean up
+        window.URL.revokeObjectURL(downloadUrl)
+      }
+
+      // Generate HTML report as before
+      if (templateContent) {
         // Prepare the data for Mustache templating
         const templateData = {
           title: result.title || 'IFC Validation Report',
@@ -168,42 +183,6 @@ export const UploadCard = () => {
           newWindow.document.close()
           newWindow.document.title = `Report - ${fileName}`
         }
-      }
-
-      // Generate BCF if selected
-      if (reportFormats.bcf) {
-        const file = ifcFiles.find((f) => f.name === fileName)
-        if (!file) {
-          console.error('IFC file not found')
-          return
-        }
-
-        const arrayBuffer = await file.arrayBuffer()
-        const worker = new Worker('/pyodideWorker.js')
-
-        worker.onmessage = (event) => {
-          if (event.data.type === 'progress') {
-            console.log('BCF Progress:', event.data.message)
-          } else if (event.data.type === 'bcf-ready') {
-            // Create and trigger download of BCF file
-            const blob = new Blob([event.data.data], { type: 'application/octet-stream' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${fileName.replace('.ifc', '')}_validation.bcf`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-          }
-        }
-
-        worker.postMessage({
-          type: 'generate-bcf',
-          arrayBuffer,
-          result,
-          fileName,
-        })
       }
     } catch (error) {
       console.error('Error generating report:', error)
