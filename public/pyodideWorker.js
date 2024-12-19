@@ -25,7 +25,7 @@ async function loadPyodide() {
 }
 
 self.onmessage = async (event) => {
-  const { arrayBuffer, idsContent, reporterCode, templateContent, fileName } = event.data
+  const { type, arrayBuffer, idsContent, reporterCode, templateContent, fileName, result } = event.data
 
   try {
     // Ensure pyodide is loaded
@@ -34,7 +34,48 @@ self.onmessage = async (event) => {
       throw new Error('Failed to initialize Pyodide')
     }
 
-    // Create the reporter module
+    // Handle BCF generation request
+    if (type === 'generate-bcf') {
+      self.postMessage({ type: 'progress', message: 'Generating BCF report...' })
+
+      // Create virtual files for IFC data
+      const uint8Array = new Uint8Array(arrayBuffer)
+      pyodide.FS.writeFile('model.ifc', uint8Array)
+
+      // Create the reporter module
+      await pyodide.runPythonAsync(`
+import sys
+sys.path.append('.')
+
+import json
+import ifcopenshell
+import ifctester
+from ifctester.reporter import Bcf
+from ifctester.ids import Ids
+
+# Load the IFC model
+model = ifcopenshell.open('model.ifc')
+
+# Create BCF reporter and generate report
+spec = Ids()
+spec.validate(model)  # Validate model first
+bcf_reporter = Bcf(spec)
+bcf_reporter.results = json.loads('''${JSON.stringify(result)}''')
+bcf_reporter.to_file('validation_issues.bcf')
+      `)
+
+      // Read the generated BCF file
+      const bcfData = pyodide.FS.readFile('validation_issues.bcf')
+
+      self.postMessage({
+        type: 'bcf-ready',
+        data: bcfData,
+        fileName: fileName,
+      })
+      return
+    }
+
+    // Original HTML report generation code continues here...
     if (!reporterCode) {
       throw new Error('Reporter code is required but was not provided')
     }

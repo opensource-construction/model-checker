@@ -3,16 +3,14 @@
   "upload-description": {
     "0": "Welcome to the IFC Model Checker!",
     "1": "The goal of this tool is to provide a quick overview of a model's condition. It comes with several standard tests - if these succeed, it's worth looking deeper into the model.",
-    "2": "Otherwise probably not.",
-    "3": "We designed it to be really easy AND secure.",
-    "4": "All data stays on your local machine - no data will be sent anywhere, all checks are performed locally."
+    "2": "We designed it to be straightforward and secure.",
+    "3": "All data stays on your local machine - no data will be sent anywhere, all checks are performed locally."
   },
   "upload-description-ids": {
     "0": "Welcome to the IDS Validator!",
     "1": "This tool helps you verify if your IFC models comply with IDS (Information Delivery Specification) requirements. It performs a comprehensive check against the rules defined in your IDS file.",
-    "2": "Non-compliant models can be identified early in the process.",
-    "3": "We designed it to be straightforward and secure.",
-    "4": "All validation is performed locally in your browser using WASM - your data never leaves your device.",
+    "2": "We designed it to be straightforward and secure.",
+    "3": "All validation is performed locally in your browser using WASM - your data never leaves your device.",
     "5": "Results are provided in a detailed report that you can view online, download as HTML, print to PDF, or export as BCF for further use in your BIM workflow."
   },
   "upload-card": {
@@ -106,5 +104,12 @@
   "validation": {
     "title": "IFC Model Validation",
     "description": "Validate your IFC models against IDS specifications. Drop your files below to get started."
-  }
+  },
+  "report-format": "Report Format",
+  "html-report": "HTML Report (view in browser)",
+  "bcf-report": "BCF Report (download for BIM tools)",
+  "report-format-description": "Select one or both report formats. HTML reports can be viewed and printed directly, while BCF reports can be used in BIM collaboration tools.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Please select at least one report format"
 }
