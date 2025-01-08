@@ -80,29 +80,8 @@ export const UploadCard = () => {
     setProcessingLogs((prev) => [...prev, message])
   }
 
-  const openReportInNewTab = async (result: any, fileName: string) => {
+  const openHtmlReport = async (result: any, fileName: string) => {
     try {
-      // Check if BCF data is available
-      if (result.bcf_data) {
-        // Create a Blob from the BCF data
-        const bcfBlob = new Blob([result.bcf_data], { type: 'application/octet-stream' })
-
-        // Create a download link
-        const downloadUrl = window.URL.createObjectURL(bcfBlob)
-        const link = document.createElement('a')
-        link.href = downloadUrl
-        link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.bcf`
-
-        // Trigger download
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        // Clean up
-        window.URL.revokeObjectURL(downloadUrl)
-      }
-
-      // Generate HTML report as before
       if (templateContent) {
         // Prepare the data for Mustache templating
         const templateData = {
@@ -185,7 +164,32 @@ export const UploadCard = () => {
         }
       }
     } catch (error) {
-      console.error('Error generating report:', error)
+      console.error('Error generating HTML report:', error)
+    }
+  }
+
+  const downloadBcfReport = async (result: any, fileName: string) => {
+    try {
+      if (result.bcf_data) {
+        // Create a Blob from the BCF data
+        const bcfBlob = new Blob([result.bcf_data], { type: 'application/octet-stream' })
+
+        // Create a download link
+        const downloadUrl = window.URL.createObjectURL(bcfBlob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.bcf`
+
+        // Trigger download
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        // Clean up
+        window.URL.revokeObjectURL(downloadUrl)
+      }
+    } catch (error) {
+      console.error('Error generating BCF report:', error)
     }
   }
 
@@ -638,7 +642,7 @@ export const UploadCard = () => {
                     <Group key={index} gap='xs'>
                       {reportFormats.html && (
                         <Button
-                          onClick={() => openReportInNewTab(result.result, result.fileName)}
+                          onClick={() => openHtmlReport(result.result, result.fileName)}
                           color='yellow'
                           variant='outline'
                           size='sm'
@@ -668,8 +672,7 @@ export const UploadCard = () => {
                       )}
                       {reportFormats.bcf && (
                         <Button
-                          onClick={() => openReportInNewTab(result.result, result.fileName)}
-                          color='blue'
+                          onClick={() => downloadBcfReport(result.result, result.fileName)}
                           variant='outline'
                           size='sm'
                           fw={500}
