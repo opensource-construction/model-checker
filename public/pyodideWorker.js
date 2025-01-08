@@ -1,3 +1,4 @@
+/* global importScripts */
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js')
 
 let pyodide = null
@@ -25,7 +26,7 @@ async function loadPyodide() {
 }
 
 self.onmessage = async (event) => {
-  const { type, arrayBuffer, idsContent, reporterCode, templateContent, fileName, result } = event.data
+  const { arrayBuffer, idsContent, reporterCode, templateContent, fileName } = event.data
 
   try {
     // Ensure pyodide is loaded
@@ -53,6 +54,7 @@ await micropip.install('https://ifcopenshell.github.io/wasm-preview/IfcOpenShell
     await pyodide.runPythonAsync(`
 await micropip.install('lark')
 await micropip.install('ifctester')
+await micropip.install('bcf-client')
         `)
 
     // Create virtual files for IFC and IDS data
@@ -200,9 +202,35 @@ try:
         json_reporter = Json(spec)
         json_result = json_reporter.report()
         
+        # Get the filename from the input parameters
+        model_filename = '${fileName}'.replace('.ifc', '')
+
         # Generate BCF report
         bcf_reporter = Bcf(spec)
         bcf_result = bcf_reporter.report()
+        
+        # Create a temporary file for BCF
+        import tempfile
+        import os
+        
+        # Create a temporary directory
+        temp_dir = tempfile.mkdtemp()
+        temp_bcf_path = os.path.join(temp_dir, 'temp.bcf')
+        
+        # Save BCF to temporary file
+        bcf_reporter.to_file(temp_bcf_path)
+        
+        # Read the BCF file as bytes
+        with open(temp_bcf_path, 'rb') as f:
+            bcf_zip_bytes = f.read()
+        
+        # Clean up temporary file
+        os.remove(temp_bcf_path)
+        os.rmdir(temp_dir)
+        
+        # Convert bytes to base64
+        import base64
+        bcf_zip_base64 = base64.b64encode(bcf_zip_bytes).decode('utf-8')
         
         # Calculate total checks and passed checks
         total_checks = 0
@@ -267,7 +295,7 @@ try:
         result = {
             'title': 'IFC Validation Report',
             'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'filename': '${fileName}',
+            'filename': model_filename + '.ifc',
             'total_specifications': len(json_result['specifications']),
             'total_specifications_pass': len([s for s in json_result['specifications'] if s['status']]),
             'total_requirements': sum(len(s['requirements']) for s in json_result['specifications']),
@@ -278,7 +306,10 @@ try:
             'percent_checks_pass': round((total_checks_pass / total_checks * 100) if total_checks > 0 else 0, 2),
             'specifications': json_result['specifications'],
             'status': all(s['status'] for s in json_result['specifications']),
-            'bcf_data': bcf_result  # Add BCF data to results
+            'bcf_data': {
+                'zip_content': bcf_zip_base64,
+                'filename': f"{model_filename}_validation.bcf"
+            }
         }
 
         # Store the result

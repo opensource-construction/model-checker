@@ -24,6 +24,13 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { processFile } from './processFile.ts'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
+import { downloadBcfReport } from '../../utils/bcfUtils'
+import {
+  ValidationEntity,
+  ValidationRequirement,
+  ValidationResult,
+  ValidationSpecification,
+} from '../../types/validation'
 
 interface FileError {
   code: string
@@ -33,7 +40,7 @@ interface FileError {
 
 interface ProcessedResult {
   fileName: string
-  result: any
+  result: ValidationResult
 }
 
 export const UploadCard = () => {
@@ -80,7 +87,7 @@ export const UploadCard = () => {
     setProcessingLogs((prev) => [...prev, message])
   }
 
-  const openHtmlReport = async (result: any, fileName: string) => {
+  const openHtmlReport = async (result: ValidationResult, fileName: string) => {
     try {
       if (templateContent) {
         // Prepare the data for Mustache templating
@@ -89,7 +96,7 @@ export const UploadCard = () => {
           date: result.date || new Date().toLocaleString(),
           filename: fileName || 'Unknown',
           status: result.status,
-          specifications: result.specifications?.map((spec: any) => ({
+          specifications: result.specifications?.map((spec: ValidationSpecification) => ({
             name: spec.name,
             status: spec.status,
             description: spec.description || '',
@@ -99,14 +106,12 @@ export const UploadCard = () => {
             total_checks_pass: spec.total_checks_pass,
             total_applicable: spec.total_applicable,
             total_applicable_pass: spec.total_applicable_pass,
-            requirements: spec.requirements?.map((req: any) => ({
+            requirements: spec.requirements?.map((req: ValidationRequirement) => ({
               description: req.description,
               status: req.status,
-              // Important: Add these flags for both passed and failed
-              total_pass: req.passed_entities?.length > 0,
-              total_fail: req.failed_entities?.length > 0,
-              // Pass through all entities data
-              passed_entities: req.passed_entities?.map((entity: any) => ({
+              total_pass: req.passed_entities?.length ?? 0 > 0,
+              total_fail: req.failed_entities?.length ?? 0 > 0,
+              passed_entities: req.passed_entities?.map((entity: ValidationEntity) => ({
                 class: entity.class || '',
                 predefined_type: entity.predefined_type || '',
                 name: entity.name || '',
@@ -118,7 +123,7 @@ export const UploadCard = () => {
                 type_global_id: entity.type_global_id,
                 extra_of_type: entity.extra_of_type,
               })),
-              failed_entities: req.failed_entities?.map((entity: any) => ({
+              failed_entities: req.failed_entities?.map((entity: ValidationEntity) => ({
                 class: entity.class || '',
                 predefined_type: entity.predefined_type || '',
                 name: entity.name || '',
@@ -131,7 +136,6 @@ export const UploadCard = () => {
                 type_global_id: entity.type_global_id,
                 extra_of_type: entity.extra_of_type,
               })),
-              // Add all the necessary flags for both passed and failed
               has_omitted_passes: req.has_omitted_passes,
               total_omitted_passes: req.total_omitted_passes,
               total_passed_entities: req.total_passed_entities,
@@ -141,7 +145,7 @@ export const UploadCard = () => {
               extra_of_type: req.extra_of_type,
             })),
           })),
-          // Add summary stats
+          // Summary stats
           total_specifications: result.total_specifications,
           total_specifications_pass: result.total_specifications_pass,
           percent_specifications_pass: result.percent_specifications_pass,
@@ -168,28 +172,16 @@ export const UploadCard = () => {
     }
   }
 
-  const downloadBcfReport = async (result: any, fileName: string) => {
-    try {
-      if (result.bcf_data) {
-        // Create a Blob from the BCF data
-        const bcfBlob = new Blob([result.bcf_data], { type: 'application/octet-stream' })
-
-        // Create a download link
-        const downloadUrl = window.URL.createObjectURL(bcfBlob)
-        const link = document.createElement('a')
-        link.href = downloadUrl
-        link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.bcf`
-
-        // Trigger download
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        // Clean up
-        window.URL.revokeObjectURL(downloadUrl)
+  const handleBcfDownload = (result: ProcessedResult) => {
+    if (result.result.bcf_data) {
+      try {
+        downloadBcfReport(result.result.bcf_data)
+      } catch (error) {
+        console.error('Failed to download BCF report:', error)
+        setUploadError(`Failed to download BCF report: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
-    } catch (error) {
-      console.error('Error generating BCF report:', error)
+    } else {
+      setUploadError('No BCF data available for download')
     }
   }
 
@@ -270,16 +262,22 @@ export const UploadCard = () => {
 
             console.log(`Adding result for file ${file.name}`)
             return { fileName: file.name, result }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error(`Error processing file ${file.name}:`, error)
-            const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''
-            const errorMessage = `Error processing ${file.name}: ${error.message || 'Unknown error'}${errorDetails}`
+            const errorDetails =
+              error instanceof Error && 'details' in error
+                ? `\nDetails: ${JSON.stringify((error as { details: unknown }).details, null, 2)}`
+                : ''
+            const errorMessage = `Error processing ${file.name}: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }${errorDetails}`
             setUploadError(errorMessage)
             return {
               fileName: file.name,
               result: {
-                error: error.message,
-                details: error.details,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                details:
+                  error instanceof Error && 'details' in error ? (error as { details: unknown }).details : undefined,
               },
             }
           }
@@ -287,7 +285,7 @@ export const UploadCard = () => {
       )
 
       console.log('All files processed, results:', processedResults)
-      setProcessedResults(processedResults)
+      setProcessedResults(processedResults as ProcessedResult[])
       setUploadProgress(100)
       setIsProcessing(false)
     },
@@ -672,7 +670,7 @@ export const UploadCard = () => {
                       )}
                       {reportFormats.bcf && (
                         <Button
-                          onClick={() => downloadBcfReport(result.result, result.fileName)}
+                          onClick={() => handleBcfDownload(result)}
                           variant='outline'
                           size='sm'
                           fw={500}
