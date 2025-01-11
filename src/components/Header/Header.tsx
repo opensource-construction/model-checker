@@ -13,16 +13,21 @@ export const Header = () => {
   })
 
   return (
-    <Group justify='space-between'>
-      <UnstyledButton onClick={() => navigate('/')}>
-        <Group pt={8}>
+    <Group h='100%' w='100%' justify='space-between' align='center' style={{ flexWrap: 'nowrap' }}>
+      <UnstyledButton onClick={() => navigate('/')} style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+        <Group gap='xs' wrap='nowrap'>
           <img src={oscLogo} alt={'opensource.construction'} style={{ maxHeight: imageHeight }} />
-          <Title order={4}>IFC Model Checker</Title>
+          <Title order={4} style={{ whiteSpace: 'nowrap' }}>
+            IFC Model Checker
+          </Title>
         </Group>
       </UnstyledButton>
-      <Group>
+      <Group gap='xs' wrap='nowrap' pr='xl'>
         <ThemeToggle />
-        <UnstyledButton onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en' ? 'de' : 'en')} mr='md'>
+        <UnstyledButton
+          onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'en' ? 'de' : 'en')}
+          style={{ height: '100%', display: 'flex', alignItems: 'center' }}
+        >
           {i18n.resolvedLanguage === 'en' ? 'DE' : 'EN'}
         </UnstyledButton>
       </Group>

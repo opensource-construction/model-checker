@@ -1,132 +1,313 @@
 :root {
-    /* Light theme colors - keeping as is */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a4a4a;
-    --border-color: #e0e0e0;
-    --accent-color: #007bff;
+  /* Light theme colors - keeping as is */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --border-color: #e0e0e0;
+  --accent-color: #007bff;
+  /* Add transition variables */
+  --theme-transition-duration: 0.5s;
+  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Tokyo Night inspired dark theme */
 :root.dark {
-    /* Base colors */
-    --bg-primary: #1a1b26;
-    --bg-secondary: #24283b;
-    --text-primary: #a9b1d6;
-    --text-secondary: #787c99;
-    --border-color: #292e42;
-    
-    /* Accent colors */
-    --accent-color: #7aa2f7;
-    --accent-yellow: #e0af68;
-    --accent-green: #9ece6a;
-    --accent-purple: #bb9af7;
-    --accent-orange: #ff9e64;
-    --accent-cyan: #7dcfff;
-    --accent-red: #f7768e;
-    
-    /* Additional colors */
-    --comment: #565f89;
-    --terminal-black: #414868;
-    --selection-bg: #28344a;
+  /* Base colors */
+  --bg-primary: #1a1b26;
+  --bg-secondary: #24283b;
+  --text-primary: #a9b1d6;
+  --text-secondary: #787c99;
+  --border-color: #292e42;
+
+  /* Accent colors */
+  --accent-color: #7aa2f7;
+  --accent-yellow: #e0af68;
+  --accent-green: #9ece6a;
+  --accent-purple: #bb9af7;
+  --accent-orange: #ff9e64;
+  --accent-cyan: #7dcfff;
+  --accent-red: #f7768e;
+
+  /* Additional colors */
+  --comment: #565f89;
+  --terminal-black: #414868;
+  --selection-bg: #28344a;
+
+  /* Background colors */
+  --mantine-color-gray-0: var(--bg-primary);
 }
 
-/* Base styles */
+/* Base transitions and theme handling */
+:root {
+  /* ... existing variables ... */
+
+  /* Add transition variables */
+  --theme-transition-duration: 0.5s;
+  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth theme transitions */
 body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Prevent flash of white during dark mode transition */
+html.dark {
+  background-color: var(--bg-primary);
 }
 
 /* Add this to your existing index.css or create a new one */
 * {
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Card styles */
 .mantine-Card-root {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
 }
 
 .mantine-Card-root:hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Dark mode specific overrides */
 :root.dark {
-    /* Main layout */
-    .mantine-AppShell-main {
-        background-color: var(--bg-primary);
-    }
+  /* Main layout */
+  .mantine-AppShell-main {
+    background-color: var(--bg-primary);
+  }
 
-    /* Header/Navbar */
-    .mantine-Header-root,
-    .mantine-Navbar-root {
-        background-color: var(--bg-secondary);
-        border-color: var(--border-color);
-    }
+  /* Header/Navbar */
+  .mantine-Header-root,
+  .mantine-Navbar-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
 
-    /* Paper components */
-    .mantine-Paper-root {
-        background-color: var(--bg-secondary);
-        border-color: var(--border-color);
-    }
+  /* Paper components */
+  .mantine-Paper-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
 
-    /* Text colors */
-    .mantine-Title-root,
-    .mantine-Text-root {
-        color: var(--text-primary);
-    }
+  /* Text colors */
+  .mantine-Title-root,
+  .mantine-Text-root {
+    color: var(--text-primary);
+  }
 
-    /* Buttons */
-    .mantine-Button-root {
-        background-color: var(--accent-color);
-        color: var(--bg-primary);
-    }
+  /* Buttons */
+  .mantine-Button-root {
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+  }
 
-    .mantine-UnstyledButton-root {
-        color: var(--text-primary);
-    }
+  .mantine-UnstyledButton-root {
+    color: var(--text-primary);
+  }
 
-    /* Links */
-    a {
-        color: var(--accent-cyan);
-    }
+  /* Links */
+  a {
+    color: var(--accent-cyan);
+  }
 
-    /* Input fields */
-    .mantine-TextInput-input,
-    .mantine-Textarea-input,
-    .mantine-Select-input {
-        background-color: var(--bg-primary);
-        border-color: var(--border-color);
-        color: var(--text-primary);
-    }
+  /* Input fields */
+  .mantine-TextInput-input,
+  .mantine-Textarea-input,
+  .mantine-Select-input {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
 
-    /* Tables */
-    .mantine-Table-root {
-        background-color: var(--bg-secondary);
-        border-color: var(--border-color);
-    }
+  /* Tables */
+  .mantine-Table-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
 
-    .mantine-Table-row:hover {
-        background-color: var(--selection-bg);
-    }
+  .mantine-Table-row:hover {
+    background-color: var(--selection-bg);
+  }
 
-    /* Group backgrounds */
-    .mantine-Group-root {
-        background-color: transparent;
-    }
+  /* Group backgrounds */
+  .mantine-Group-root {
+    background-color: transparent;
+  }
 
-    /* Card styles in dark mode */
-    .mantine-Card-root {
-        background-color: var(--bg-secondary);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
+  /* Card styles in dark mode */
+  .mantine-Card-root {
+    background-color: var(--bg-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
 
-    .mantine-Card-root:hover {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
+  .mantine-Card-root:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Footer in dark mode */
+  .mantine-AppShell-footer {
+    background-color: var(--bg-secondary) !important; /* Using the secondary background for better contrast */
+  }
+}
+
+/* Ensure the page background extends fully */
+body,
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mantine-color-gray-0);
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Update dark mode background handling */
+:root.dark {
+  /* ... other dark mode variables ... */
+
+  /* Single background color definition */
+  --mantine-color-gray-0: var(--bg-primary);
+
+  /* Remove any other background definitions */
+  .mantine-AppShell-main {
+    /* Remove background-color definition here */
+  }
+}
+
+/* Remove any other background definitions from components unless specifically needed */
+.mantine-Paper-root {
+  border-color: var(--border-color);
+  /* Keep other styles but remove any background-color definitions */
+}
+
+/* Component transitions */
+.mantine-Paper-root,
+.mantine-Card-root,
+.mantine-AppShell-main,
+.mantine-AppShell-footer {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+  backface-visibility: hidden; /* Prevent flickering in some browsers */
+}
+
+/* Dark mode transitions */
+:root.dark {
+  /* ... existing dark mode variables ... */
+
+  .mantine-AppShell-main {
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  }
+
+  .mantine-Paper-root {
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  }
+
+  /* Smooth transition for text */
+  .mantine-Text-root,
+  .mantine-Title-root {
+    transition: color var(--theme-transition-duration) var(--theme-transition-timing);
+  }
+}
+
+/* Ensure smooth transitions for all interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Prevent transition flicker */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove individual transitions and consolidate */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base theme handling */
+body,
+html,
+#root,
+.mantine-AppShell-main,
+.mantine-Paper-root,
+.mantine-Card-root {
+  transition: all var(--theme-transition);
+}
+
+/* Prevent flash during transition */
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: var(--bg-primary);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mantine-color-gray-0);
+}
+
+/* Dark mode handling */
+:root.dark {
+  /* ... existing dark mode variables ... */
+  --mantine-color-gray-0: var(--bg-primary);
+
+  .mantine-AppShell-main {
+    background-color: var(--bg-primary);
+  }
+
+  .mantine-Paper-root {
+    background-color: var(--bg-secondary);
+  }
+}
+
+/* Remove individual transitions from components */
+.mantine-Card-root {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mantine-Card-root:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Update UploadFilePage height handling */
+.mantine-AppShell-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }

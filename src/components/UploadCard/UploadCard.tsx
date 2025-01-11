@@ -15,6 +15,7 @@ import {
   Switch,
   Text,
   Tooltip,
+  Container,
 } from '@mantine/core'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
 import { IconFile3d, IconFileText, IconUpload, IconX, IconDownload, IconInfoCircle } from '@tabler/icons-react'
@@ -42,6 +43,21 @@ interface ProcessedResult {
   fileName: string
   result: ValidationResult
 }
+
+const consoleStyles = {
+  position: 'fixed',
+  bottom: '60px', // Above footer
+  right: '20px',
+  width: '270px',
+  maxHeight: '300px',
+  zIndex: 1000,
+  borderRadius: '8px',
+  backdropFilter: 'blur(8px)',
+  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+  border: '1px solid var(--border-color)',
+  backgroundColor: 'var(--bg-secondary)',
+  transition: 'all var(--theme-transition)',
+} as const
 
 export const UploadCard = () => {
   const navigate = useNavigate()
@@ -345,366 +361,317 @@ export const UploadCard = () => {
   }
 
   return (
-    <Stack maw={{ base: '95%', sm: '70%' }} mx='auto' px={{ base: 'xs', sm: 'md', lg: 'xl' }} gap='md'>
-      <Paper shadow='sm' p={{ base: 'md', sm: 'lg', lg: 'xl' }} withBorder>
+    <Stack maw={800} mx='auto'>
+      <Paper shadow='sm' p='md' withBorder radius='md'>
         <Stack gap='md'>
-          <Stack gap='md'>
-            <UploadCardTitle isIdsValidation={isIdsValidation} />
-            <Group align='center' gap='md' mt={{ base: 'xs', sm: 'md', lg: 'xl' }}>
+          <UploadCardTitle isIdsValidation={isIdsValidation} />
+
+          <Group align='center'>
+            <Switch
+              checked={isIdsValidation}
+              onChange={(event) => setIsIdsValidation(event.currentTarget.checked)}
+              label={t('ids-validation')}
+              size='md'
+            />
+
+            {isIdsValidation && (
               <Group gap='xs'>
-                <Switch
-                  checked={isIdsValidation}
-                  onChange={(event) => setIsIdsValidation(event.currentTarget.checked)}
-                  label={t('ids-validation')}
-                />
-                {isIdsValidation && (
-                  <Stack gap={0}>
-                    <Group gap='xs'>
-                      <Text size='sm'>{t('report-format')}:</Text>
-                      <Group gap='xs'>
-                        <Group gap={4}>
-                          <Checkbox
-                            label='HTML'
-                            checked={reportFormats.html}
-                            onChange={(e) => setReportFormats((prev) => ({ ...prev, html: e.currentTarget.checked }))}
-                          />
-                          <Tooltip label={t('html-report')}>
-                            <IconInfoCircle size={16} style={{ color: 'var(--mantine-color-gray-6)' }} />
-                          </Tooltip>
-                        </Group>
-                        <Group gap={4}>
-                          <Checkbox
-                            label='BCF'
-                            checked={reportFormats.bcf}
-                            onChange={(e) => setReportFormats((prev) => ({ ...prev, bcf: e.currentTarget.checked }))}
-                          />
-                          <Tooltip label={t('bcf-report')}>
-                            <IconInfoCircle size={16} style={{ color: 'var(--mantine-color-gray-6)' }} />
-                          </Tooltip>
-                        </Group>
-                      </Group>
-                    </Group>
-                  </Stack>
-                )}
-              </Group>
-            </Group>
-            <Stack gap='xs' mt={{ base: 'md', lg: 'xl' }}>
-              <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.0`)}</Text>
-              <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.1`)}</Text>
-              <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.2`)}</Text>
-              {isIdsValidation && (
-                <Text size='sm' c='blue.7'>
-                  {t('upload-description-ids.3')}
+                <Text size='sm' fw={500}>
+                  {t('report-format')}:
                 </Text>
-              )}
-            </Stack>
+                <Group gap='xs'>
+                  <Checkbox
+                    label='HTML'
+                    checked={reportFormats.html}
+                    onChange={(e) => setReportFormats((prev) => ({ ...prev, html: e.currentTarget.checked }))}
+                    size='sm'
+                  />
+                  <Checkbox
+                    label='BCF'
+                    checked={reportFormats.bcf}
+                    onChange={(e) => setReportFormats((prev) => ({ ...prev, bcf: e.currentTarget.checked }))}
+                    size='sm'
+                  />
+                </Group>
+              </Group>
+            )}
+          </Group>
 
-            <Box mt={{ base: 'lg', lg: 'xl' }}>
-              {isIdsValidation ? (
-                <Stack maw='100%'>
-                  <Grid gutter={{ base: 'xs', sm: 'md', lg: 'xl' }} style={{ width: '100%' }}>
-                    <Grid.Col span={{ base: 12, sm: 6 }}>
-                      <Dropzone
-                        onDrop={handleIfcDrop}
-                        onReject={handleReject}
-                        maxSize={500 * 1024 ** 2}
-                        multiple={true}
-                        validator={ifcValidator}
-                        style={{ width: '100%', minHeight: '300px', height: '100%' }}
-                      >
-                        <Stack h='100%' gap='xs'>
-                          <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '120px' }}>
-                            <Stack align='center' justify='center' gap='xs'>
-                              <Dropzone.Accept>
-                                <IconUpload
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-blue-6)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Accept>
-                              <Dropzone.Reject>
-                                <IconX
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Reject>
-                              <Dropzone.Idle>
-                                <IconFile3d
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-dimmed)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Idle>
-
-                              <Stack gap='xs'>
-                                <Text size='lg'>{t('dropzone.drag.ifc')}</Text>
-                                <Text size='sm' c='dimmed'>
-                                  {t('dropzone.attach')}
-                                </Text>
-                              </Stack>
-                            </Stack>
-                          </Group>
-                          <ScrollArea.Autosize mah={160}>
-                            {ifcFiles?.map((file, index) => (
-                              <Group key={index} gap='xs'>
-                                <IconFile3d stroke={0.7} />
-                                <Text size='sm'>{file.name}</Text>
-                              </Group>
-                            ))}
-                          </ScrollArea.Autosize>
-                        </Stack>
-                      </Dropzone>
-                    </Grid.Col>
-                    <Grid.Col span={{ base: 12, sm: 6 }}>
-                      <Dropzone
-                        onDrop={handleIdsDrop}
-                        onReject={handleReject}
-                        maxSize={5 * 1024 ** 2}
-                        multiple={false}
-                        validator={idsValidator}
-                        style={{ width: '100%', minHeight: '300px', height: '100%' }}
-                      >
-                        <Stack h='100%' gap='xs'>
-                          <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '120px' }}>
-                            <Stack align='center' justify='center' gap='xs'>
-                              <Dropzone.Accept>
-                                <IconUpload
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-blue-6)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Accept>
-                              <Dropzone.Reject>
-                                <IconX
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Reject>
-                              <Dropzone.Idle>
-                                <IconFileText
-                                  style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-dimmed)' }}
-                                  stroke={1.5}
-                                />
-                              </Dropzone.Idle>
-                              <Stack gap='xs'>
-                                <Text size='lg'>{t('dropzone.drag.ids')}</Text>
-                                <Text size='sm' c='dimmed'>
-                                  {t('dropzone.attach-single')}
-                                </Text>
-                              </Stack>
-                            </Stack>
-                          </Group>
-                          <ScrollArea.Autosize mah={160}>
-                            {idsFile && (
-                              <Group gap='xs'>
-                                <IconFileText stroke={0.7} />
-                                <Text size='sm'>{idsFile.name}</Text>
-                              </Group>
-                            )}
-                          </ScrollArea.Autosize>
-                        </Stack>
-                      </Dropzone>
-                    </Grid.Col>
-                  </Grid>
-                </Stack>
-              ) : (
-                <Dropzone
-                  onDrop={handleIfcDrop}
-                  onReject={handleReject}
-                  maxSize={500 * 1024 ** 2}
-                  multiple={true}
-                  validator={ifcValidator}
-                  style={{
-                    width: '100%',
-                    minHeight: '300px',
-                    maxWidth: '100%',
-                    margin: '0 auto',
-                  }}
-                >
-                  <Stack h='100%' gap='xs'>
-                    <Group justify='center' gap='xl' style={{ pointerEvents: 'none', minHeight: '120px' }}>
-                      <Stack align='center' justify='center' gap='xs'>
-                        <Dropzone.Accept>
-                          <IconUpload
-                            style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-blue-6)' }}
-                            stroke={1.5}
-                          />
-                        </Dropzone.Accept>
-                        <Dropzone.Reject>
-                          <IconX
-                            style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-red-6)' }}
-                            stroke={1.5}
-                          />
-                        </Dropzone.Reject>
-                        <Dropzone.Idle>
-                          <IconFile3d
-                            style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-dimmed)' }}
-                            stroke={1.5}
-                          />
-                        </Dropzone.Idle>
-
-                        <Stack gap='xs'>
-                          <Text size='lg'>{t('dropzone.drag.ifc')}</Text>
-                          <Text size='sm' c='dimmed'>
-                            {t('dropzone.attach')}
-                          </Text>
-                        </Stack>
-                      </Stack>
-                    </Group>
-                    <ScrollArea.Autosize mah={160}>
-                      {ifcFiles?.map((file, index) => (
-                        <Group key={index} gap='xs'>
-                          <IconFile3d stroke={0.7} />
-                          <Text size='sm'>{file.name}</Text>
-                        </Group>
-                      ))}
-                    </ScrollArea.Autosize>
-                  </Stack>
-                </Dropzone>
-              )}
-            </Box>
-            {errors && (
-              <div>
-                {errors.map((error, index) => (
-                  <Text key={index} size='sm' c='red'>
-                    {t('dropzone.error-message')}: {error.file} - {error.message}
-                  </Text>
-                ))}
-              </div>
+          <Stack gap='xs'>
+            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.0`)}</Text>
+            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.1`)}</Text>
+            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.2`)}</Text>
+            {isIdsValidation && (
+              <Text size='sm' c='blue.7'>
+                {t('upload-description-ids.3')}
+              </Text>
             )}
           </Stack>
-          {isProcessing && (
-            <Center
-              style={{
-                position: 'fixed',
-                bottom: 'calc(var(--mantine-footer-height, 60px) + 1rem)',
-                right: '1rem',
-                width: 'auto',
-                maxWidth: '600px',
-                backgroundColor: 'transparent',
-                zIndex: 1000,
-                pointerEvents: 'none',
-              }}
-            >
-              <Paper
-                withBorder
-                p='xs'
-                style={{
-                  width: '100%',
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  backgroundColor: 'var(--mantine-color-dark-4)',
-                  fontFamily: 'monospace',
-                  pointerEvents: 'auto',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+
+          <Box>
+            {isIdsValidation ? (
+              <Grid gutter='md'>
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Dropzone
+                    onDrop={handleIfcDrop}
+                    onReject={handleReject}
+                    maxSize={500 * 1024 ** 2}
+                    multiple={true}
+                    validator={ifcValidator}
+                    styles={{
+                      root: {
+                        minHeight: '300px',
+                        border: '1px dashed var(--mantine-color-gray-4)',
+                        backgroundColor: 'transparent',
+                      },
+                    }}
+                  >
+                    <Stack justify='center' align='center' h='100%' spacing='xs'>
+                      <Dropzone.Accept>
+                        <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
+                      </Dropzone.Accept>
+                      <Dropzone.Reject>
+                        <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
+                      </Dropzone.Reject>
+                      <Dropzone.Idle>
+                        <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
+                      </Dropzone.Idle>
+
+                      <Text size='xl' inline>
+                        {t('dropzone.drag.ifc')}
+                      </Text>
+                      <Text size='sm' color='dimmed' inline>
+                        {t('dropzone.attach')}
+                      </Text>
+
+                      <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
+                        {ifcFiles?.map((file, index) => (
+                          <Group key={index} gap='xs'>
+                            <IconFile3d size={16} />
+                            <Text size='sm'>{file.name}</Text>
+                          </Group>
+                        ))}
+                      </ScrollArea.Autosize>
+                    </Stack>
+                  </Dropzone>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Dropzone
+                    onDrop={handleIdsDrop}
+                    onReject={handleReject}
+                    maxSize={5 * 1024 ** 2}
+                    multiple={false}
+                    validator={idsValidator}
+                    styles={{
+                      root: {
+                        minHeight: '300px',
+                        border: '1px dashed var(--mantine-color-gray-4)',
+                        backgroundColor: 'transparent',
+                      },
+                    }}
+                  >
+                    <Stack justify='center' align='center' h='100%' spacing='xs'>
+                      <Dropzone.Accept>
+                        <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
+                      </Dropzone.Accept>
+                      <Dropzone.Reject>
+                        <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
+                      </Dropzone.Reject>
+                      <Dropzone.Idle>
+                        <IconFileText size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
+                      </Dropzone.Idle>
+
+                      <Text size='xl' inline>
+                        {t('dropzone.drag.ids')}
+                      </Text>
+                      <Text size='sm' color='dimmed' inline>
+                        {t('dropzone.attach-single')}
+                      </Text>
+
+                      <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
+                        {idsFile && (
+                          <Group gap='xs'>
+                            <IconFileText size={16} />
+                            <Text size='sm'>{idsFile.name}</Text>
+                          </Group>
+                        )}
+                      </ScrollArea.Autosize>
+                    </Stack>
+                  </Dropzone>
+                </Grid.Col>
+              </Grid>
+            ) : (
+              <Dropzone
+                onDrop={handleIfcDrop}
+                onReject={handleReject}
+                maxSize={500 * 1024 ** 2}
+                multiple={true}
+                validator={ifcValidator}
+                styles={{
+                  root: {
+                    minHeight: '300px',
+                    border: '1px dashed var(--mantine-color-gray-4)',
+                    backgroundColor: 'transparent',
+                  },
                 }}
               >
-                {processingLogs.map((log, index) => (
-                  <Text
-                    key={index}
-                    size='sm'
-                    style={{
-                      color: '#fff',
-                      padding: '2px 0',
-                      borderBottom: index !== processingLogs.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                    }}
-                  >
-                    {log}
+                <Stack justify='center' align='center' h='100%' spacing='xs'>
+                  <Dropzone.Accept>
+                    <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
+                  </Dropzone.Accept>
+                  <Dropzone.Reject>
+                    <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
+                  </Dropzone.Reject>
+                  <Dropzone.Idle>
+                    <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
+                  </Dropzone.Idle>
+
+                  <Text size='xl' inline>
+                    {t('dropzone.drag.ifc')}
                   </Text>
-                ))}
-                {isProcessing && (
-                  <Text
-                    size='sm'
-                    style={{
-                      color: '#fff',
-                      padding: '2px 0',
-                      opacity: 0.7,
-                    }}
-                  >
-                    {loadingDots}
+                  <Text size='sm' color='dimmed' inline>
+                    {t('dropzone.attach')}
                   </Text>
-                )}
-              </Paper>
-            </Center>
-          )}
-          {uploadProgress > 0 && uploadProgress < 100 && <Progress value={uploadProgress} size='xl' mb='md' />}
-          {uploadError && (
-            <Alert color='red' title='Processing Error' mb='md'>
-              {uploadError}
+
+                  <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
+                    {ifcFiles?.map((file, index) => (
+                      <Group key={index} gap='xs'>
+                        <IconFile3d size={16} />
+                        <Text size='sm'>{file.name}</Text>
+                      </Group>
+                    ))}
+                  </ScrollArea.Autosize>
+                </Stack>
+              </Dropzone>
+            )}
+          </Box>
+
+          {errors && errors.length > 0 && (
+            <Alert color='red' variant='light'>
+              {errors.map((error, index) => (
+                <Text key={index} size='sm'>
+                  {t('dropzone.error-message')}: {error.file} - {error.message}
+                </Text>
+              ))}
             </Alert>
           )}
-          {processedResults.length > 0 && (
-            <Alert color='green' title='Processing Complete' mb='md'>
-              <Text>Your files have been processed.</Text>
-              <Box maw={650}>
-                <Group mt='sm' gap='xs' wrap='wrap'>
-                  {processedResults.map((result, index) => (
-                    <Group key={index} gap='xs'>
-                      {reportFormats.html && (
-                        <Button
-                          onClick={() => openHtmlReport(result.result, result.fileName)}
-                          color='yellow'
-                          variant='outline'
-                          size='sm'
-                          fw={500}
-                          className='report-button'
-                          leftSection={<IconFileText size={16} />}
-                          styles={{
-                            root: {
-                              border: '2px solid var(--mantine-color-yellow-filled)',
-                              color: 'var(--mantine-color-dark-6)',
-                              backgroundColor: 'var(--mantine-color-yellow-1)',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'var(--mantine-color-yellow-2)',
-                                transform: 'translateY(-4px)',
-                                boxShadow: '0 4px 8px rgba(255, 213, 0, 0.35)',
-                              },
-                              '&:active': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 2px 4px rgba(255, 213, 0, 0.35)',
-                              },
-                            },
-                          }}
-                        >
-                          HTML - {result.fileName}
-                        </Button>
-                      )}
-                      {reportFormats.bcf && (
-                        <Button
-                          onClick={() => handleBcfDownload(result)}
-                          variant='outline'
-                          size='sm'
-                          fw={500}
-                          className='report-button'
-                          leftSection={<IconDownload size={16} />}
-                          styles={{
-                            root: {
-                              border: '2px solid var(--mantine-color-blue-filled)',
-                              color: 'var(--mantine-color-dark-6)',
-                              backgroundColor: 'var(--mantine-color-blue-1)',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'var(--mantine-color-blue-2)',
-                                transform: 'translateY(-4px)',
-                                boxShadow: '0 4px 8px rgba(0, 145, 255, 0.35)',
-                              },
-                              '&:active': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 2px 4px rgba(0, 145, 255, 0.35)',
-                              },
-                            },
-                          }}
-                        >
-                          BCF - {result.fileName}
-                        </Button>
-                      )}
-                    </Group>
+
+          {isProcessing && (
+            <Paper withBorder p='md' style={consoleStyles}>
+              <Group position='apart' mb='xs'>
+                <Text size='sm' fw={500} c='dimmed'>
+                  Processing Logs
+                </Text>
+                <Text size='xs' c='dimmed'>
+                  {processingLogs.length} entries
+                </Text>
+              </Group>
+
+              <ScrollArea h={200} offsetScrollbars>
+                <Stack spacing='xs'>
+                  {processingLogs.map((log, index) => (
+                    <Text
+                      key={index}
+                      size='sm'
+                      style={{
+                        color: 'var(--text-primary)',
+                        padding: '4px 8px',
+                        backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'transparent',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {log}
+                    </Text>
                   ))}
-                </Group>
-              </Box>
+                  {isProcessing && (
+                    <Text
+                      size='sm'
+                      style={{
+                        color: 'var(--text-secondary)',
+                        padding: '4px 8px',
+                      }}
+                    >
+                      {loadingDots}
+                    </Text>
+                  )}
+                </Stack>
+              </ScrollArea>
+            </Paper>
+          )}
+
+          {processedResults.length > 0 && (
+            <Alert color='green' variant='light'>
+              <Text>Your files have been processed.</Text>
+              <Group mt='md' gap='sm'>
+                {processedResults.map((result, index) => (
+                  <Group key={index} gap='xs'>
+                    {reportFormats.html && (
+                      <Button
+                        onClick={() => openHtmlReport(result.result, result.fileName)}
+                        color='yellow'
+                        variant='outline'
+                        size='sm'
+                        fw={500}
+                        className='report-button'
+                        leftSection={<IconFileText size={16} />}
+                        styles={{
+                          root: {
+                            border: '2px solid var(--mantine-color-yellow-filled)',
+                            color: 'var(--mantine-color-dark-6)',
+                            backgroundColor: 'var(--mantine-color-yellow-1)',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: 'var(--mantine-color-yellow-2)',
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 4px 8px rgba(255, 213, 0, 0.35)',
+                            },
+                            '&:active': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 2px 4px rgba(255, 213, 0, 0.35)',
+                            },
+                          },
+                        }}
+                      >
+                        HTML - {result.fileName}
+                      </Button>
+                    )}
+                    {reportFormats.bcf && (
+                      <Button
+                        onClick={() => handleBcfDownload(result)}
+                        variant='outline'
+                        size='sm'
+                        fw={500}
+                        className='report-button'
+                        leftSection={<IconDownload size={16} />}
+                        styles={{
+                          root: {
+                            border: '2px solid var(--mantine-color-blue-filled)',
+                            color: 'var(--mantine-color-dark-6)',
+                            backgroundColor: 'var(--mantine-color-blue-1)',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: 'var(--mantine-color-blue-2)',
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 4px 8px rgba(0, 145, 255, 0.35)',
+                            },
+                            '&:active': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 2px 4px rgba(0, 145, 255, 0.35)',
+                            },
+                          },
+                        }}
+                      >
+                        BCF - {result.fileName}
+                      </Button>
+                    )}
+                  </Group>
+                ))}
+              </Group>
             </Alert>
           )}
+
           <Button
-            mt={{ base: 'md', lg: 'xl' }}
             onClick={handleClick}
             disabled={
               !ifcFiles.length ||
@@ -713,8 +680,13 @@ export const UploadCard = () => {
               (isIdsValidation && !reportFormats.html && !reportFormats.bcf)
             }
             styles={(theme) => ({
+              root: {
+                height: rem(42),
+                backgroundColor: theme.colors.yellow[5],
+              },
               label: {
                 color: theme.colors.dark[9],
+                fontSize: theme.fontSizes.md,
               },
             })}
           >

@@ -21,7 +21,7 @@ export const theme = createTheme({
     xl: '88em',
     xxl: '120em',
   },
-  defaultRadius: rem(4),  // Slight default rounding
+  defaultRadius: rem(4), // Slight default rounding
   primaryColor: 'yellow',
   primaryShade: 5,
   colors: {
@@ -31,7 +31,7 @@ export const theme = createTheme({
       '#fff4b0',
       '#fff193',
       '#ffee76',
-      '#ffee09',  // Primary yellow
+      '#ffee09', // Primary yellow
       '#e6d608',
       '#ccbe07',
       '#b3a706',
@@ -44,10 +44,10 @@ export const theme = createTheme({
       '#5c5f66',
       '#373A40',
       '#2C2E33',
-      '#1a1b26',  // Tokyo Night dark background
-      '#24283b',  // Tokyo Night secondary background
-      '#16161e',  // Tokyo Night darker shade
-      '#13131a',  // Tokyo Night darkest shade
+      '#1a1b26', // Tokyo Night dark background
+      '#24283b', // Tokyo Night secondary background
+      '#16161e', // Tokyo Night darker shade
+      '#13131a', // Tokyo Night darkest shade
     ],
   },
   components: {
@@ -58,8 +58,8 @@ export const theme = createTheme({
     }),
     Paper: {
       defaultProps: {
-        p: 'md',  // Default padding for all Paper components (including cards)
-        radius: 'sm',  // Slight rounding
+        p: 'md', // Default padding for all Paper components (including cards)
+        radius: 'sm', // Slight rounding
       },
     },
   },
