@@ -43,19 +43,28 @@ self.onmessage = async (event) => {
     self.postMessage({ type: 'progress', message: 'Installing required packages...' })
     await pyodide.loadPackage(['micropip'])
 
+    // Bypass the Emscripten version compatibility check for wheels.
+    self.postMessage({ type: 'progress', message: 'Patching micropip for compatibility check bypass...' })
+    await pyodide.runPythonAsync(`
+import micropip
+from micropip._micropip import WheelInfo
+WheelInfo.check_compatible = lambda self: None
+    `)
+
     // Install IfcOpenShell and dependencies
     self.postMessage({ type: 'progress', message: 'Installing IfcOpenShell...' })
     await pyodide.runPythonAsync(`
 import micropip
-await micropip.install('https://ifcopenshell.github.io/wasm-preview/IfcOpenShell-0.7.0-py3-none-any.whl')
-        `)
+await micropip.install('https://cdn.jsdelivr.net/gh/IfcOpenShell/wasm-wheels@33b437e5fd5425e606f34aff602c42034ff5e6dc/ifcopenshell-0.8.1+latest-cp312-cp312-emscripten_3_1_58_wasm32.whl')
+    `)
 
     self.postMessage({ type: 'progress', message: 'Installing additional dependencies...' })
     await pyodide.runPythonAsync(`
 await micropip.install('lark')
 await micropip.install('ifctester')
 await micropip.install('bcf-client')
-        `)
+await micropip.install('pystache')
+    `)
 
     // Create virtual files for IFC and IDS data
     self.postMessage({ type: 'progress', message: 'Processing input files...' })
@@ -75,7 +84,7 @@ global validation_result_json
 validation_result_json = None
 global template_content
 template_content = '''${templateContent || ''}'''
-        `)
+    `)
 
     // Run the validation in a separate step
     pyodide.runPython(`
@@ -107,9 +116,17 @@ def convert_to_serializable(obj):
 def store_results_as_json(results, html_report=None):
     global validation_result_json
     serializable_results = convert_to_serializable(results)
+    result_dict = {
+        'status': all(s['status'] for s in serializable_results['specifications']),
+        'specifications': serializable_results['specifications'],
+        'bcf_data': {
+            'zip_content': bcf_zip_base64,
+            'filename': f"{model_filename}_validation.bcf"
+        }
+    }
     if html_report:
-        serializable_results['html_report'] = html_report
-    validation_result_json = json.dumps(serializable_results)
+        result_dict['html_report'] = html_report
+    validation_result_json = json.dumps(result_dict)
 
 # Custom implementation of get_pset for WASM compatibility
 def get_pset(element, pset_name):
@@ -314,6 +331,13 @@ try:
 
         # Store the result
         store_results_as_json(result)
+
+        # Generate HTML report
+        html_reporter = Html(spec)
+        html_report = html_reporter.to_string()
+        
+        # Store results with HTML report
+        store_results_as_json(result, html_report=html_report)
     else:
         print("Debug - No IDS content provided")
         # Create a basic IDS for model info
