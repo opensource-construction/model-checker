@@ -1,0 +1,108 @@
+{
+  "upload-file": "Chargiar datoteca",
+  "upload-description": {
+    "0": "Bainvegni tar l'IFC Model Checker!",
+    "1": "La finamira da quest instrument è da dar ina survista svelta dal stadi d'in model. I cuntegna differents tests da standard - sche quels èn reussids, vali la paina d'examinar il model pli detagliadamain.",
+    "2": "Nus avain creà el per ch'el saja simpel e segir.",
+    "3": "Tut las datas restan sin tes computer local - naginas datas vegnan tramessas utrò, tut las verificaziuns vegnan fatgas localmain."
+  },
+  "upload-description-ids": {
+    "0": "Bainvegni tar il validatur IDS!",
+    "1": "Quest instrument ta gida a controllar sche tes models IFC correspundan als basegns IDS (Information Delivery Specification). El fa ina controlla cumpletta tenor las reglas definidas en tia datoteca IDS.",
+    "2": "Nus avain creà el per ch'el saja simpel e segir.",
+    "3": "Tut la validaziun vegn fatga localmain en tes navigatur cun WASM - tias datas na bandunan mai tes apparat.",
+    "4": "Ils resultats vegnan furnids en in rapport detaglià che ti pos guardar online, telechargiar sco HTML, stampar sco PDF u exportar sco BCF per utilisar en tes process da lavur BIM."
+  },
+  "upload-card": {
+    "title": "Validaziun dal model e reglas",
+    "description": "L'IFC Model Checker mussa problems ch'ins chatta savens en datotecas .ifc, manond a datas da qualitad auta en l'industria AEC. La controlla da tias datotecas IFC chargiadas vegn fatga cumplettamain sin la vart dal client, nus na memorisain naginas datas - nagut banduna tes apparat e tut vegn stizzà suenter la sessiun.",
+    "rules": "Reglas",
+    "info-card": {
+      "0": "Validaziun dal num dal project: Garantescha che mintga project haja in num signifitgant e valid.",
+      "1": "Associaziuns dal project: Controllescha che tut ils elements colliads cun il project sajan correctamain connectads.",
+      "2": "Validaziun dal num dal lieu: Conferma che ils nums dals lieus sajan definids correctamain.",
+      "3": "Associaziuns dal lieu: Controllescha la correcta colliaziun dals elements colliads cun il lieu.",
+      "4": "Validaziun dal num da l'edifizi: Garantescha che ils edifizis dal project hajan nums clars e valids.",
+      "5": "Associaziuns da l'edifizi: Valitescha las connexiuns tranter ils edifizis ed auters elements.",
+      "6": "Validaziun dals plauns: Conferma che mintga edifizi haja ina structura da plauns valida.",
+      "7": "Validaziun dal num dals plauns: Garantescha che mintga plaun d'in edifizi saja numnà correctamain.",
+      "8": "Associaziuns dals plauns: Controllescha che ils elements sajan correctamain associads cun lur plauns respectivs.",
+      "9": "Validaziun dal num dals spazis: Garantescha che tut ils spazis sajan numnads cleramain e precisamain.",
+      "10": "Validaziun dal num dals objects: Conferma che tut ils objects dal project hajan nums valids.",
+      "11": "Validaziun da la descripziun dals objects: Garantescha che mintga object haja ina descripziun adequata.",
+      "12": "Validaziun dal num dal tip: Controllescha che ils tips sajan numnads correctamain, evitond ambiguitads.",
+      "13": "Associaziuns da materials: Garantescha che tut ils objects hajan definiziuns da materials associadas.",
+      "14": "Controlla dals tips predefinids: Conferma che ils tips predefinids sajan valids (betg UNDEFINED).",
+      "15": "Validaziun dals elements: Identifitgescha ils BuildingElementProxies."
+    }
+  },
+  "validate": "Validar",
+  "dropzone": {
+    "drag": {
+      "ifc": "Lascha crudar datotecas IFC qua u clicca per tscherner",
+      "ids": "Lascha crudar la datoteca IDS qua u clicca per tscherner"
+    },
+    "error-message": "Errur",
+    "attach": "Ti pos agiuntar pliras datotecas",
+    "attach-single": "Mo ina datoteca po vegnir agiuntada"
+  },
+  "results": "Resultats",
+  "print": "Stampar",
+  "result-table": {
+    "rule": "Regla",
+    "status": "Status",
+    "level-of-fulfilment": "Nivel d'adempliment",
+    "passed": "Reussì",
+    "failed": "Betg reussì",
+    "statistics": "Statisticas",
+    "all-data": "Tut las datas",
+    "count": "Dumber",
+    "other": "Auter"
+  },
+  "rules": {
+    "project-name": "È il num IfcProject emplenì?",
+    "site-name": "È il num IfcSite emplenì?",
+    "building-name": "È il num IfcBuilding emplenì?",
+    "story-name": "Èn ils nums IfcBuilding Storey emplenids?",
+    "story-relation": "Han tut ils objects ina relaziun cun in BuildingStory?",
+    "building-relation": "Han tut ils objects ina relaziun cun in edifizi?",
+    "site-relation": "Han tut ils objects ina relaziun cun in lieu?",
+    "project-relation": "Han tut ils objects ina relaziun cun in project?",
+    "space-name": "Sche i dat IfcSpaces, han els il num emplenì?",
+    "object-name": "Han tut ils objects in num?",
+    "type-name": "Han tut ils objects in num da tip?",
+    "object-description": "Han tut ils objects ina descripziun?",
+    "material-name": "Han tut ils objects in num da material?",
+    "predefined-type": "Sche ils objects han in tip predefinì, èn els definids?",
+    "object-count": "Part dals IfcBuildingElementProxy utilisads:",
+    "project-names": "Num da project IFC utilisà",
+    "site-names": "Num da lieu IFC utilisà",
+    "building-names": "Num d'edifizi IFC utilisà",
+    "story-names": "Nums da plauns IFC utilisads",
+    "object-names": "Nums d'objects IFC utilisads",
+    "type-names": "Num da tip d'object IFC utilisà",
+    "descriptions": "Descripziun d'object IFC utilisada",
+    "material-names": "Num da material d'object IFC utilisà",
+    "predefined-types": "Tip predefinì d'object IFC utilisà",
+    "building-element-proxies": "Han tut ils BuildingElementProxy in num?"
+  },
+  "validation-type": "Tip da validaziun",
+  "ids-validation": "Validaziun IDS",
+  "standard-validation": "Validaziun standard",
+  "Upload": {
+    "idsValidation": "Activar la validaziun IDS",
+    "dropIdsFile": "Lascha crudar la datoteca IDS qua",
+    "dropIdsFileDescription": "Lascha crudar tia datoteca IDS (Information Delivery Specification) qua"
+  },
+  "sponsored-by": "Sponsurà da:",
+  "open-source": "Open Source sin:",
+  "author": "Autur",
+  "exported": "Exportà",
+  "report-format": "Format dal rapport",
+  "html-report": "Rapport HTML (vesair en il navigatur)",
+  "bcf-report": "Rapport BCF (telechargiar per instruments BIM)",
+  "report-format-description": "Tscherna in u plirs formats da rapport. Rapports HTML pon vegnir vesids e stampads directamain, entant che rapports BCF pon vegnir utilisads en instruments da collavuraziun BIM.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Tscherna per plaschair almain in format da rapport"
+}

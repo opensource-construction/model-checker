@@ -1,0 +1,108 @@
+{
+  "upload-file": "Télécharger un fichier",
+  "upload-description": {
+    "0": "Bienvenue sur l'IFC Model Checker !",
+    "1": "L'objectif de cet outil est de fournir un aperçu rapide de l'état d'un modèle. Il est livré avec plusieurs tests standard - si ceux-ci réussissent, il vaut la peine d'examiner le modèle plus en détail.",
+    "2": "Nous l'avons conçu pour qu'il soit simple et sécurisé.",
+    "3": "Toutes les données restent sur votre machine locale - aucune donnée ne sera envoyée ailleurs, toutes les vérifications sont effectuées localement."
+  },
+  "upload-description-ids": {
+    "0": "Bienvenue sur le validateur IDS !",
+    "1": "Cet outil vous aide à vérifier si vos modèles IFC sont conformes aux exigences IDS (Information Delivery Specification). Il effectue une vérification complète selon les règles définies dans votre fichier IDS.",
+    "2": "Nous l'avons conçu pour qu'il soit simple et sécurisé.",
+    "3": "Toute la validation est effectuée localement dans votre navigateur en utilisant WASM - vos données ne quittent jamais votre appareil.",
+    "4": "Les résultats sont fournis dans un rapport détaillé que vous pouvez consulter en ligne, télécharger en HTML, imprimer en PDF ou exporter en BCF pour une utilisation ultérieure dans votre flux de travail BIM."
+  },
+  "upload-card": {
+    "title": "Validation du modèle et règles",
+    "description": "L'IFC Model Checker signale les problèmes couramment rencontrés dans les fichiers .ifc, conduisant à des données de haute qualité dans l'industrie AEC. La vérification de vos fichiers IFC téléchargés se fait entièrement côté client, nous ne sauvegardons aucune donnée - rien ne quitte votre appareil et tout est supprimé après la fermeture de la session.",
+    "rules": "Règles",
+    "info-card": {
+      "0": "Validation du nom du projet : S'assure que chaque projet a un nom significatif et valide.",
+      "1": "Associations de projet : Vérifie que tous les éléments liés au projet sont correctement connectés.",
+      "2": "Validation du nom du site : Confirme que les noms des sites sont correctement définis.",
+      "3": "Associations de site : Vérifie la bonne liaison des éléments liés au site.",
+      "4": "Validation du nom du bâtiment : S'assure que les bâtiments du projet ont des noms clairs et valides.",
+      "5": "Associations de bâtiment : Valide les connexions entre les bâtiments et les autres éléments.",
+      "6": "Validation des étages : Confirme que chaque bâtiment a une structure d'étages valide.",
+      "7": "Validation du nom des étages : S'assure que chaque étage d'un bâtiment est correctement nommé.",
+      "8": "Associations d'étages : Vérifie que les éléments sont correctement associés à leurs étages respectifs.",
+      "9": "Validation du nom des espaces : S'assure que tous les espaces sont nommés clairement et précisément.",
+      "10": "Validation du nom des objets : Confirme que tous les objets du projet ont des noms valides.",
+      "11": "Validation de la description des objets : S'assure que chaque objet a une description appropriée.",
+      "12": "Validation du nom du type : Vérifie que les types sont nommés correctement, évitant les ambiguïtés.",
+      "13": "Associations de matériaux : S'assure que tous les objets ont des définitions de matériaux associées.",
+      "14": "Vérification des types prédéfinis : Confirme que les types prédéfinis sont valides (pas UNDEFINED).",
+      "15": "Validation des éléments : Identifie les BuildingElementProxies."
+    }
+  },
+  "validate": "Valider",
+  "dropzone": {
+    "drag": {
+      "ifc": "Déposez les fichiers IFC ici ou cliquez pour sélectionner",
+      "ids": "Déposez le fichier IDS ici ou cliquez pour sélectionner"
+    },
+    "error-message": "Erreur",
+    "attach": "Vous pouvez ajouter plusieurs fichiers",
+    "attach-single": "Un seul fichier peut être ajouté"
+  },
+  "results": "Résultats",
+  "print": "Imprimer",
+  "result-table": {
+    "rule": "Règle",
+    "status": "Statut",
+    "level-of-fulfilment": "Niveau de conformité",
+    "passed": "Réussi",
+    "failed": "Échoué",
+    "statistics": "Statistiques",
+    "all-data": "Toutes les données",
+    "count": "Nombre",
+    "other": "Autre"
+  },
+  "rules": {
+    "project-name": "Le nom IfcProject est-il rempli ?",
+    "site-name": "Le nom IfcSite est-il rempli ?",
+    "building-name": "Le nom IfcBuilding est-il rempli ?",
+    "story-name": "Les noms IfcBuilding Storey sont-ils remplis ?",
+    "story-relation": "Tous les objets ont-ils une relation avec un BuildingStory ?",
+    "building-relation": "Tous les objets ont-ils une relation avec un bâtiment ?",
+    "site-relation": "Tous les objets ont-ils une relation avec un site ?",
+    "project-relation": "Tous les objets ont-ils une relation avec un projet ?",
+    "space-name": "S'il y a des IfcSpaces, ont-ils le nom rempli ?",
+    "object-name": "Tous les objets ont-ils un nom ?",
+    "type-name": "Tous les objets ont-ils un nom de type ?",
+    "object-description": "Tous les objets ont-ils une description ?",
+    "material-name": "Tous les objets ont-ils un nom de matériau ?",
+    "predefined-type": "Si les objets ont un type prédéfini, sont-ils définis ?",
+    "object-count": "Part des IfcBuildingElementProxy utilisés :",
+    "project-names": "Nom de projet IFC utilisé",
+    "site-names": "Nom de site IFC utilisé",
+    "building-names": "Nom de bâtiment IFC utilisé",
+    "story-names": "Noms d'étages IFC utilisés",
+    "object-names": "Noms d'objets IFC utilisés",
+    "type-names": "Nom de type d'objet IFC utilisé",
+    "descriptions": "Description d'objet IFC utilisée",
+    "material-names": "Nom de matériau d'objet IFC utilisé",
+    "predefined-types": "Type prédéfini d'objet IFC utilisé",
+    "building-element-proxies": "Tous les BuildingElementProxy ont-ils un nom ?"
+  },
+  "validation-type": "Type de validation",
+  "ids-validation": "Validation IDS",
+  "standard-validation": "Validation standard",
+  "Upload": {
+    "idsValidation": "Activer la validation IDS",
+    "dropIdsFile": "Déposez le fichier IDS ici",
+    "dropIdsFileDescription": "Faites glisser et déposez votre fichier IDS (Information Delivery Specification) ici"
+  },
+  "sponsored-by": "Sponsorisé par :",
+  "open-source": "Open Source sur :",
+  "author": "Auteur",
+  "exported": "Exporté",
+  "report-format": "Format du rapport",
+  "html-report": "Rapport HTML (voir dans le navigateur)",
+  "bcf-report": "Rapport BCF (télécharger pour les outils BIM)",
+  "report-format-description": "Sélectionnez un ou plusieurs formats de rapport. Les rapports HTML peuvent être consultés et imprimés directement, tandis que les rapports BCF peuvent être utilisés dans les outils de collaboration BIM.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Veuillez sélectionner au moins un format de rapport"
+}
