@@ -3,35 +3,31 @@ import {
   Alert,
   Box,
   Button,
-  Center,
   Checkbox,
   Grid,
   Group,
   Paper,
-  Progress,
   rem,
   ScrollArea,
   Stack,
   Switch,
-  Text,
-  Tooltip,
-  Container,
+  Text
 } from '@mantine/core'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
-import { IconFile3d, IconFileText, IconUpload, IconX, IconDownload, IconInfoCircle } from '@tabler/icons-react'
+import { IconDownload, IconFile3d, IconFileText, IconUpload, IconX } from '@tabler/icons-react'
 import Mustache from 'mustache'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { processFile } from './processFile.ts'
-import { UploadCardTitle } from './UploadCardTitle.tsx'
-import { downloadBcfReport } from '../../utils/bcfUtils'
 import {
   ValidationEntity,
   ValidationRequirement,
   ValidationResult,
   ValidationSpecification,
 } from '../../types/validation'
+import { downloadBcfReport } from '../../utils/bcfUtils'
+import { processFile } from './processFile.ts'
+import { UploadCardTitle } from './UploadCardTitle.tsx'
 
 interface FileError {
   code: string

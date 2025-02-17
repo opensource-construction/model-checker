@@ -95,7 +95,7 @@ global report_fileName
 report_fileName = '''${fileName || 'Unknown IFC File'}'''
     `)
 
-    // Run the validation in a separate step and call reporter module to generate report.
+    // Run the validation in a separate step and call reporter module to generate reports.
     await pyodide.runPythonAsync(`
         import ifcopenshell
         import os
@@ -137,16 +137,29 @@ report_fileName = '''${fileName || 'Unknown IFC File'}'''
             ids.specifications = []
             ids.validate(model)
         
-        # Generate the report using the reporter module.
+        # Generate the JSON report using the reporter module.
         import reporter
-        reporter_instance = reporter.Json(ids)
-        reporter_instance.report()
-        # Overwrite the report title and filename using the passed fileName.
-        reporter_instance.results['filename'] = report_fileName
-        reporter_instance.results['title'] = report_fileName
-        # Export the report as a valid JSON string.
+        json_reporter = reporter.Json(ids)
+        json_reporter.report()
+        
+        # NEW: Generate the BCF report
+        bcf_reporter = reporter.Bcf(ids)
+        bcf_reporter.report()
+        temp_bcf_filename = "/report.bcf"
+        bcf_reporter.write(temp_bcf_filename)
+        with open(temp_bcf_filename, "rb") as f:
+             bcf_bytes = f.read()
+        import base64
+        bcf_b64 = base64.b64encode(bcf_bytes).decode('utf-8')
+        
+        # Overwrite report title and add bcf data to the JSON report.
+        json_reporter.results['filename'] = report_fileName
+        json_reporter.results['title'] = report_fileName
+        json_reporter.results['bcf_data'] = {"zip_content": bcf_b64, "filename": report_fileName + ".bcf"}
+        
+        # Export the JSON string.
         import json
-        validation_result_json = json.dumps(reporter_instance.results, default=str)
+        validation_result_json = json.dumps(json_reporter.results, default=str)
     `)
 
     // Get the JSON string from Python's global namespace

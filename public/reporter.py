@@ -641,14 +641,19 @@ class Bcf(Json):
     def write(self, filepath: str) -> None:
         import numpy as np
         import ifcopenshell.util.placement
-        from bcf.v2.bcfxml import BcfXml
+        from bcf.v3.bcfxml import BcfXml  # updated to the v3 API
+        import io, zipfile
         unit_scale = None
         bcfxml = BcfXml.create_new(self.results["title"])
+        print("DEBUG: Begin BCF write(), title:", self.results["title"])
+        topics_added = 0
         for spec in self.results["specifications"]:
-            if spec["status"]:
-                continue
+            print("DEBUG: Processing spec:", spec.get("name", "unknown"))
             for req in spec["requirements"]:
-                if req["status"]:
+                print("DEBUG: Requirement keys:", list(req.keys()))
+                print("DEBUG: Requirement", req.get("label", "unknown"), "status:", req.get("status"), "failed_entities:", req.get("failed_entities"))
+                # Instead of filtering by overall requirement status, add a topic if there is at least one failure.
+                if not req.get("failed_entities"):
                     continue
                 for failure in req["failed_entities"]:
                     element = failure["element"]
@@ -660,8 +665,9 @@ class Bcf(Json):
                         getattr(element, "Tag", "")
                     ]
                     title = " - ".join([comp for comp in title_components if comp])
-                    description = f'{spec["name"]} - {req["description"]}'
+                    description = f'{spec.get("name", "unknown")} - {req.get("description", "")}'
                     topic = bcfxml.add_topic(title, description, "IfcTester")
+                    print("DEBUG: Added topic:", title)
                     if getattr(element, "ObjectPlacement", None):
                         placement = ifcopenshell.util.placement.get_local_placement(element.ObjectPlacement)
                         if unit_scale is None:
@@ -669,4 +675,16 @@ class Bcf(Json):
                         location = [(o * unit_scale) + 5.0 for o in placement[:, 3][:3]]
                         topic.add_viewpoint_from_point_and_guids(np.array(location), element.GlobalId)
                     if element.is_a("IfcElement"):
-                        topic.add_viewpoint(element) 
+                        topic.add_viewpoint(element)
+                    topics_added += 1
+        print("DEBUG: Total topics added:", topics_added)
+
+        # NEW: Commit topics if commit() is available – this finalizes the BCF project.
+        if hasattr(bcfxml, "commit"):
+            print("DEBUG: Committing BCF topics...")
+            bcfxml.commit()
+
+        # Delegate saving to the new API.
+        print("DEBUG: Saving BCF file via built-in save()...")
+        bcfxml.save(filepath)
+        print("DEBUG: BCF file saved to", filepath) 
