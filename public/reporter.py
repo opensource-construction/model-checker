@@ -10,6 +10,7 @@ import ifcopenshell.util.element
 from typing import TypedDict, Union, Literal, Optional
 from ifctester.ids import Specification, Ids
 from ifctester.facet import Facet, FacetFailure
+import uuid
 
 # Fallback for __file__ in the Pyodide environment
 try:
@@ -207,6 +208,17 @@ class Console(Reporter):
             print(txt, end=end)
         else:
             print(txt)
+
+    # Added write method to enable file output from the Console reporter.
+    def write(self, filepath: str) -> None:
+        # Redirect stdout to the file during report generation.
+        original_stdout = sys.stdout
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                sys.stdout = f
+                self.report()
+        finally:
+            sys.stdout = original_stdout
 
 ###############################################################################
 # Txt Reporter – plain text version (disables colour)
@@ -634,57 +646,50 @@ class OdsSummary(Json):
 ###############################################################################
 # BCF Reporter – produces a BCF project file using bcf-client.
 ###############################################################################
+
 class Bcf(Json):
     def report_failed_entities(self, requirement: Facet) -> list[FacetFailure]:
         return [FacetFailure(f) for f in requirement.failures]
 
-    def write(self, filepath: str) -> None:
+    def to_file(self, filepath: str) -> None:
         import numpy as np
         import ifcopenshell.util.placement
-        from bcf.v3.bcfxml import BcfXml  # updated to the v3 API
-        import io, zipfile
+        from bcf.v2.bcfxml import BcfXml
+
         unit_scale = None
         bcfxml = BcfXml.create_new(self.results["title"])
-        print("DEBUG: Begin BCF write(), title:", self.results["title"])
-        topics_added = 0
-        for spec in self.results["specifications"]:
-            print("DEBUG: Processing spec:", spec.get("name", "unknown"))
-            for req in spec["requirements"]:
-                print("DEBUG: Requirement keys:", list(req.keys()))
-                print("DEBUG: Requirement", req.get("label", "unknown"), "status:", req.get("status"), "failed_entities:", req.get("failed_entities"))
-                # Instead of filtering by overall requirement status, add a topic if there is at least one failure.
-                if not req.get("failed_entities"):
+        for specification in self.results["specifications"]:
+            if specification["status"]:
+                continue
+            for requirement in specification["requirements"]:
+                if requirement["status"]:
                     continue
-                for failure in req["failed_entities"]:
+                for failure in requirement["failed_entities"]:
                     element = failure["element"]
-                    title_components = [
+                    title_components = []
+                    for title_component in [
                         element.is_a(),
                         getattr(element, "Name", "") or "Unnamed",
                         failure.get("reason", "No reason"),
                         getattr(element, "GlobalId", ""),
-                        getattr(element, "Tag", "")
-                    ]
-                    title = " - ".join([comp for comp in title_components if comp])
-                    description = f'{spec.get("name", "unknown")} - {req.get("description", "")}'
+                        getattr(element, "Tag", ""),
+                    ]:
+                        if title_component:
+                            title_components.append(title_component)
+                    title = " - ".join(title_components)
+                    description = f'{specification["name"]} - {requirement["description"]}'
                     topic = bcfxml.add_topic(title, description, "IfcTester")
-                    print("DEBUG: Added topic:", title)
                     if getattr(element, "ObjectPlacement", None):
                         placement = ifcopenshell.util.placement.get_local_placement(element.ObjectPlacement)
                         if unit_scale is None:
                             unit_scale = ifcopenshell.util.unit.calculate_unit_scale(element.wrapped_data.file)
                         location = [(o * unit_scale) + 5.0 for o in placement[:, 3][:3]]
-                        topic.add_viewpoint_from_point_and_guids(np.array(location), element.GlobalId)
+                        viewpoint = topic.add_viewpoint_from_point_and_guids(np.array(location), element.GlobalId)
                     if element.is_a("IfcElement"):
                         topic.add_viewpoint(element)
-                    topics_added += 1
-        print("DEBUG: Total topics added:", topics_added)
+        bcfxml.save_project(filepath)
 
-        # NEW: Commit topics if commit() is available – this finalizes the BCF project.
-        if hasattr(bcfxml, "commit"):
-            print("DEBUG: Committing BCF topics...")
-            bcfxml.commit()
-
-        # Delegate saving to the new API.
-        print("DEBUG: Saving BCF file via built-in save()...")
-        bcfxml.save(filepath)
-        print("DEBUG: BCF file saved to", filepath) 
+    # --------------------------------------------------------------------------------
+    # New write() method: delegate to to_file()
+    def write(self, filepath: str) -> None:
+        self.to_file(filepath)
