@@ -2,6 +2,7 @@ import { PartialResult } from '@context'
 import { BarChart } from '@mantine/charts'
 import { Container } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
+import { useMantineColorScheme } from '@mantine/core'
 
 interface RowStatisticsProps {
   value: PartialResult[]
@@ -9,6 +10,7 @@ interface RowStatisticsProps {
 
 export const RowStatistics = ({ value }: RowStatisticsProps) => {
   const { t, i18n } = useTranslation()
+  const { colorScheme } = useMantineColorScheme()
   const groupedResults = Object.groupBy(value, ({ name }) => name)
 
   const data = Object.entries(groupedResults).map(([name, values]) => ({ name, value: values?.length || 0 }))
@@ -25,7 +27,12 @@ export const RowStatistics = ({ value }: RowStatisticsProps) => {
         h={300}
         data={orderedData}
         dataKey='name'
-        series={[{ name: 'value', color: 'blue.6' }]}
+        series={[
+          {
+            name: 'value',
+            color: colorScheme === 'dark' ? 'blue.5' : '#0909ff',
+          },
+        ]}
         yAxisLabel={t('result-table.count')}
         withTooltip={true}
         withBarValueLabel

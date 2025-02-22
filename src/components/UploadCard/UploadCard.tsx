@@ -468,7 +468,7 @@ export const UploadCard = () => {
                       },
                     }}
                   >
-                    <Stack justify='center' align='center' h='100%' spacing='xs'>
+                    <Stack justify='center' align='center' h='100%' gap='xs'>
                       <Dropzone.Accept>
                         <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
                       </Dropzone.Accept>

@@ -64,7 +64,7 @@
     "site-name": "Is IfcSite Name filled out?",
     "building-name": "Is IfcBuilding Name filled out?",
     "story-name": "Are IfcBuilding Storey Names filled out?",
-    "story-relation": "Do, all Objects have a relation to a BuildingStory?",
+    "story-relation": "Do all Objects have a relation to a BuildingStory?",
     "building-relation": "Do all Objects have a relation to a Building?",
     "site-relation": "Do all Objects have a relation to a Site?",
     "project-relation": "Do all Objects have a relation to a Project?",

@@ -104,14 +104,14 @@ function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): Part
 
   let match: RegExpExecArray | null
 
-  // Extract storey IDs and names
+  // Directly extract storey IDs and names
   while ((match = storeyRegex.exec(content)) !== null) {
     const storeyId = match[1]
     const storeyName = match[3]
     buildingStoreyMap[storeyId] = storeyName
   }
 
-  // Map elements to storeys
+  // Map elements to storeys through direct containment relation
   while ((match = relContainedRegex.exec(content)) !== null) {
     const entityList = match[2]
     const storeyId = match[3]
@@ -123,15 +123,34 @@ function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): Part
     }
   }
 
-  // Check relation and map to storey names
+  // New: Compute a child-to-parent mapping using IFCRELAGGREGATES
+  const childToParentMap: { [key: string]: string } = {}
+  const relAggregatesRegex = /#(\d+)=IFCRELAGGREGATES\([^,]*,[^,]*,.*?,#(\d+),\(([^)]*)\)\);/g
+  while ((match = relAggregatesRegex.exec(content)) !== null) {
+    const parentId = match[2]
+    const childList = match[3]
+    const children = childList.match(/#(\d+)/g)
+    if (children) {
+      children.forEach((child) => {
+        childToParentMap[child.replace('#', '')] = parentId
+      })
+    }
+  }
+
+  // For each element (from the passed regex) try direct mapping; if missing, try parent's mapping
   while ((match = regex.exec(content)) !== null) {
     const { entityId, globalId } = match.groups!
-    const storeyId = elementToStoreyMap[entityId]
+    let storeyId = elementToStoreyMap[entityId]
+    if (!storeyId && childToParentMap[entityId]) {
+      // Fallback: if the element has a parent, assign the parent's storey (if available)
+      const parentId = childToParentMap[entityId]
+      storeyId = elementToStoreyMap[parentId]
+    }
     const storeyName = storeyId ? buildingStoreyMap[storeyId] : 'Unknown'
-    const passed = storeyId !== undefined
+    const passed = !!storeyId  // pass if the storey was found (directly or via parent's relation)
     results.push({
       globalId,
-      name: storeyName, // Use storey name instead of element name
+      name: storeyName, // Use storey name (inherited if necessary)
       passed,
     })
   }
@@ -615,6 +634,7 @@ function mapElementsToStoreys(content: string): { [key: string]: string } {
   const elementToStoreyMap: { [key: string]: string } = {}
   let match: RegExpExecArray | null
 
+  // Get the direct relation mapping from contained-structure
   while ((match = relContainedRegex.exec(content)) !== null) {
     const entityList = match[2]
     const storeyId = match[3]
@@ -626,6 +646,30 @@ function mapElementsToStoreys(content: string): { [key: string]: string } {
       })
     }
   }
+
+  // New: Build a child-to-parent mapping via IFCRELAGGREGATES
+  const childToParentMap: { [key: string]: string } = {}
+  const relAggregatesRegex = /#(\d+)=IFCRELAGGREGATES\([^,]*,[^,]*,.*?,#(\d+),\(([^)]*)\)\);/g
+  while ((match = relAggregatesRegex.exec(content)) !== null) {
+    const parentId = match[2]
+    const childList = match[3]
+    const children = childList.match(/#(\d+)/g)
+    if (children) {
+      children.forEach((child) => {
+        childToParentMap[child.replace('#', '')] = parentId
+      })
+    }
+  }
+
+  // For any element missing a direct storey mapping, try to assign the parent's storey mapping
+  Object.keys(childToParentMap).forEach((childId) => {
+    if (!elementToStoreyMap[childId]) {
+      const parentId = childToParentMap[childId]
+      if (elementToStoreyMap[parentId]) {
+        elementToStoreyMap[childId] = elementToStoreyMap[parentId]
+      }
+    }
+  })
 
   return elementToStoreyMap
 }
