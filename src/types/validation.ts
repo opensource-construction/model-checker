@@ -37,6 +37,7 @@ export interface ValidationRequirement {
 
 export interface ValidationSpecification {
   name: string
+  is_ifc_version: boolean
   status: boolean
   description: string
   instructions?: string

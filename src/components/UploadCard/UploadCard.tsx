@@ -7,11 +7,12 @@ import {
   Grid,
   Group,
   Paper,
+  Progress,
   rem,
   ScrollArea,
   Stack,
   Switch,
-  Text
+  Text,
 } from '@mantine/core'
 import { Dropzone, FileRejection } from '@mantine/dropzone'
 import { IconDownload, IconFile3d, IconFileText, IconUpload, IconX } from '@tabler/icons-react'
@@ -423,7 +424,7 @@ export const UploadCard = () => {
                       },
                     }}
                   >
-                    <Stack justify='center' align='center' h='100%' spacing='xs'>
+                    <Stack justify='center' align='center' h='100%' gap='xs'>
                       <Dropzone.Accept>
                         <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
                       </Dropzone.Accept>
@@ -513,7 +514,7 @@ export const UploadCard = () => {
                   },
                 }}
               >
-                <Stack justify='center' align='center' h='100%' spacing='xs'>
+                <Stack justify='center' align='center' h='100%' gap='xs'>
                   <Dropzone.Accept>
                     <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
                   </Dropzone.Accept>
@@ -554,9 +555,17 @@ export const UploadCard = () => {
             </Alert>
           )}
 
+          {uploadProgress > 0 && uploadProgress < 100 && <Progress value={uploadProgress} size='sm' mb='md' />}
+
+          {uploadError && (
+            <Alert color='red' variant='light' mb='md'>
+              {uploadError}
+            </Alert>
+          )}
+
           {isProcessing && (
             <Paper withBorder p='md' style={consoleStyles}>
-              <Group position='apart' mb='xs'>
+              <Group justify='apart' mb='xs'>
                 <Text size='sm' fw={500} c='dimmed'>
                   Processing Logs
                 </Text>
@@ -566,7 +575,7 @@ export const UploadCard = () => {
               </Group>
 
               <ScrollArea h={200} offsetScrollbars>
-                <Stack spacing='xs'>
+                <Stack gap='xs'>
                   {processingLogs.map((log, index) => (
                     <Text
                       key={index}

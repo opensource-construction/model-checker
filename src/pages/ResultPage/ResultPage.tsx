@@ -1,5 +1,5 @@
 import { Paper, ProjectResult } from '@components'
-import { Button, Container, Divider, Group, Title, useMatches, useMantineColorScheme } from '@mantine/core'
+import { Button, Container, Divider, Group, Title, useMatches } from '@mantine/core'
 import { useValidationContext } from '@context'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef } from 'react'
@@ -15,7 +15,6 @@ export const ResultPage = () => {
     documentTitle: `model_checker_${new Date().toLocaleDateString()}`,
     removeAfterPrint: true,
   })
-  const { colorScheme } = useMantineColorScheme()
 
   useEffect(() => {
     if (!Object.keys(state).length) {
@@ -32,14 +31,10 @@ export const ResultPage = () => {
         margin: '36px auto 0',
       }}
     >
-      <Paper hide={useMatches({ base: true, sm: false })} w='100%'>
+      <Paper hide={useMatches({ base: true, sm: false })}>
         <Group justify='space-between'>
           <Title order={2}>{t('results')}</Title>
-          <Button
-            color="gray.6"
-            mt='md'
-            onClick={() => handlePrint(null, () => contentToPrint.current)}
-          >
+          <Button color='gray.6' mt='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>
             {t('print')}
           </Button>
         </Group>
