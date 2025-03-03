@@ -236,13 +236,6 @@ await micropip.install('pystache')
       message: getConsoleMessage('console.loading.inputFiles', 'Processing input files...'),
     })
 
-    // Only create IFC array buffer if provided
-    // Not used directly, but keeping for future potential use
-    const ifcArrayBufferJs = arrayBuffer ? pyodide.toPy(new Uint8Array(arrayBuffer)) : null
-    // Only create IDS string if provided
-    // Not used directly, but keeping for future potential use
-    const idsContentJs = idsContent ? pyodide.toPy(idsContent) : null
-
     // Run validation
     self.postMessage({
       type: 'progress',
@@ -455,7 +448,7 @@ validation_result_json = json.dumps(results, default=str, ensure_ascii=False)
           }
 
           // Then handle phrases with prefixes
-          ;[
+          [
             { prefix: 'Checks passed', field: 'checksPassedPrefix' },
             { prefix: 'Specifications passed', field: 'specificationsPassedPrefix' },
             { prefix: 'Requirements passed', field: 'requirementsPassedPrefix' },

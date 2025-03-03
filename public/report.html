@@ -215,6 +215,42 @@
         border-radius: 5px;
         background-color: #fafafa;
       }
+      .percent[data-width='100'] {
+        width: 100%;
+      }
+      .percent[data-width='0'] {
+        width: 0%;
+      }
+      .percent[data-width='10'] {
+        width: 10%;
+      }
+      .percent[data-width='20'] {
+        width: 20%;
+      }
+      .percent[data-width='30'] {
+        width: 30%;
+      }
+      .percent[data-width='40'] {
+        width: 40%;
+      }
+      .percent[data-width='50'] {
+        width: 50%;
+      }
+      .percent[data-width='60'] {
+        width: 60%;
+      }
+      .percent[data-width='70'] {
+        width: 70%;
+      }
+      .percent[data-width='80'] {
+        width: 80%;
+      }
+      .percent[data-width='90'] {
+        width: 90%;
+      }
+      .percent[data-width='100'] {
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -228,7 +264,7 @@
     <div class="container">
       <div
         class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
-        style="width: {{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}%;"
+        data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
       >
         {{^total_checks}}{{t.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
       </div>
@@ -260,7 +296,7 @@
         <div class="container">
           <div
             class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
-            style="width: {{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}%;"
+            data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
           >
             {{^total_checks}}Skipped{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
           </div>

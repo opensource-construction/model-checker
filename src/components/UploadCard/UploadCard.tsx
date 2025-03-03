@@ -20,23 +20,28 @@ import Mustache from 'mustache'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import {
-  ValidationEntity,
-  ValidationRequirement,
-  ValidationResult,
-  ValidationSpecification,
-} from '../../types/validation'
+import { ValidationResult } from '../../types/validation'
 import { downloadBcfReport } from '../../utils/bcfUtils'
 import { processFile } from './processFile.ts'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
 
+/**
+ * Interface for file validation errors
+ */
 interface FileError {
+  /** Error code */
   code: string
+  /** Error message */
   message: string
+  /** Name of the file that caused the error */
   file: string
 }
 
+/**
+ * Interface for processed validation results
+ */
 interface ProcessedResult {
+  /** Name of the processed file */
   fileName: string
   result: ValidationResult
 }
@@ -182,6 +187,7 @@ export const UploadCard = () => {
 
       let currentIdsContent: string | null = null
       if (isIdsValidation && idsFile) {
+        addLog(i18n.t('console.loading.idsFile', 'Reading IDS file content...'))
         try {
           currentIdsContent = await idsFile.text()
         } catch (error) {
@@ -190,18 +196,6 @@ export const UploadCard = () => {
           setIsProcessing(false)
           return
         }
-      }
-
-      // Fetch the reporter code
-      let reporterCode: string | null = null
-      try {
-        const response = await fetch('/reporter.py')
-        reporterCode = await response.text()
-      } catch (error) {
-        const errorMsg = handleError(error)
-        setUploadError(errorMsg)
-        setIsProcessing(false)
-        return
       }
 
       const processedResults = await Promise.all(
@@ -280,7 +274,7 @@ export const UploadCard = () => {
       setUploadProgress(100)
       setIsProcessing(false)
     },
-    [dispatch, isIdsValidation, navigate, templateContent, i18n.language],
+    [isIdsValidation, i18n],
   )
 
   const handleClick = async () => {
@@ -539,7 +533,7 @@ export const UploadCard = () => {
               {uploadError}
               {uploadError.includes('out of memory') && (
                 <Box mt='sm'>
-                  <Text weight={700}>{t('console.loading.reloading', 'Page will reload in 3 seconds...')}</Text>
+                  <Text fw={700}>{t('console.loading.reloading', 'Page will reload in 3 seconds...')}</Text>
                 </Box>
               )}
             </Alert>
