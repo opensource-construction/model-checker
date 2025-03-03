@@ -1,3 +1,4 @@
+import { FileState } from '@types/FileState'
 import { Paper, ProjectResult } from '@components'
 import { Button, Container, Divider, Group, Title, useMatches } from '@mantine/core'
 import { useValidationContext } from '@context'
@@ -8,12 +9,44 @@ import { useReactToPrint } from 'react-to-print'
 
 export const ResultPage = () => {
   const { state } = useValidationContext()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const contentToPrint = useRef(null)
+
+  // Store current language in a ref to ensure it's up to date
+  const currentLanguageRef = useRef(i18n.language)
+  
+  // Update ref when language changes
+  useEffect(() => {
+    currentLanguageRef.current = i18n.language
+  }, [i18n.language])
+
   const handlePrint = useReactToPrint({
     documentTitle: `model_checker_${new Date().toLocaleDateString()}`,
     removeAfterPrint: true,
+    content: () => {
+      const worker = new Worker('/pyodideWorker.js')
+      
+      // Get the current validation state
+      const currentState = Object.values(state)[0] as FileState
+      
+      console.log('ResultPage: Language details:', {
+        currentLanguage: currentLanguageRef.current,
+        resolvedLanguage: i18n.resolvedLanguage,
+        languages: i18n.languages,
+        fallbackLng: i18n.options.fallbackLng
+      })
+
+      worker.postMessage({
+        arrayBuffer: currentState.arrayBuffer,
+        idsContent: currentState.idsContent,
+        reporterCode: currentState.reporterCode,
+        templateContent: currentState.templateContent,
+        fileName: currentState.fileName,
+        language: currentLanguageRef.current // Use the ref value
+      })
+      return contentToPrint.current
+    }
   })
 
   useEffect(() => {

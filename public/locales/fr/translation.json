@@ -104,5 +104,76 @@
   "report-format-description": "Sélectionnez un ou plusieurs formats de rapport. Les rapports HTML peuvent être consultés et imprimés directement, tandis que les rapports BCF peuvent être utilisés dans les outils de collaboration BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
-  "select-report-format": "Veuillez sélectionner au moins un format de rapport"
+  "select-report-format": "Veuillez sélectionner au moins un format de rapport",
+  "report": {
+    "summary": "Résumé",
+    "specifications": "Spécifications",
+    "requirements": "Exigences",
+    "details": "Détails",
+    "class": "Classe",
+    "predefinedType": "Type Prédéfini",
+    "name": "Nom",
+    "description": "Description",
+    "warning": "Avertissement",
+    "globalId": "ID Global",
+    "tag": "Étiquette",
+    "reportBy": "Rapport par",
+    "and": "et",
+    "status": {
+      "pass": "RÉUSSI",
+      "fail": "ÉCHEC",
+      "untested": "NON TESTÉ",
+      "skipped": "IGNORÉ"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "L'ensemble de propriétés requis n'existe pas",
+      "dataShallBeProvided": "Les données doivent être fournies dans l'ensemble de données",
+      "propertyNotExist": "La propriété requise n'existe pas",
+      "invalidValue": "a une valeur invalide",
+      "notInRange": "n'est pas dans la plage autorisée",
+      "notFound": "n'a pas été trouvé",
+      "doesNotHave": "n'a pas de",
+      "missingProperty": "la propriété requise est manquante"
+    },
+    "interface": {
+      "passed": "réussi",
+      "failed": "échoué",
+      "checksPassedPrefix": "Vérifications réussies",
+      "specificationsPassedPrefix": "Spécifications réussies",
+      "requirementsPassedPrefix": "Exigences respectées",
+      "elementsPassedPrefix": "Éléments conformes",
+      "applicability": "Applicabilité",
+      "all": "Tous",
+      "data": "Données"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} autres du même type d'élément ({{type}} avec l'étiquette {{tag}} et l'ID global {{id}}) non affichés ...",
+      "moreElementsNotShown": "... {{count}} autres éléments {{type}} non affichés sur un total de {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Chargement de Pyodide...",
+      "pyodideSuccess": "Pyodide chargé avec succès",
+      "translations": "Chargement des traductions...",
+      "packages": "Installation des paquets requis...",
+      "micropipPatch": "Application du patch micropip pour le contournement de la vérification de compatibilité...",
+      "ifcOpenShell": "Installation d'IfcOpenShell...",
+      "dependencies": "Installation des dépendances supplémentaires...",
+      "inputFiles": "Traitement des fichiers d'entrée...",
+      "validation": "Exécution de la validation IFC...",
+      "processingLogs": "Journaux de traitement",
+      "entries": "entrées",
+      "reloading": "La page se rechargera dans 3 secondes..."
+    },
+    "error": {
+      "pyodideLoad": "Échec du chargement de Pyodide : {{message}}",
+      "generic": "Une erreur s'est produite : {{message}}",
+      "outOfMemory": "Pyodide a manqué de mémoire. La page se rechargera automatiquement pour libérer des ressources."
+    },
+    "success": {
+      "processingComplete": "Vos fichiers ont été traités.",
+      "validationComplete": "Validation terminée ! Consultez vos résultats ci-dessous."
+    }
+  }
 }

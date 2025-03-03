@@ -64,6 +64,11 @@ export interface ValidationResult {
   total_checks: number
   total_checks_pass: number
   percent_checks_pass: number
+  language_code?: string
+  ui_language?: string
+  available_languages?: string[]
+  html_content?: string
+  t?: Record<string, string>
   bcf_data?: {
     zip_content: string
     filename: string

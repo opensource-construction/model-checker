@@ -111,5 +111,76 @@
   "report-format-description": "Select one or both report formats. HTML reports can be viewed and printed directly, while BCF reports can be used in BIM collaboration tools.",
   "view-html": "HTML",
   "download-bcf": "BCF",
-  "select-report-format": "Please select at least one report format"
+  "select-report-format": "Please select at least one report format",
+  "report": {
+    "summary": "Summary",
+    "specifications": "Specifications",
+    "requirements": "Requirements",
+    "details": "Details",
+    "class": "Class",
+    "predefinedType": "PredefinedType",
+    "name": "Name",
+    "description": "Description",
+    "warning": "Warning",
+    "globalId": "GlobalId",
+    "tag": "Tag",
+    "reportBy": "Report by",
+    "and": "and",
+    "status": {
+      "pass": "PASS",
+      "fail": "FAIL",
+      "untested": "UNTESTED",
+      "skipped": "SKIPPED"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "The required property set does not exist",
+      "dataShallBeProvided": "data shall be provided in the dataset",
+      "propertyNotExist": "The required property does not exist",
+      "invalidValue": "has an invalid value",
+      "notInRange": "is not in the allowed range",
+      "notFound": "was not found",
+      "doesNotHave": "does not have",
+      "missingProperty": "is missing the required property"
+    },
+    "interface": {
+      "passed": "passed",
+      "failed": "failed",
+      "checksPassedPrefix": "Checks passed",
+      "specificationsPassedPrefix": "Specifications passed",
+      "requirementsPassedPrefix": "Requirements passed",
+      "elementsPassedPrefix": "Elements passed",
+      "applicability": "Applicability",
+      "all": "All",
+      "data": "data"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...",
+      "moreElementsNotShown": "... {{count}} more {{type}} elements not shown out of {{total}} total ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Loading Pyodide...",
+      "pyodideSuccess": "Pyodide loaded successfully",
+      "translations": "Loading translations...",
+      "packages": "Installing required packages...",
+      "micropipPatch": "Patching micropip for compatibility check bypass...",
+      "ifcOpenShell": "Installing IfcOpenShell...",
+      "dependencies": "Installing additional dependencies...",
+      "inputFiles": "Processing input files...",
+      "validation": "Running IFC validation...",
+      "processingLogs": "Processing Logs",
+      "entries": "entries",
+      "reloading": "Page will reload in 3 seconds..."
+    },
+    "error": {
+      "pyodideLoad": "Failed to load Pyodide: {{message}}",
+      "generic": "An error occurred: {{message}}",
+      "outOfMemory": "Pyodide ran out of memory. The page will reload automatically to free resources."
+    },
+    "success": {
+      "processingComplete": "Your files have been processed.",
+      "validationComplete": "Validation complete! View your results below."
+    }
+  }
 }

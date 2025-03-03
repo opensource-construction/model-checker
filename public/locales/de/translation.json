@@ -54,7 +54,7 @@
     "passed": "Erfüllt",
     "failed": "Nicht erfüllt",
     "statistics": "Statistik",
-    "all-data": "Alle Entitäten",
+    "all-data": "Alle Daten",
     "count": "Anzahl",
     "other": "Andere"
   },
@@ -103,5 +103,76 @@
   "report-format-description": "Wählen Sie eines oder beide Berichtsformate. HTML-Berichte können direkt angezeigt und gedruckt werden, während BCF-Berichte in BIM-Kollaborationstools verwendet werden können.",
   "view-html": "HTML",
   "download-bcf": "BCF",
-  "select-report-format": "Bitte wählen Sie mindestens ein Berichtsformat aus"
+  "select-report-format": "Bitte wählen Sie mindestens ein Berichtsformat aus",
+  "report": {
+    "summary": "Zusammenfassung",
+    "specifications": "Spezifikationen",
+    "requirements": "Anforderungen",
+    "details": "Details",
+    "class": "Klasse",
+    "predefinedType": "Vordefinierter Typ",
+    "name": "Name",
+    "description": "Beschreibung",
+    "warning": "Warnung",
+    "globalId": "Globale ID",
+    "tag": "Kennzeichnung",
+    "reportBy": "Bericht von",
+    "and": "und",
+    "status": {
+      "pass": "BESTANDEN",
+      "fail": "FEHLGESCHLAGEN",
+      "untested": "UNGETESTET",
+      "skipped": "ÜBERSPRUNGEN"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "Der erforderliche Eigenschaftssatz existiert nicht",
+      "dataShallBeProvided": "Daten müssen im Datensatz bereitgestellt werden",
+      "propertyNotExist": "Die erforderliche Eigenschaft existiert nicht",
+      "invalidValue": "hat einen ungültigen Wert",
+      "notInRange": "liegt nicht im erlaubten Bereich",
+      "notFound": "wurde nicht gefunden",
+      "doesNotHave": "hat keine",
+      "missingProperty": "fehlt die erforderliche Eigenschaft"
+    },
+    "interface": {
+      "passed": "erfüllt",
+      "failed": "nicht erfüllt",
+      "checksPassedPrefix": "Checks erfüllt",
+      "specificationsPassedPrefix": "Spezifikationen erfüllt",
+      "requirementsPassedPrefix": "Anforderungen erfüllt",
+      "elementsPassedPrefix": "Elemente erfüllt",
+      "applicability": "Anwendbarkeit",
+      "all": "Alle",
+      "data": "Daten"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",
+      "moreElementsNotShown": "... {{count}} weitere {{type}} Elemente nicht angezeigt von insgesamt {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Pyodide wird geladen...",
+      "pyodideSuccess": "Pyodide erfolgreich geladen",
+      "translations": "Übersetzungen werden geladen...",
+      "packages": "Erforderliche Pakete werden installiert...",
+      "micropipPatch": "Micropip wird für Kompatibilitätsprüfungen angepasst...",
+      "ifcOpenShell": "IfcOpenShell wird installiert...",
+      "dependencies": "Zusätzliche Abhängigkeiten werden installiert...",
+      "inputFiles": "Eingabedateien werden verarbeitet...",
+      "validation": "IFC-Validierung wird ausgeführt...",
+      "processingLogs": "Verarbeitungsprotokolle",
+      "entries": "Einträge",
+      "reloading": "Seite wird in 3 Sekunden neu geladen..."
+    },
+    "error": {
+      "pyodideLoad": "Fehler beim Laden von Pyodide: {{message}}",
+      "generic": "Ein Fehler ist aufgetreten: {{message}}",
+      "outOfMemory": "Pyodide hat zu wenig Arbeitsspeicher. Die Seite wird automatisch neu geladen, um Ressourcen freizugeben."
+    },
+    "success": {
+      "processingComplete": "Ihre Dateien wurden verarbeitet.",
+      "validationComplete": "Validierung abgeschlossen! Sehen Sie sich die Ergebnisse unten an."
+    }
+  }
 }

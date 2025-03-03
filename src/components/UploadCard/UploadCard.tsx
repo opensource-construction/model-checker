@@ -59,6 +59,7 @@ const consoleStyles = {
 export const UploadCard = () => {
   const navigate = useNavigate()
   const { dispatch } = useValidationContext()
+  const { i18n } = useTranslation()
   const [ifcFiles, setIfcFiles] = useState<File[]>([])
   const [idsFile, setIdsFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<FileError[] | null>(null)
@@ -103,72 +104,34 @@ export const UploadCard = () => {
   const openHtmlReport = async (result: ValidationResult, fileName: string) => {
     try {
       if (templateContent) {
+        const reportLanguage = result.language_code || result.ui_language || i18n.language || 'en'
+
+        console.log('Opening report with:', {
+          language: reportLanguage,
+          availableLanguages: result.available_languages,
+          hasHtmlContent: Boolean(result.html_content),
+        })
+
+        // If we have pre-rendered HTML content from the worker that's already translated
+        if (result.html_content) {
+          const newWindow = window.open()
+          if (newWindow) {
+            newWindow.document.write(result.html_content)
+            newWindow.document.close()
+            newWindow.document.title = `Report - ${fileName}`
+          }
+          return
+        }
+
+        // Fallback to Mustache template rendering
         // Prepare the data for Mustache templating
         const templateData = {
+          ...result,
           title: result.title || 'IFC Validation Report',
           date: result.date || new Date().toLocaleString(),
           filename: fileName || 'Unknown',
-          status: result.status,
-          specifications: result.specifications?.map((spec: ValidationSpecification) => ({
-            name: spec.name,
-            is_ifc_version: spec.is_ifc_version,
-            status: spec.status,
-            description: spec.description || '',
-            instructions: spec.instructions,
-            percent_checks_pass: spec.percent_checks_pass,
-            total_checks: spec.total_checks || 0,
-            total_checks_pass: spec.total_checks_pass || 0,
-            total_applicable: spec.total_applicable || 0,
-            total_applicable_pass: spec.total_applicable_pass || 0,
-            requirements: spec.requirements?.map((req: ValidationRequirement) => ({
-              description: req.description,
-              status: req.status,
-              total_pass: req.passed_entities?.length || 0,
-              total_fail: req.failed_entities?.length || 0,
-              passed_entities: req.passed_entities?.map((entity: ValidationEntity) => ({
-                class: entity.class || '',
-                predefined_type: entity.predefined_type || '',
-                name: entity.name || '',
-                description: entity.description || '',
-                global_id: entity.global_id || '',
-                tag: entity.tag || '',
-                type_name: entity.type_name,
-                type_tag: entity.type_tag,
-                type_global_id: entity.type_global_id,
-                extra_of_type: entity.extra_of_type,
-              })),
-              failed_entities: req.failed_entities?.map((entity: ValidationEntity) => ({
-                class: entity.class || '',
-                predefined_type: entity.predefined_type || '',
-                name: entity.name || '',
-                description: entity.description || '',
-                reason: entity.reason || '',
-                global_id: entity.global_id || '',
-                tag: entity.tag || '',
-                type_name: entity.type_name,
-                type_tag: entity.type_tag,
-                type_global_id: entity.type_global_id,
-                extra_of_type: entity.extra_of_type,
-              })),
-              has_omitted_passes: req.has_omitted_passes,
-              total_omitted_passes: req.total_omitted_passes,
-              total_passed_entities: req.total_passed_entities,
-              has_omitted_failures: req.has_omitted_failures,
-              total_omitted_failures: req.total_omitted_failures,
-              total_failed_entities: req.total_failed_entities,
-              extra_of_type: req.extra_of_type,
-            })),
-          })),
-          // Summary stats
-          total_specifications: result.total_specifications,
-          total_specifications_pass: result.total_specifications_pass,
-          percent_specifications_pass: result.percent_specifications_pass,
-          total_requirements: result.total_requirements,
-          total_requirements_pass: result.total_requirements_pass,
-          percent_requirements_pass: result.percent_requirements_pass,
-          total_checks: result.total_checks,
-          total_checks_pass: result.total_checks_pass,
-          percent_checks_pass: result.percent_checks_pass,
+          language: reportLanguage,
+          t: result.t || {}, // Ensure translations are passed to template
         }
 
         // Render the template with Mustache
@@ -252,9 +215,22 @@ export const UploadCard = () => {
                 if (event.data.type === 'progress') {
                   addLog(event.data.message)
                 } else if (event.data.type === 'error') {
+                  // Check if this is an out of memory error
+                  if (event.data.errorType === 'out_of_memory') {
+                    addLog(event.data.message)
+                    // Set a timer to reload the page after showing the message
+                    setUploadError(event.data.message)
+                    console.log('Out of memory detected, will reload in 3 seconds')
+                    setTimeout(() => {
+                      window.location.reload()
+                    }, 3000) // Wait 3 seconds before reloading
+                  }
                   reject(new Error(event.data.message))
                 } else if (event.data.type === 'complete') {
                   console.log('Received worker result:', event.data.results)
+                  if (event.data.message) {
+                    addLog(event.data.message)
+                  }
                   resolve(event.data.results)
                 } else {
                   reject(new Error('Invalid response from worker'))
@@ -268,10 +244,11 @@ export const UploadCard = () => {
               worker.postMessage({
                 arrayBuffer,
                 idsContent: currentIdsContent,
-                reporterCode,
-                templateContent,
                 fileName: file.name,
+                language: i18n.language,
               })
+
+              console.log(`Worker started with language: ${i18n.language}`)
             })
 
             console.log(`Adding result for file ${file.name}`)
@@ -303,7 +280,7 @@ export const UploadCard = () => {
       setUploadProgress(100)
       setIsProcessing(false)
     },
-    [isIdsValidation, templateContent],
+    [dispatch, isIdsValidation, navigate, templateContent, i18n.language],
   )
 
   const handleClick = async () => {
@@ -560,6 +537,11 @@ export const UploadCard = () => {
           {uploadError && (
             <Alert color='red' variant='light' mb='md'>
               {uploadError}
+              {uploadError.includes('out of memory') && (
+                <Box mt='sm'>
+                  <Text weight={700}>{t('console.loading.reloading', 'Page will reload in 3 seconds...')}</Text>
+                </Box>
+              )}
             </Alert>
           )}
 
@@ -567,10 +549,10 @@ export const UploadCard = () => {
             <Paper withBorder p='md' style={consoleStyles}>
               <Group justify='apart' mb='xs'>
                 <Text size='sm' fw={500} c='dimmed'>
-                  Processing Logs
+                  {t('console.loading.processingLogs', 'Processing Logs')}
                 </Text>
                 <Text size='xs' c='dimmed'>
-                  {processingLogs.length} entries
+                  {processingLogs.length} {t('console.loading.entries', 'entries')}
                 </Text>
               </Group>
 
@@ -608,7 +590,7 @@ export const UploadCard = () => {
 
           {processedResults.length > 0 && (
             <Alert color='green' variant='light'>
-              <Text>Your files have been processed.</Text>
+              <Text>{t('console.success.processingComplete', 'Your files have been processed.')}</Text>
               <Group mt='md' gap='sm'>
                 {processedResults.map((result, index) => (
                   <Group key={index} gap='xs'>

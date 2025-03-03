@@ -104,5 +104,76 @@
   "report-format-description": "Seleziona uno o più formati di rapporto. I rapporti HTML possono essere visualizzati e stampati direttamente, mentre i rapporti BCF possono essere utilizzati negli strumenti di collaborazione BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
-  "select-report-format": "Seleziona almeno un formato di rapporto"
+  "select-report-format": "Seleziona almeno un formato di rapporto",
+  "report": {
+    "summary": "Riepilogo",
+    "specifications": "Specifiche",
+    "requirements": "Requisiti",
+    "details": "Dettagli",
+    "class": "Classe",
+    "predefinedType": "Tipo Predefinito",
+    "name": "Nome",
+    "description": "Descrizione",
+    "warning": "Avviso",
+    "globalId": "ID Globale",
+    "tag": "Tag",
+    "reportBy": "Report di",
+    "and": "e",
+    "status": {
+      "pass": "SUPERATO",
+      "fail": "FALLITO",
+      "untested": "NON TESTATO",
+      "skipped": "SALTATO"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "Il set di proprietà richiesto non esiste",
+      "dataShallBeProvided": "I dati devono essere forniti nel set di dati",
+      "propertyNotExist": "La proprietà richiesta non esiste",
+      "invalidValue": "ha un valore non valido",
+      "notInRange": "non è nell'intervallo consentito",
+      "notFound": "non è stato trovato",
+      "doesNotHave": "non ha",
+      "missingProperty": "manca la proprietà richiesta"
+    },
+    "interface": {
+      "passed": "superato",
+      "failed": "fallito",
+      "checksPassedPrefix": "Controlli superati",
+      "specificationsPassedPrefix": "Specifiche superate",
+      "requirementsPassedPrefix": "Requisiti soddisfatti",
+      "elementsPassedPrefix": "Elementi conformi",
+      "applicability": "Applicabilità",
+      "all": "Tutti",
+      "data": "Dati"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} altri dello stesso tipo di elemento ({{type}} con Tag {{tag}} e ID Globale {{id}}) non mostrati ...",
+      "moreElementsNotShown": "... {{count}} altri elementi {{type}} non mostrati su un totale di {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Caricamento di Pyodide...",
+      "pyodideSuccess": "Pyodide caricato con successo",
+      "translations": "Caricamento delle traduzioni...",
+      "packages": "Installazione dei pacchetti richiesti...",
+      "micropipPatch": "Applicazione della patch micropip per l'aggiramento del controllo di compatibilità...",
+      "ifcOpenShell": "Installazione di IfcOpenShell...",
+      "dependencies": "Installazione delle dipendenze aggiuntive...",
+      "inputFiles": "Elaborazione dei file di input...",
+      "validation": "Esecuzione della validazione IFC...",
+      "processingLogs": "Registri di elaborazione",
+      "entries": "voci",
+      "reloading": "La pagina si ricaricherà in 3 secondi..."
+    },
+    "error": {
+      "pyodideLoad": "Impossibile caricare Pyodide: {{message}}",
+      "generic": "Si è verificato un errore: {{message}}",
+      "outOfMemory": "Pyodide ha esaurito la memoria. La pagina si ricaricherà automaticamente per liberare risorse."
+    },
+    "success": {
+      "processingComplete": "I tuoi file sono stati elaborati.",
+      "validationComplete": "Validazione completata! Visualizza i risultati qui sotto."
+    }
+  }
 }

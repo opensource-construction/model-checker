@@ -104,5 +104,76 @@
   "report-format-description": "Tscherna in u plirs formats da rapport. Rapports HTML pon vegnir vesids e stampads directamain, entant che rapports BCF pon vegnir utilisads en instruments da collavuraziun BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
-  "select-report-format": "Tscherna per plaschair almain in format da rapport"
+  "select-report-format": "Tscherna almain in format da rapport",
+  "report": {
+    "summary": "Resumaziun",
+    "specifications": "Specificaziuns",
+    "requirements": "Pretensiuns",
+    "details": "Details",
+    "class": "Classa",
+    "predefinedType": "Tip predefinì",
+    "name": "Num",
+    "description": "Descripziun",
+    "warning": "Avertiment",
+    "globalId": "ID global",
+    "tag": "Tag",
+    "reportBy": "Rapport da",
+    "and": "e",
+    "status": {
+      "pass": "REUSSÌ",
+      "fail": "BETG REUSSÌ",
+      "untested": "BETG TESTÀ",
+      "skipped": "SURSIGLÌ"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "Il set da proprietads pretendì n'exista betg",
+      "dataShallBeProvided": "Las datas ston vegnir furnidas en il set da datas",
+      "propertyNotExist": "La proprietad pretendida n'exista betg",
+      "invalidValue": "ha ina valur nunvalida",
+      "notInRange": "n'è betg en il spectrum permess",
+      "notFound": "n'è betg vegnì chattà",
+      "doesNotHave": "n'ha betg",
+      "missingProperty": "manca la proprietad pretendida"
+    },
+    "interface": {
+      "passed": "reussì",
+      "failed": "betg reussì",
+      "checksPassedPrefix": "Controllas reussidas",
+      "specificationsPassedPrefix": "Specificaziuns reussidas",
+      "requirementsPassedPrefix": "Pretensiuns satisfatgas",
+      "elementsPassedPrefix": "Elements confurms",
+      "applicability": "Applicabilitad",
+      "all": "Tut",
+      "data": "Datas"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} dapli dal medem tip d'element ({{type}} cun Tag {{tag}} ed ID global {{id}}) betg mussads ...",
+      "moreElementsNotShown": "... {{count}} ulteriurs elements {{type}} betg mussads ord in total da {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Chargiar Pyodide...",
+      "pyodideSuccess": "Pyodide chargià cun success",
+      "translations": "Chargiar translaziuns...",
+      "packages": "Installar paquets necessaris...",
+      "micropipPatch": "Adattar micropip per surpassar la controlla da cumpatibilitad...",
+      "ifcOpenShell": "Installar IfcOpenShell...",
+      "dependencies": "Installar dependenzas supplementaras...",
+      "inputFiles": "Elavurar las datotecas d'input...",
+      "validation": "Exequir la validaziun IFC...",
+      "processingLogs": "Protocols d'elavuraziun",
+      "entries": "endataziuns",
+      "reloading": "La pagina vegn rechargiada en 3 secundas..."
+    },
+    "error": {
+      "pyodideLoad": "Errur cun chargiar Pyodide: {{message}}",
+      "generic": "Ina errur è succedida: {{message}}",
+      "outOfMemory": "Pyodide ha memia pauca memoria. La pagina vegn rechargiada automaticamain per deliberar resursas."
+    },
+    "success": {
+      "processingComplete": "Tias datotecas èn vegnidas elavuradas.",
+      "validationComplete": "Validaziun terminada! Guarda ils resultats sutvart."
+    }
+  }
 }
