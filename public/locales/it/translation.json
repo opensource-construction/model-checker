@@ -7,15 +7,27 @@
     "3": "Tutti i dati rimangono sul tuo computer locale - nessun dato verrà inviato altrove, tutti i controlli vengono eseguiti localmente."
   },
   "upload-description-ids": {
-    "0": "Benvenuto nel validatore IDS!",
-    "1": "Questo strumento ti aiuta a verificare se i tuoi modelli IFC sono conformi ai requisiti IDS (Information Delivery Specification). Esegue un controllo completo rispetto alle regole definite nel tuo file IDS.",
+    "1": "Verifica i modelli IFC in base ai requisiti definiti nel tuo file IDS.",
     "2": "L'abbiamo progettato per essere semplice e sicuro.",
-    "3": "Tutta la validazione viene eseguita localmente nel tuo browser utilizzando WASM - i tuoi dati non lasciano mai il tuo dispositivo.",
-    "4": "I risultati sono forniti in un rapporto dettagliato che puoi visualizzare online, scaricare come HTML, stampare in PDF o esportare come BCF per un ulteriore utilizzo nel tuo flusso di lavoro BIM."
+    "3": "Tutta la validazione viene eseguita localmente nel tuo browser - i tuoi dati non lasciano mai il tuo dispositivo.",
+    "4": "Visualizza i risultati come report HTML interattivo direttamente nel browser, con opzioni per scaricare, condividere o stampare in PDF. È disponibile anche l'esportazione BCF per i flussi di lavoro BIM."
   },
   "upload-card": {
     "title": "Validazione del modello e regole",
-    "description": "IFC Model Checker evidenzia i problemi comunemente riscontrati nei file .ifc, portando a dati di alta qualità nell'industria AEC. Il controllo dei file IFC caricati avviene completamente lato client, non salviamo alcun dato - nulla lascia il tuo dispositivo e tutto viene eliminato dopo la chiusura della sessione.",
+    "description": "IFC Model Checker evidenzia i problemi comunemente riscontrati nei file .ifc, portando a dati di alta qualità nel settore AEC. Il controllo dei file IFC caricati avviene completamente lato client, non salviamo alcun dato - nulla lascia il tuo dispositivo e tutto viene eliminato dopo la chiusura della sessione.",
+    "ids-title": "Validazione IDS",
+    "ids-description": "Il validatore IDS ti permette di verificare se i tuoi modelli IFC sono conformi ai requisiti della Specifica di Consegna delle Informazioni (IDS). Esegue una validazione completa rispetto alle regole definite nel file IDS. Tutta la validazione avviene localmente nel tuo browser utilizzando WASM - i tuoi dati non lasciano mai il tuo dispositivo. I risultati sono forniti in un rapporto dettagliato che puoi visualizzare online, scaricare come HTML, stampare come PDF o esportare come BCF per un ulteriore utilizzo nel tuo flusso di lavoro BIM.",
+    "ids-info": {
+      "about-title": "Informazioni su IDS:",
+      "about-text": "Information Delivery Specification (IDS) è uno standard buildingSMART per definire i requisiti informativi in una forma interpretabile dal computer. Consente il controllo automatico di conformità dei modelli IFC, aumentando il controllo di qualità e la fedeltà dei dati.",
+      "about-link-text": "Ulteriori informazioni su IDS:",
+      "about-link": "Standard IDS buildingSMART",
+      "how-it-works-title": "Come funziona:",
+      "how-it-works-text": "Questo validatore utilizza IfcOpenShell in esecuzione in WebAssembly (WASM), che consente alla libreria IfcOpenShell basata su Python di funzionare direttamente nel tuo browser. WebAssembly è un formato di istruzioni binarie che permette alle applicazioni ad alte prestazioni di funzionare nei browser web senza plugin.",
+      "how-it-works-security": "Ciò significa che tutta la validazione avviene localmente sul tuo dispositivo - i tuoi dati non lasciano mai il tuo browser, garantendo completa privacy e sicurezza.",
+      "wasm-link-text": "Ulteriori informazioni su WebAssembly:",
+      "wasm-link": "WebAssembly.org"
+    },
     "rules": "Regole",
     "info-card": {
       "0": "Validazione nome progetto: Assicura che ogni progetto abbia un nome significativo e valido.",

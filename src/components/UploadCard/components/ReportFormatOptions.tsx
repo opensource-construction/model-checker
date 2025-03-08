@@ -1,4 +1,4 @@
-import { Checkbox, Group, Switch, Text } from '@mantine/core'
+import { Checkbox, Group, Switch, Text, Divider, Box, Flex } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
 
 interface ReportFormatOptionsProps {
@@ -20,20 +20,21 @@ export const ReportFormatOptions = ({
   const { t } = useTranslation()
 
   return (
-    <Group align='center'>
-      <Switch
-        checked={isIdsValidation}
-        onChange={(event) => setIsIdsValidation(event.currentTarget.checked)}
-        label={t('ids-validation')}
-        size='md'
-      />
+    <Box mt={-10}>
+      <Divider my='xs' />
+      <Flex justify={isIdsValidation ? 'space-between' : 'flex-start'} align='center' wrap='wrap' gap='md'>
+        <Switch
+          checked={isIdsValidation}
+          onChange={(event) => setIsIdsValidation(event.currentTarget.checked)}
+          label={t('ids-validation')}
+          size='md'
+        />
 
-      {isIdsValidation && (
-        <Group gap='xs'>
-          <Text size='sm' fw={500}>
-            {t('report-format')}:
-          </Text>
+        {isIdsValidation && (
           <Group gap='xs'>
+            <Text size='sm' fw={500}>
+              {t('report-format')}:
+            </Text>
             <Checkbox
               label='HTML'
               checked={reportFormats.html}
@@ -47,8 +48,8 @@ export const ReportFormatOptions = ({
               size='sm'
             />
           </Group>
-        </Group>
-      )}
-    </Group>
+        )}
+      </Flex>
+    </Box>
   )
 }

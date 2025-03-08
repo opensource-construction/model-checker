@@ -7,15 +7,27 @@
     "3": "Tut las datas restan sin tes computer local - naginas datas vegnan tramessas utrò, tut las verificaziuns vegnan fatgas localmain."
   },
   "upload-description-ids": {
-    "0": "Bainvegni tar il validatur IDS!",
-    "1": "Quest instrument ta gida a controllar sche tes models IFC correspundan als basegns IDS (Information Delivery Specification). El fa ina controlla cumpletta tenor las reglas definidas en tia datoteca IDS.",
+    "1": "Controllescha models IFC tenor las pretensiuns definidas en tia datoteca IDS.",
     "2": "Nus avain creà el per ch'el saja simpel e segir.",
-    "3": "Tut la validaziun vegn fatga localmain en tes navigatur cun WASM - tias datas na bandunan mai tes apparat.",
-    "4": "Ils resultats vegnan furnids en in rapport detaglià che ti pos guardar online, telechargiar sco HTML, stampar sco PDF u exportar sco BCF per utilisar en tes process da lavur BIM."
+    "3": "Tut la validaziun vegn fatga localmain en tes navigatur - tias datas na bandunan mai tes apparat.",
+    "4": "Contempla tes resultats sco rapport HTML interactiv directamain en tes navigatur, cun opziuns per telechargiar, cundivider u stampar sco PDF. L'export BCF è era disponibel per workflows da BIM."
   },
   "upload-card": {
     "title": "Validaziun dal model e reglas",
-    "description": "L'IFC Model Checker mussa problems ch'ins chatta savens en datotecas .ifc, manond a datas da qualitad auta en l'industria AEC. La controlla da tias datotecas IFC chargiadas vegn fatga cumplettamain sin la vart dal client, nus na memorisain naginas datas - nagut banduna tes apparat e tut vegn stizzà suenter la sessiun.",
+    "description": "IFC Model Checker mussa problems frequents en datotecas .ifc, che mainan a datas da qualitad auta en l'industria AEC. La controlla da Vossas datotecas IFC chargiadas succeda cumplettamain sin la vart dal client, nus na memorisain naginas datas - nagut banduna Voss apparat e tut vegn stizzà suenter la sessiun.",
+    "ids-title": "Validaziun IDS",
+    "ids-description": "Il validatur IDS As permetta da controllar sche Voss models IFC correspundan als requisits da la Specificaziun da Furniziun d'Infurmaziuns (IDS). El fa ina validaziun cumpletta tenor las reglas definidas en la datoteca IDS. Tut la validaziun succeda localmain en Voss navigatur cun WASM - Vossas datas na bandunan mai Voss apparat. Ils resultats vegnan furnids en in rapport detaglià che Vus pudais guardar online, telechargiar sco HTML, stampar sco PDF u exportar sco BCF per in ulteriur diever en Voss process da lavur BIM.",
+    "ids-info": {
+      "about-title": "Davart IDS:",
+      "about-text": "Information Delivery Specification (IDS) è in standard buildingSMART per definir requisits d'infurmaziun en ina furma interpretabla dal computer. El permetta la controlla automatica da conformitad dals models IFC, augmentond il control da qualitad e la fidaivladad da las datas.",
+      "about-link-text": "Ulteriuras infurmaziuns davart IDS:",
+      "about-link": "Standard IDS buildingSMART",
+      "how-it-works-title": "Co quai funcziuna:",
+      "how-it-works-text": "Quest validatur utilisescha IfcOpenShell che funcziuna en WebAssembly (WASM), quai che permetta a la biblioteca IfcOpenShell basada sin Python da funcziunar directamain en Voss navigatur. WebAssembly è in format d'instrucziuns binarias che permetta ad applicaziuns da prestaziun auta da funcziunar en navigaturs web senza plugins.",
+      "how-it-works-security": "Quai vul dir che tut la validaziun succeda localmain sin Voss apparat - Vossas datas na bandunan mai Voss navigatur, garantind cumpletta protecziun da datas e segirezza.",
+      "wasm-link-text": "Ulteriuras infurmaziuns davart WebAssembly:",
+      "wasm-link": "WebAssembly.org"
+    },
     "rules": "Reglas",
     "info-card": {
       "0": "Validaziun dal num dal project: Garantescha che mintga project haja in num signifitgant e valid.",
