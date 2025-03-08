@@ -104,6 +104,18 @@
     background-color: var(--selection-bg);
   }
 
+  /* Add these styles to fix table text color in dark mode */
+  .mantine-Table-th,
+  .mantine-Table-td {
+    color: var(--text-primary);
+  }
+
+  /* Improve table header style for better readability */
+  .mantine-Table-th {
+    font-weight: 600;
+    border-bottom-color: var(--border-color);
+  }
+
   /* Group backgrounds */
   .mantine-Group-root {
     background-color: transparent;

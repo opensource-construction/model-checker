@@ -22,6 +22,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   } = props
   const [opened, { toggle }] = useDisclosure(false)
   const { t } = useTranslation()
+  const { colorScheme } = useMantineColorScheme()
 
   return (
     <>
@@ -35,7 +36,12 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         </Table.Td>
         <Table.Td>
           {value.length ? (
-            <ActionIcon variant='transparent' size='sm' onClick={toggle} color='black'>
+            <ActionIcon
+              variant='transparent'
+              size='sm'
+              onClick={toggle}
+              color={colorScheme === 'dark' ? 'gray.3' : 'dark'}
+            >
               {opened ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
           ) : null}
@@ -68,7 +74,7 @@ const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
   }
 
   return (
-    <Progress.Root size='xxl' styles={{ label: { color: 'black' } }}>
+    <Progress.Root size='xxl' styles={{ label: { color: colorScheme === 'dark' ? '#a9b1d6' : 'black' } }}>
       <Progress.Section value={fulfilment} color={color}>
         <Progress.Label py={8}>
           <div style={{ paddingBlock: 'calc(0.25rem * var(--mantine-scale))' }} />
