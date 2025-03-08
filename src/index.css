@@ -1,12 +1,10 @@
 :root {
-  /* Light theme colors - keeping as is */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --text-primary: #1a1a1a;
   --text-secondary: #4a4a4a;
   --border-color: #e0e0e0;
   --accent-color: #007bff;
-  /* Add transition variables */
   --theme-transition-duration: 0.5s;
   --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
   --theme-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -37,60 +35,17 @@
 
   /* Background colors */
   --mantine-color-gray-0: var(--bg-primary);
-}
 
-/* Base transitions and theme handling */
-:root {
-  /* ... existing variables ... */
+  /* ===== MANTINE COMPONENT OVERRIDES ===== */
 
-  /* Add transition variables */
-  --theme-transition-duration: 0.5s;
-  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Smooth theme transitions */
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  transition:
-    background-color var(--theme-transition-duration) var(--theme-transition-timing),
-    color var(--theme-transition-duration) var(--theme-transition-timing);
-}
-
-/* Prevent flash of white during dark mode transition */
-html.dark {
-  background-color: var(--bg-primary);
-}
-
-/* Add this to your existing index.css or create a new one */
-* {
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease,
-    color 0.3s ease;
-}
-
-/* Card styles */
-.mantine-Card-root {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.2s ease;
-}
-
-.mantine-Card-root:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-}
-
-/* Dark mode specific overrides */
-:root.dark {
   /* Main layout */
   .mantine-AppShell-main {
     background-color: var(--bg-primary);
+    /* Gradient override */
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Header/Navbar */
@@ -104,12 +59,15 @@ html.dark {
   .mantine-Paper-root {
     background-color: var(--bg-secondary);
     border-color: var(--border-color);
+    /* Gradient override */
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   }
 
   /* Text colors */
   .mantine-Title-root,
   .mantine-Text-root {
     color: var(--text-primary);
+    transition: color var(--theme-transition-duration) var(--theme-transition-timing);
   }
 
   /* Buttons */
@@ -159,12 +117,59 @@ html.dark {
 
   .mantine-Card-root:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
   }
 
   /* Footer in dark mode */
   .mantine-AppShell-footer {
     background-color: var(--bg-secondary) !important; /* Using the secondary background for better contrast */
   }
+}
+
+/* Base transitions and theme handling */
+* {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme transitions */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Prevent flash of white during dark mode transition */
+html.dark {
+  background-color: var(--bg-primary);
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: var(--bg-primary);
+}
+
+/* Card styles */
+.mantine-Card-root {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.mantine-Card-root:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Ensure the page background extends fully */
@@ -182,23 +187,8 @@ body,
   transition: background-color var(--theme-transition-duration) var(--theme-transition-timing);
 }
 
-/* Update dark mode background handling */
-:root.dark {
-  /* ... other dark mode variables ... */
-
-  /* Single background color definition */
-  --mantine-color-gray-0: var(--bg-primary);
-
-  /* Remove any other background definitions */
-  .mantine-AppShell-main {
-    /* Remove background-color definition here */
-  }
-}
-
-/* Remove any other background definitions from components unless specifically needed */
 .mantine-Paper-root {
   border-color: var(--border-color);
-  /* Keep other styles but remove any background-color definitions */
 }
 
 /* Component transitions */
@@ -211,25 +201,6 @@ body,
     border-color var(--theme-transition-duration) var(--theme-transition-timing),
     box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
   backface-visibility: hidden; /* Prevent flickering in some browsers */
-}
-
-/* Dark mode transitions */
-:root.dark {
-  /* ... existing dark mode variables ... */
-
-  .mantine-AppShell-main {
-    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-  }
-
-  .mantine-Paper-root {
-    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  }
-
-  /* Smooth transition for text */
-  .mantine-Text-root,
-  .mantine-Title-root {
-    transition: color var(--theme-transition-duration) var(--theme-transition-timing);
-  }
 }
 
 /* Ensure smooth transitions for all interactive elements */
@@ -245,18 +216,6 @@ textarea {
     box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
 }
 
-/* Prevent transition flicker */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Remove individual transitions and consolidate */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* Base theme handling */
 body,
 html,
@@ -265,44 +224,6 @@ html,
 .mantine-Paper-root,
 .mantine-Card-root {
   transition: all var(--theme-transition);
-}
-
-/* Prevent flash during transition */
-html.dark,
-html.dark body,
-html.dark #root {
-  background-color: var(--bg-primary);
-}
-
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--mantine-color-gray-0);
-}
-
-/* Dark mode handling */
-:root.dark {
-  /* ... existing dark mode variables ... */
-  --mantine-color-gray-0: var(--bg-primary);
-
-  .mantine-AppShell-main {
-    background-color: var(--bg-primary);
-  }
-
-  .mantine-Paper-root {
-    background-color: var(--bg-secondary);
-  }
-}
-
-/* Remove individual transitions from components */
-.mantine-Card-root {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.mantine-Card-root:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
 }
 
 /* Update UploadFilePage height handling */
