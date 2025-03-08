@@ -1,7 +1,7 @@
 import { useValidationContext } from '@context'
 import { Box, Button, Paper, Stack, rem } from '@mantine/core'
 import { FileRejection } from '@mantine/dropzone'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { BcfData, downloadBcfReport } from '../../utils/bcfUtils'
@@ -33,6 +33,7 @@ export const UploadCard = () => {
     html: true,
     bcf: false,
   })
+  const resultsRef = useRef<HTMLDivElement>(null)
 
   const addLog = (message: string) => {
     setProcessingLogs((prev) => [...prev, message])
@@ -52,6 +53,26 @@ export const UploadCard = () => {
   })
 
   const { openHtmlReport } = useHtmlReport(templateContent, i18n)
+
+  // Function to scroll to results
+  const scrollToResults = () => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }
+
+  // Watch for when processing completes
+  useEffect(() => {
+    if (!isProcessing && processedResults.length > 0) {
+      // Scroll to results when processing is complete
+      setTimeout(scrollToResults, 200)
+    }
+  }, [isProcessing, processedResults.length])
 
   useEffect(() => {
     // Load the HTML template
@@ -122,8 +143,8 @@ export const UploadCard = () => {
   }
 
   return (
-    <Stack maw={800} mx='auto'>
-      <Paper shadow='sm' p='md' withBorder radius='md'>
+    <Stack maw={800} mx='auto' style={{ width: '100%', paddingTop: '30px' }}>
+      <Paper p='md' radius='md' shadow='sm' withBorder>
         <Stack gap='md'>
           <UploadCardTitle isIdsValidation={isIdsValidation} />
 
@@ -151,12 +172,15 @@ export const UploadCard = () => {
 
           <ProcessingConsole isProcessing={isProcessing} logs={processingLogs} />
 
-          <ResultsDisplay
-            processedResults={processedResults}
-            reportFormats={reportFormats}
-            onHtmlReport={openHtmlReport}
-            onBcfDownload={handleBcfDownload}
-          />
+          <div ref={resultsRef}>
+            <ResultsDisplay
+              processedResults={processedResults}
+              reportFormats={reportFormats}
+              onHtmlReport={openHtmlReport}
+              onBcfDownload={handleBcfDownload}
+              resultsRef={resultsRef}
+            />
+          </div>
 
           <Button
             onClick={handleClick}

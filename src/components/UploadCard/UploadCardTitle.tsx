@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Modal, Title, Text, Box, Flex, Anchor, Space } from '@mantine/core'
+import { ActionIcon, Modal, Title, Text, Flex, Anchor, Space } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'

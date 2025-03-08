@@ -127,7 +127,11 @@ export const useFileProcessor = ({ i18n, addLog }: UseFileProcessorProps) => {
       )
 
       console.log('All files processed, results:', processedResults)
-      setProcessedResults(processedResults as ProcessedResult[])
+      // Clear and then set the results to ensure the state update is detected
+      setProcessedResults([])
+      setTimeout(() => {
+        setProcessedResults(processedResults as ProcessedResult[])
+      }, 10)
       setUploadProgress(100)
       setIsProcessing(false)
       return processedResults as ProcessedResult[]

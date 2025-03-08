@@ -1,7 +1,7 @@
 import { Alert, Button, Group, Text } from '@mantine/core'
 import { IconDownload, IconFileText } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { useEffect } from 'react'
+import { useEffect, RefObject } from 'react'
 import { ValidationResult } from '../../../types/validation'
 import { BcfData } from '../../../utils/bcfUtils'
 import { ProcessedResult } from '../hooks/useFileProcessor'
@@ -19,6 +19,7 @@ interface ResultsDisplayProps {
       bcf_data?: BcfData
     }
   }) => void
+  resultsRef?: RefObject<HTMLDivElement>
 }
 
 export const ResultsDisplay = ({
@@ -26,6 +27,7 @@ export const ResultsDisplay = ({
   reportFormats,
   onHtmlReport,
   onBcfDownload,
+  resultsRef,
 }: ResultsDisplayProps) => {
   const { t } = useTranslation()
 
@@ -33,12 +35,26 @@ export const ResultsDisplay = ({
   useEffect(() => {
     if (processedResults.length > 0) {
       // Scroll to bottom of the page with smooth animation
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth',
-      })
+      setTimeout(() => {
+        if (resultsRef?.current) {
+          resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else {
+          window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth',
+          })
+
+          // Add a fallback in case the first attempt doesn't work
+          setTimeout(() => {
+            const resultsElement = document.querySelector('.report-button')
+            if (resultsElement) {
+              resultsElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          }, 100)
+        }
+      }, 100)
     }
-  }, [processedResults])
+  }, [processedResults, resultsRef])
 
   if (processedResults.length === 0) {
     return null

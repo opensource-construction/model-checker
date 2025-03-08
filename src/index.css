@@ -200,7 +200,42 @@ body,
 }
 
 .mantine-Paper-root {
-  border-color: var(--border-color);
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Style the ResultPage container */
+.ResultPage {
+  background-color: var(--bg-secondary) !important;
+  min-height: 100vh !important;
+  padding-top: 20px !important;
+}
+
+/* Add back border for Result page Paper component */
+.ResultPage .mantine-Paper-root,
+.ResultPage .mantine-Card-root {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 40px 30px 30px 30px !important;
+  margin: 40px 25px 25px 25px !important;
+  background-color: var(--bg-primary) !important;
+  position: relative !important;
+}
+
+/* Ensure dark mode also has the border */
+html.dark .ResultPage .mantine-Paper-root,
+html.dark .ResultPage .mantine-Card-root {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  padding: 40px 30px 30px 30px !important;
+  margin: 40px 25px 25px 25px !important;
+  background-color: var(--bg-primary) !important;
+  position: relative !important;
 }
 
 /* Component transitions */
@@ -243,4 +278,151 @@ html,
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 0;
+  margin: 0;
+  background-color: inherit;
+}
+
+/* Remove unwanted borders in both light and dark modes */
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Ensure dark mode doesn't have unwanted borders */
+html.dark .mantine-Paper-root,
+html.dark .mantine-Container-root,
+html.dark .mantine-AppShell-main {
+  border: none !important;
+  box-shadow: none !important;
+  background-color: inherit;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove any potential white borders in dark mode */
+html.dark * {
+  box-shadow: none !important;
+}
+
+/* Fix for top and bottom whitespace */
+.mantine-AppShell-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: inherit;
+  min-height: 100vh;
+}
+
+/* Ensure containers don't add unwanted spacing */
+.mantine-Container-root {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure Paper components don't add unwanted spacing */
+.mantine-Paper-root {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Content padding should be handled by inner elements */
+.mantine-Paper-root > * {
+  padding: 20px;
+}
+
+/* Ensure full height for all elements */
+html,
+body {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: auto;
+}
+
+/* Remove any top/bottom margins from all elements */
+* {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Ensure content is properly contained */
+.mantine-AppShell-main > * {
+  height: 100%;
+  min-height: 100vh;
+}
+
+/* Specific styles for checkboxes in ReportFormatOptions */
+.mantine-Checkbox-root {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mantine-Checkbox-body {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mantine-Checkbox-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mantine-Checkbox-input {
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.mantine-Checkbox-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  margin: auto !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Center the SVG checkmark and make it smaller */
+.mantine-Checkbox-icon svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 70% !important;
+  height: 70% !important;
+}
+
+.mantine-Checkbox-label {
+  margin-left: 4px !important;
+  padding-left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Reduce the gap between checkbox and label */
+.mantine-Checkbox-labelWrapper {
+  margin-left: 2px !important;
 }

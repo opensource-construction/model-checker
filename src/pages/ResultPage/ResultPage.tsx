@@ -40,11 +40,12 @@ export const ResultPage = () => {
 
   return (
     <Container
-      mt={36}
+      mt={0}
+      className='ResultPage'
       style={{
         width: '98%',
         maxWidth: '98%',
-        margin: '36px auto 0',
+        margin: '0 auto',
       }}
     >
       <Paper hide={useMatches({ base: true, sm: false })}>

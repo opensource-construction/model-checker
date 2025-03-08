@@ -12,11 +12,7 @@ export const PageLayout = () => {
 
   return (
     <AppShell header={{ height: { base: 40, lg: 60 } }} padding={padding} withBorder={false} footer={{ height: 40 }}>
-      <AppShell.Header
-        pl={`calc(var(--mantine-spacing-xl))`}
-        bg='yellow'
-        style={{ display: 'flex', alignItems: 'center' }}
-      >
+      <AppShell.Header pl={0} bg='yellow' style={{ display: 'flex', alignItems: 'center' }}>
         <ErrorBoundary>
           <Header />
         </ErrorBoundary>
