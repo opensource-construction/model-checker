@@ -1,95 +1,57 @@
 import { useValidationContext } from '@context'
-import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  Grid,
-  Group,
-  Paper,
-  Progress,
-  rem,
-  ScrollArea,
-  Stack,
-  Switch,
-  Text,
-} from '@mantine/core'
-import { Dropzone, FileRejection } from '@mantine/dropzone'
-import { IconDownload, IconFile3d, IconFileText, IconUpload, IconX } from '@tabler/icons-react'
-import Mustache from 'mustache'
-import { useCallback, useEffect, useState } from 'react'
+import { Box, Button, Paper, Stack, rem } from '@mantine/core'
+import { FileRejection } from '@mantine/dropzone'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ValidationResult } from '../../types/validation'
-import { downloadBcfReport } from '../../utils/bcfUtils'
+import { BcfData, downloadBcfReport } from '../../utils/bcfUtils'
 import { processFile } from './processFile.ts'
+import {
+  ErrorDisplay,
+  FileDropzones,
+  ProcessingConsole,
+  ReportFormatOptions,
+  ResultsDisplay,
+  UploadInstructions,
+} from './components'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
-
-/**
- * Interface for file validation errors
- */
-interface FileError {
-  /** Error code */
-  code: string
-  /** Error message */
-  message: string
-  /** Name of the file that caused the error */
-  file: string
-}
-
-/**
- * Interface for processed validation results
- */
-interface ProcessedResult {
-  /** Name of the processed file */
-  fileName: string
-  result: ValidationResult
-}
-
-const consoleStyles = {
-  position: 'fixed',
-  bottom: '60px', // Above footer
-  right: '20px',
-  width: '270px',
-  maxHeight: '300px',
-  zIndex: 1000,
-  borderRadius: '8px',
-  backdropFilter: 'blur(8px)',
-  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
-  border: '1px solid var(--border-color)',
-  backgroundColor: 'var(--bg-secondary)',
-  transition: 'all var(--theme-transition)',
-} as const
+import { useFileProcessor, useHtmlReport } from './hooks'
+import { FileError } from './hooks/useFileProcessor'
 
 export const UploadCard = () => {
   const navigate = useNavigate()
-  const { dispatch } = useValidationContext()
   const { i18n } = useTranslation()
+  const { t } = useTranslation()
+  const { dispatch } = useValidationContext()
   const [ifcFiles, setIfcFiles] = useState<File[]>([])
   const [idsFile, setIdsFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<FileError[] | null>(null)
   const [isIdsValidation, setIsIdsValidation] = useState(false)
-  const { t } = useTranslation()
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [processedResults, setProcessedResults] = useState<ProcessedResult[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
   const [processingLogs, setProcessingLogs] = useState<string[]>([])
   const [templateContent, setTemplateContent] = useState<string | null>(null)
-  const [loadingDots, setLoadingDots] = useState('')
   const [reportFormats, setReportFormats] = useState({
     html: true,
     bcf: false,
   })
 
-  useEffect(() => {
-    if (isProcessing) {
-      const interval = setInterval(() => {
-        setLoadingDots((dots) => (dots.length >= 3 ? '' : dots + '.'))
-      }, 500)
-      return () => clearInterval(interval)
-    }
-  }, [isProcessing])
+  const addLog = (message: string) => {
+    setProcessingLogs((prev) => [...prev, message])
+  }
+
+  const {
+    isProcessing,
+    uploadProgress,
+    uploadError,
+    processedResults,
+    setUploadError,
+    setProcessedResults,
+    processFiles,
+  } = useFileProcessor({
+    i18n,
+    addLog,
+  })
+
+  const { openHtmlReport } = useHtmlReport(templateContent, i18n)
 
   useEffect(() => {
     // Load the HTML template
@@ -102,59 +64,12 @@ export const UploadCard = () => {
       .catch((error) => console.error('Error loading template:', error))
   }, [])
 
-  const addLog = (message: string) => {
-    setProcessingLogs((prev) => [...prev, message])
-  }
-
-  const openHtmlReport = async (result: ValidationResult, fileName: string) => {
-    try {
-      if (templateContent) {
-        const reportLanguage = result.language_code || result.ui_language || i18n.language || 'en'
-
-        console.log('Opening report with:', {
-          language: reportLanguage,
-          availableLanguages: result.available_languages,
-          hasHtmlContent: Boolean(result.html_content),
-        })
-
-        // If we have pre-rendered HTML content from the worker that's already translated
-        if (result.html_content) {
-          const newWindow = window.open()
-          if (newWindow) {
-            newWindow.document.write(result.html_content)
-            newWindow.document.close()
-            newWindow.document.title = `Report - ${fileName}`
-          }
-          return
-        }
-
-        // Fallback to Mustache template rendering
-        // Prepare the data for Mustache templating
-        const templateData = {
-          ...result,
-          title: result.title || 'IFC Validation Report',
-          date: result.date || new Date().toLocaleString(),
-          filename: fileName || 'Unknown',
-          language: reportLanguage,
-          t: result.t || {}, // Ensure translations are passed to template
-        }
-
-        // Render the template with Mustache
-        const htmlContent = Mustache.render(templateContent, templateData)
-
-        const newWindow = window.open()
-        if (newWindow) {
-          newWindow.document.write(htmlContent)
-          newWindow.document.close()
-          newWindow.document.title = `Report - ${fileName}`
-        }
-      }
-    } catch (error) {
-      console.error('Error generating HTML report:', error)
+  const handleBcfDownload = (result: {
+    fileName: string
+    result: {
+      bcf_data?: BcfData
     }
-  }
-
-  const handleBcfDownload = (result: ProcessedResult) => {
+  }) => {
     if (result.result.bcf_data) {
       try {
         downloadBcfReport(result.result.bcf_data)
@@ -167,124 +82,13 @@ export const UploadCard = () => {
     }
   }
 
-  useEffect(() => {
-    if (!processedResults.length) return
-    console.log('Results ready for report generation')
-  }, [processedResults, templateContent])
-
-  const processFiles = useCallback(
-    async (ifcFiles: File[], idsFile: File | null) => {
-      setIsProcessing(true)
-      setUploadProgress(0)
-      setProcessingLogs([])
-      console.log('Starting file processing...')
-
-      if (!idsFile && isIdsValidation) {
-        setUploadError('IDS file is required for validation')
-        setIsProcessing(false)
-        return
-      }
-
-      let currentIdsContent: string | null = null
-      if (isIdsValidation && idsFile) {
-        addLog(i18n.t('console.loading.idsFile', 'Reading IDS file content...'))
-        try {
-          currentIdsContent = await idsFile.text()
-        } catch (error) {
-          const errorMsg = handleError(error)
-          setUploadError(errorMsg)
-          setIsProcessing(false)
-          return
-        }
-      }
-
-      const processedResults = await Promise.all(
-        ifcFiles.map(async (file) => {
-          try {
-            const arrayBuffer = await file.arrayBuffer()
-            const worker = new Worker('/pyodideWorker.js')
-
-            const result = await new Promise((resolve, reject) => {
-              worker.onmessage = (event) => {
-                if (event.data.type === 'progress') {
-                  addLog(event.data.message)
-                } else if (event.data.type === 'error') {
-                  // Check if this is an out of memory error
-                  if (event.data.errorType === 'out_of_memory') {
-                    addLog(event.data.message)
-                    // Set a timer to reload the page after showing the message
-                    setUploadError(event.data.message)
-                    console.log('Out of memory detected, will reload in 3 seconds')
-                    setTimeout(() => {
-                      window.location.reload()
-                    }, 3000) // Wait 3 seconds before reloading
-                  }
-                  reject(new Error(event.data.message))
-                } else if (event.data.type === 'complete') {
-                  console.log('Received worker result:', event.data.results)
-                  if (event.data.message) {
-                    addLog(event.data.message)
-                  }
-                  resolve(event.data.results)
-                } else {
-                  reject(new Error('Invalid response from worker'))
-                }
-              }
-
-              worker.onerror = (error) => {
-                reject(new Error(error.message || 'Unknown worker error'))
-              }
-
-              worker.postMessage({
-                arrayBuffer,
-                idsContent: currentIdsContent,
-                fileName: file.name,
-                language: i18n.language,
-              })
-
-              console.log(`Worker started with language: ${i18n.language}`)
-            })
-
-            console.log(`Adding result for file ${file.name}`)
-            return { fileName: file.name, result }
-          } catch (error: unknown) {
-            console.error(`Error processing file ${file.name}:`, error)
-            const errorDetails =
-              error instanceof Error && 'details' in error
-                ? `\nDetails: ${JSON.stringify((error as { details: unknown }).details, null, 2)}`
-                : ''
-            const errorMessage = `Error processing ${file.name}: ${
-              error instanceof Error ? error.message : 'Unknown error'
-            }${errorDetails}`
-            setUploadError(errorMessage)
-            return {
-              fileName: file.name,
-              result: {
-                error: error instanceof Error ? error.message : 'Unknown error',
-                details:
-                  error instanceof Error && 'details' in error ? (error as { details: unknown }).details : undefined,
-              },
-            }
-          }
-        }),
-      )
-
-      console.log('All files processed, results:', processedResults)
-      setProcessedResults(processedResults as ProcessedResult[])
-      setUploadProgress(100)
-      setIsProcessing(false)
-    },
-    [isIdsValidation, i18n],
-  )
-
   const handleClick = async () => {
     setUploadError(null)
     setProcessedResults([])
-    setUploadProgress(0)
 
     if (isIdsValidation && idsFile) {
       if (!ifcFiles.length) return
-      await processFiles(ifcFiles, idsFile)
+      await processFiles(ifcFiles, idsFile, isIdsValidation)
     } else {
       if (!ifcFiles.length) return
       ifcFiles.forEach((file) => {
@@ -308,25 +112,13 @@ export const UploadCard = () => {
   }
 
   const handleReject = (fileRejections: FileRejection[]) => {
-    setErrors(fileRejections.map((rejection) => ({ ...rejection.errors[0], file: rejection.file.name })))
-  }
-
-  const ifcValidator = (file: File) => {
-    return file && file.name && file.name.endsWith('.ifc')
-      ? null
-      : { code: 'file-invalid-type', message: t('dropzone.error.ifc') }
-  }
-
-  const idsValidator = (file: File) => {
-    return file && file.name && file.name.endsWith('.ids')
-      ? null
-      : { code: 'file-invalid-type', message: t('dropzone.error.ids') }
-  }
-
-  // Add type checking for errors
-  const handleError = (error: unknown) => {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-    return `Failed to read IDS file: ${errorMessage}`
+    setErrors(
+      fileRejections.map((rejection) => ({
+        code: rejection.errors[0].code,
+        message: rejection.errors[0].message,
+        file: rejection.file.name,
+      })),
+    )
   }
 
   return (
@@ -335,323 +127,36 @@ export const UploadCard = () => {
         <Stack gap='md'>
           <UploadCardTitle isIdsValidation={isIdsValidation} />
 
-          <Group align='center'>
-            <Switch
-              checked={isIdsValidation}
-              onChange={(event) => setIsIdsValidation(event.currentTarget.checked)}
-              label={t('ids-validation')}
-              size='md'
-            />
+          <ReportFormatOptions
+            isIdsValidation={isIdsValidation}
+            setIsIdsValidation={setIsIdsValidation}
+            reportFormats={reportFormats}
+            setReportFormats={setReportFormats}
+          />
 
-            {isIdsValidation && (
-              <Group gap='xs'>
-                <Text size='sm' fw={500}>
-                  {t('report-format')}:
-                </Text>
-                <Group gap='xs'>
-                  <Checkbox
-                    label='HTML'
-                    checked={reportFormats.html}
-                    onChange={(e) => setReportFormats((prev) => ({ ...prev, html: e.currentTarget.checked }))}
-                    size='sm'
-                  />
-                  <Checkbox
-                    label='BCF'
-                    checked={reportFormats.bcf}
-                    onChange={(e) => setReportFormats((prev) => ({ ...prev, bcf: e.currentTarget.checked }))}
-                    size='sm'
-                  />
-                </Group>
-              </Group>
-            )}
-          </Group>
-
-          <Stack gap='xs'>
-            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.0`)}</Text>
-            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.1`)}</Text>
-            <Text size='sm'>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.2`)}</Text>
-            {isIdsValidation && (
-              <Text size='sm' c='blue.7'>
-                {t('upload-description-ids.3')}
-              </Text>
-            )}
-          </Stack>
+          <UploadInstructions isIdsValidation={isIdsValidation} />
 
           <Box>
-            {isIdsValidation ? (
-              <Grid gutter='md'>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <Dropzone
-                    onDrop={handleIfcDrop}
-                    onReject={handleReject}
-                    maxSize={500 * 1024 ** 2}
-                    multiple={true}
-                    validator={ifcValidator}
-                    styles={{
-                      root: {
-                        minHeight: '300px',
-                        border: '1px dashed var(--mantine-color-gray-4)',
-                        backgroundColor: 'transparent',
-                      },
-                    }}
-                  >
-                    <Stack justify='center' align='center' h='100%' gap='xs'>
-                      <Dropzone.Accept>
-                        <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
-                      </Dropzone.Accept>
-                      <Dropzone.Reject>
-                        <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
-                      </Dropzone.Reject>
-                      <Dropzone.Idle>
-                        <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
-                      </Dropzone.Idle>
-
-                      <Text size='xl' inline>
-                        {t('dropzone.drag.ifc')}
-                      </Text>
-                      <Text size='sm' color='dimmed' inline>
-                        {t('dropzone.attach')}
-                      </Text>
-
-                      <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
-                        {ifcFiles?.map((file, index) => (
-                          <Group key={index} gap='xs'>
-                            <IconFile3d size={16} />
-                            <Text size='sm'>{file.name}</Text>
-                          </Group>
-                        ))}
-                      </ScrollArea.Autosize>
-                    </Stack>
-                  </Dropzone>
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <Dropzone
-                    onDrop={handleIdsDrop}
-                    onReject={handleReject}
-                    maxSize={5 * 1024 ** 2}
-                    multiple={false}
-                    validator={idsValidator}
-                    styles={{
-                      root: {
-                        minHeight: '300px',
-                        border: '1px dashed var(--mantine-color-gray-4)',
-                        backgroundColor: 'transparent',
-                      },
-                    }}
-                  >
-                    <Stack justify='center' align='center' h='100%' gap='xs'>
-                      <Dropzone.Accept>
-                        <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
-                      </Dropzone.Accept>
-                      <Dropzone.Reject>
-                        <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
-                      </Dropzone.Reject>
-                      <Dropzone.Idle>
-                        <IconFileText size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
-                      </Dropzone.Idle>
-
-                      <Text size='xl' inline>
-                        {t('dropzone.drag.ids')}
-                      </Text>
-                      <Text size='sm' color='dimmed' inline>
-                        {t('dropzone.attach-single')}
-                      </Text>
-
-                      <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
-                        {idsFile && (
-                          <Group gap='xs'>
-                            <IconFileText size={16} />
-                            <Text size='sm'>{idsFile.name}</Text>
-                          </Group>
-                        )}
-                      </ScrollArea.Autosize>
-                    </Stack>
-                  </Dropzone>
-                </Grid.Col>
-              </Grid>
-            ) : (
-              <Dropzone
-                onDrop={handleIfcDrop}
-                onReject={handleReject}
-                maxSize={500 * 1024 ** 2}
-                multiple={true}
-                validator={ifcValidator}
-                styles={{
-                  root: {
-                    minHeight: '300px',
-                    border: '1px dashed var(--mantine-color-gray-4)',
-                    backgroundColor: 'transparent',
-                  },
-                }}
-              >
-                <Stack justify='center' align='center' h='100%' gap='xs'>
-                  <Dropzone.Accept>
-                    <IconUpload size={32} stroke={1.5} color='var(--mantine-color-blue-6)' />
-                  </Dropzone.Accept>
-                  <Dropzone.Reject>
-                    <IconX size={32} stroke={1.5} color='var(--mantine-color-red-6)' />
-                  </Dropzone.Reject>
-                  <Dropzone.Idle>
-                    <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
-                  </Dropzone.Idle>
-
-                  <Text size='xl' inline>
-                    {t('dropzone.drag.ifc')}
-                  </Text>
-                  <Text size='sm' color='dimmed' inline>
-                    {t('dropzone.attach')}
-                  </Text>
-
-                  <ScrollArea.Autosize mah={100} mt='sm' w='100%' px='sm'>
-                    {ifcFiles?.map((file, index) => (
-                      <Group key={index} gap='xs'>
-                        <IconFile3d size={16} />
-                        <Text size='sm'>{file.name}</Text>
-                      </Group>
-                    ))}
-                  </ScrollArea.Autosize>
-                </Stack>
-              </Dropzone>
-            )}
+            <FileDropzones
+              isIdsValidation={isIdsValidation}
+              ifcFiles={ifcFiles}
+              idsFile={idsFile}
+              onIfcDrop={handleIfcDrop}
+              onIdsDrop={handleIdsDrop}
+              onReject={handleReject}
+            />
           </Box>
 
-          {errors && errors.length > 0 && (
-            <Alert color='red' variant='light'>
-              {errors.map((error, index) => (
-                <Text key={index} size='sm'>
-                  {t('dropzone.error-message')}: {error.file} - {error.message}
-                </Text>
-              ))}
-            </Alert>
-          )}
+          <ErrorDisplay errors={errors} uploadProgress={uploadProgress} uploadError={uploadError} />
 
-          {uploadProgress > 0 && uploadProgress < 100 && <Progress value={uploadProgress} size='sm' mb='md' />}
+          <ProcessingConsole isProcessing={isProcessing} logs={processingLogs} />
 
-          {uploadError && (
-            <Alert color='red' variant='light' mb='md'>
-              {uploadError}
-              {uploadError.includes('out of memory') && (
-                <Box mt='sm'>
-                  <Text fw={700}>{t('console.loading.reloading', 'Page will reload in 3 seconds...')}</Text>
-                </Box>
-              )}
-            </Alert>
-          )}
-
-          {isProcessing && (
-            <Paper withBorder p='md' style={consoleStyles}>
-              <Group justify='apart' mb='xs'>
-                <Text size='sm' fw={500} c='dimmed'>
-                  {t('console.loading.processingLogs', 'Processing Logs')}
-                </Text>
-                <Text size='xs' c='dimmed'>
-                  {processingLogs.length} {t('console.loading.entries', 'entries')}
-                </Text>
-              </Group>
-
-              <ScrollArea h={200} offsetScrollbars>
-                <Stack gap='xs'>
-                  {processingLogs.map((log, index) => (
-                    <Text
-                      key={index}
-                      size='sm'
-                      style={{
-                        color: 'var(--text-primary)',
-                        padding: '4px 8px',
-                        backgroundColor: index % 2 === 0 ? 'var(--bg-primary)' : 'transparent',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      {log}
-                    </Text>
-                  ))}
-                  {isProcessing && (
-                    <Text
-                      size='sm'
-                      style={{
-                        color: 'var(--text-secondary)',
-                        padding: '4px 8px',
-                      }}
-                    >
-                      {loadingDots}
-                    </Text>
-                  )}
-                </Stack>
-              </ScrollArea>
-            </Paper>
-          )}
-
-          {processedResults.length > 0 && (
-            <Alert color='green' variant='light'>
-              <Text>{t('console.success.processingComplete', 'Your files have been processed.')}</Text>
-              <Group mt='md' gap='sm'>
-                {processedResults.map((result, index) => (
-                  <Group key={index} gap='xs'>
-                    {reportFormats.html && (
-                      <Button
-                        onClick={() => openHtmlReport(result.result, result.fileName)}
-                        color='yellow'
-                        variant='outline'
-                        size='sm'
-                        fw={500}
-                        className='report-button'
-                        leftSection={<IconFileText size={16} />}
-                        styles={{
-                          root: {
-                            border: '2px solid var(--mantine-color-yellow-filled)',
-                            color: 'var(--mantine-color-dark-6)',
-                            backgroundColor: 'var(--mantine-color-yellow-1)',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: 'var(--mantine-color-yellow-2)',
-                              transform: 'translateY(-4px)',
-                              boxShadow: '0 4px 8px rgba(255, 213, 0, 0.35)',
-                            },
-                            '&:active': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 2px 4px rgba(255, 213, 0, 0.35)',
-                            },
-                          },
-                        }}
-                      >
-                        HTML - {result.fileName}
-                      </Button>
-                    )}
-                    {reportFormats.bcf && (
-                      <Button
-                        onClick={() => handleBcfDownload(result)}
-                        variant='outline'
-                        size='sm'
-                        fw={500}
-                        className='report-button'
-                        leftSection={<IconDownload size={16} />}
-                        styles={{
-                          root: {
-                            border: '2px solid var(--mantine-color-blue-filled)',
-                            color: 'var(--mantine-color-dark-6)',
-                            backgroundColor: 'var(--mantine-color-blue-1)',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: 'var(--mantine-color-blue-2)',
-                              transform: 'translateY(-4px)',
-                              boxShadow: '0 4px 8px rgba(0, 145, 255, 0.35)',
-                            },
-                            '&:active': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 2px 4px rgba(0, 145, 255, 0.35)',
-                            },
-                          },
-                        }}
-                      >
-                        BCF - {result.fileName}
-                      </Button>
-                    )}
-                  </Group>
-                ))}
-              </Group>
-            </Alert>
-          )}
+          <ResultsDisplay
+            processedResults={processedResults}
+            reportFormats={reportFormats}
+            onHtmlReport={openHtmlReport}
+            onBcfDownload={handleBcfDownload}
+          />
 
           <Button
             onClick={handleClick}
