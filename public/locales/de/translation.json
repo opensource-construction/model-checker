@@ -1,7 +1,7 @@
 {
   "upload-file": "Datei Hochladen",
   "upload-description": {
-    "0": "Willkommen beim IFC Model Checker!",
+    "0": "Model quality is at the center of successful BIM projects.",
     "1": "Das Ziel dieses Tools ist es, einen schnellen Überblick über den Zustand eines Modells zu erhalten. Es kommt mit einigen Standardtests - wenn diese erfolgreich sind, lohnt es sich, tiefer in das Modell einzusteigen.",
     "2": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
     "3": "Alle Daten bleiben auf Ihrem lokalen Rechner – es werden keine Daten irgendwohin gesendet, alle Überprüfungen werden lokal durchgeführt."

@@ -1,12 +1,13 @@
 {
   "upload-file": "Upload File",
   "upload-description": {
-    "0": "Welcome to the IFC Model Checker!",
-    "1": "The goal of this tool is to provide a quick overview of a model's condition. It comes with several standard tests - if these succeed, it's worth looking deeper into the model.",
+    "0": "Model quality is at the center of successful BIM projects.",
+    "1": "The goal of this tool is to provide a quick overview of the state of a model. It comes with several standard tests - if these pass, it's worth diving deeper into the model.",
     "2": "We designed it to be straightforward and secure.",
-    "3": "All data stays on your local machine - no data will be sent anywhere, all checks are performed locally."
+    "3": "All data stays on your local machine - no data is sent anywhere, all checks are performed locally."
   },
   "upload-description-ids": {
+    "0": "Model quality is at the center of successful BIM projects.",
     "1": "Verify IFC models against IDS requirements defined in your IDS file.",
     "2": "We designed it to be straightforward and secure.",
     "3": "All validation runs locally in your browser - your data never leaves your device.",

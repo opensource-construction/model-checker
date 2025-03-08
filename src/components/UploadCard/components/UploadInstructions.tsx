@@ -10,9 +10,9 @@ export const UploadInstructions = ({ isIdsValidation }: UploadInstructionsProps)
 
   return (
     <Stack gap='md' mt={5}>
-      <Text>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.0`)}</Text>
+      <Text fw={700}>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.0`)}</Text>
       <Text>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.1`)}</Text>
-      <Text fw={700}>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.2`)}</Text>
+      {!isIdsValidation && <Text fw={700}>{t('upload-description.2')}</Text>}
       <Text>{t(`${isIdsValidation ? 'upload-description-ids' : 'upload-description'}.3`)}</Text>
       {isIdsValidation && <Text>{t('upload-description-ids.4')}</Text>}
     </Stack>

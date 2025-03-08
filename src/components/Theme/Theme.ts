@@ -5,13 +5,21 @@ export const theme = createTheme({
   headings: {
     fontFamily: 'Poppins, sans-serif',
     fontWeight: '700',
+    sizes: {
+      h1: { fontSize: rem(27) },
+      h2: { fontSize: rem(22) },
+      h3: { fontSize: rem(18) },
+      h4: { fontSize: rem(14) },
+      h5: { fontSize: rem(13) },
+      h6: { fontSize: rem(11) },
+    },
   },
   fontSizes: {
-    xs: rem(12),
-    sm: rem(14),
-    md: rem(16),
-    lg: rem(18),
-    xl: rem(20),
+    xs: rem(11),
+    sm: rem(13),
+    md: rem(14),
+    lg: rem(16),
+    xl: rem(18),
   },
   breakpoints: {
     xs: '36em',
@@ -21,46 +29,56 @@ export const theme = createTheme({
     xl: '88em',
     xxl: '120em',
   },
-  defaultRadius: rem(4), // Slight default rounding
+  defaultRadius: '0',
   primaryColor: 'yellow',
-  primaryShade: 5,
+  primaryShade: 6,
   colors: {
     yellow: [
-      '#fff9d9',
-      '#fff7cc',
-      '#fff4b0',
-      '#fff193',
-      '#ffee76',
-      '#ffee09', // Primary yellow
-      '#e6d608',
-      '#ccbe07',
-      '#b3a706',
-      '#999005',
+      '#ffffe2',
+      '#fffccc',
+      '#fff89b',
+      '#fff464',
+      '#fff139',
+      '#ffef1d',
+      '#ffee09',
+      '#e3d300',
+      '#c9bb00',
+      '#ada100',
     ],
-    dark: [
-      '#C1C2C5',
-      '#A6A7AB',
-      '#909296',
-      '#5c5f66',
-      '#373A40',
-      '#2C2E33',
-      '#1a1b26', // Tokyo Night dark background
-      '#24283b', // Tokyo Night secondary background
-      '#16161e', // Tokyo Night darker shade
-      '#13131a', // Tokyo Night darkest shade
+    blue: [
+      '#eaeaff',
+      '#cfd0ff',
+      '#9c9cff',
+      '#6464ff',
+      '#3736fe',
+      '#1b19fe',
+      '#0909ff',
+      '#0000e4',
+      '#0000cc',
+      '#0000b4',
     ],
+    violet: [
+      '#ffe9ff',
+      '#ffd0ff',
+      '#fc9efc',
+      '#fa6afa',
+      '#f83ef8',
+      '#f824f8',
+      '#f715f7',
+      '#dd06dd',
+      '#c500c5',
+      '#ac00ad',
+    ],
+  },
+  other: {
+    backgroundColor: '#fafbff',
   },
   components: {
     Button: Button.extend({
       defaultProps: {
-        color: 'yellow',
+        variant: 'filled',
+        autoContrast: true,
       },
     }),
-    Paper: {
-      defaultProps: {
-        p: 'md', // Default padding for all Paper components (including cards)
-        radius: 'sm', // Slight rounding
-      },
-    },
   },
 })

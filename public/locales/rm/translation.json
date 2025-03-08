@@ -1,12 +1,13 @@
 {
   "upload-file": "Chargiar datoteca",
   "upload-description": {
-    "0": "Bainvegni tar l'IFC Model Checker!",
+    "0": "La qualitad dal model è il center da projects BIM da success.",
     "1": "La finamira da quest instrument è da dar ina survista svelta dal stadi d'in model. I cuntegna differents tests da standard - sche quels èn reussids, vali la paina d'examinar il model pli detagliadamain.",
     "2": "Nus avain creà el per ch'el saja simpel e segir.",
     "3": "Tut las datas restan sin tes computer local - naginas datas vegnan tramessas utrò, tut las verificaziuns vegnan fatgas localmain."
   },
   "upload-description-ids": {
+    "0": "La qualitad dal model è il center da projects BIM da success.",
     "1": "Controllescha models IFC tenor las pretensiuns definidas en tia datoteca IDS.",
     "2": "Nus avain creà el per ch'el saja simpel e segir.",
     "3": "Tut la validaziun vegn fatga localmain en tes navigatur - tias datas na bandunan mai tes apparat.",

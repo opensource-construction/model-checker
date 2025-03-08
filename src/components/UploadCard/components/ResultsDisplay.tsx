@@ -1,6 +1,7 @@
 import { Alert, Button, Group, Text } from '@mantine/core'
 import { IconDownload, IconFileText } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
+import { useEffect } from 'react'
 import { ValidationResult } from '../../../types/validation'
 import { BcfData } from '../../../utils/bcfUtils'
 import { ProcessedResult } from '../hooks/useFileProcessor'
@@ -27,6 +28,17 @@ export const ResultsDisplay = ({
   onBcfDownload,
 }: ResultsDisplayProps) => {
   const { t } = useTranslation()
+
+  // Add smooth scrolling effect when results are displayed
+  useEffect(() => {
+    if (processedResults.length > 0) {
+      // Scroll to bottom of the page with smooth animation
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }, [processedResults])
 
   if (processedResults.length === 0) {
     return null

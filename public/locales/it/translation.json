@@ -1,12 +1,13 @@
 {
   "upload-file": "Carica file",
   "upload-description": {
-    "0": "Benvenuto nell'IFC Model Checker!",
+    "0": "La qualità del modello è al centro dei progetti BIM di successo.",
     "1": "L'obiettivo di questo strumento è fornire una rapida panoramica delle condizioni di un modello. Include diversi test standard - se questi hanno successo, vale la pena esaminare più a fondo il modello.",
     "2": "L'abbiamo progettato per essere semplice e sicuro.",
     "3": "Tutti i dati rimangono sul tuo computer locale - nessun dato verrà inviato altrove, tutti i controlli vengono eseguiti localmente."
   },
   "upload-description-ids": {
+    "0": "La qualità del modello è al centro dei progetti BIM di successo.",
     "1": "Verifica i modelli IFC in base ai requisiti definiti nel tuo file IDS.",
     "2": "L'abbiamo progettato per essere semplice e sicuro.",
     "3": "Tutta la validazione viene eseguita localmente nel tuo browser - i tuoi dati non lasciano mai il tuo dispositivo.",
