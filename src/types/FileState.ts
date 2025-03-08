@@ -5,4 +5,4 @@ export interface FileState {
   reporterCode: string
   templateContent: string
   fileName: string
-} 
+}

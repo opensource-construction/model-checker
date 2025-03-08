@@ -13,4 +13,4 @@ export const ValidationProgressbar = ({ show, progress }: ValidationProgressbarP
   if (!show) return null
 
   return <Progress value={progress} color={progressColor} />
-} 
+}

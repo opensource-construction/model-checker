@@ -147,7 +147,7 @@ function checkStoreyRelation({ content, regex }: ProcessContentChunkProps): Part
       storeyId = elementToStoreyMap[parentId]
     }
     const storeyName = storeyId ? buildingStoreyMap[storeyId] : 'Unknown'
-    const passed = !!storeyId  // pass if the storey was found (directly or via parent's relation)
+    const passed = !!storeyId // pass if the storey was found (directly or via parent's relation)
     results.push({
       globalId,
       name: storeyName, // Use storey name (inherited if necessary)
