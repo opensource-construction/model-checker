@@ -2,7 +2,7 @@ import { ActionIcon, Group, Text, useMatches } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
 import { IconBrandGithub } from '@tabler/icons-react'
 import righettiLogo from 'assets/righetti_partner_logo.png'
-import { useTheme } from '../../context/themeUtils'
+import { useTheme } from '@context'
 
 export const Footer = () => {
   const { t } = useTranslation()
