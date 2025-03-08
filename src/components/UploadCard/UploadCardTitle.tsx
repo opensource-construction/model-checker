@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Modal, Title, Text } from '@mantine/core'
+import { ActionIcon, Group, Modal, Title, Text, Box } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
@@ -13,12 +13,18 @@ export const UploadCardTitle = ({ isIdsValidation }: UploadCardTitleProps) => {
 
   return (
     <>
-      <Group justify='center'>
-        <Title order={2}>{t('upload-file')}</Title>
-        <ActionIcon variant='transparent' onClick={() => open()}>
+      <Box sx={{ textAlign: 'center', position: 'relative' }}>
+        <Title order={2} ta='center' mb={5}>
+          {t('upload-file')}
+        </Title>
+        <ActionIcon
+          variant='transparent'
+          onClick={() => open()}
+          sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}
+        >
           <IconInfoCircle color='black' />
         </ActionIcon>
-      </Group>
+      </Box>
       <Modal
         opened={opened}
         onClose={close}

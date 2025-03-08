@@ -65,10 +65,10 @@ export const FileDropzones = ({
                 <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
               </Dropzone.Idle>
 
-              <Text size='xl' inline>
+              <Text size='xl' inline ta='center' w='100%'>
                 {t('dropzone.drag.ifc')}
               </Text>
-              <Text size='sm' color='dimmed' inline>
+              <Text size='sm' color='dimmed' inline ta='center' w='100%'>
                 {t('dropzone.attach')}
               </Text>
 
@@ -104,10 +104,10 @@ export const FileDropzones = ({
                 <IconFileText size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
               </Dropzone.Idle>
 
-              <Text size='xl' inline>
+              <Text size='xl' inline ta='center' w='100%'>
                 {t('dropzone.drag.ids')}
               </Text>
-              <Text size='sm' color='dimmed' inline>
+              <Text size='sm' color='dimmed' inline ta='center' w='100%'>
                 {t('dropzone.attach-single')}
               </Text>
 
@@ -146,10 +146,10 @@ export const FileDropzones = ({
           <IconFile3d size={32} stroke={1.5} color='var(--mantine-color-dimmed)' />
         </Dropzone.Idle>
 
-        <Text size='xl' inline>
+        <Text size='xl' inline ta='center' w='100%'>
           {t('dropzone.drag.ifc')}
         </Text>
-        <Text size='sm' color='dimmed' inline>
+        <Text size='sm' color='dimmed' inline ta='center' w='100%'>
           {t('dropzone.attach')}
         </Text>
 
