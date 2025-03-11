@@ -2,14 +2,33 @@
   "upload-file": "Upload File",
   "upload-description": {
     "0": "Model quality is at the center of successful BIM projects.",
-    "1": "The goal of this tool is to provide a quick check on the overall health of a model. It comes with a couple of standard tests – if these succeed, it's worth to look deeper into the model.",
-    "2": "Otherwise probably not.",
-    "3": "We designed it to be really easy AND secure.",
-    "4": "All data stays on your local machine – no data will be send anywhere, all checks are performed locally"
+    "1": "The goal of this tool is to provide a quick overview of the state of a model. It comes with several standard tests - if these pass, it's worth diving deeper into the model.",
+    "2": "We designed it to be straightforward and secure.",
+    "3": "All data stays on your local machine - no data is sent anywhere, all checks are performed locally."
+  },
+  "upload-description-ids": {
+    "0": "Model quality is at the center of successful BIM projects.",
+    "1": "Verify IFC models against IDS requirements defined in your IDS file.",
+    "2": "We designed it to be straightforward and secure.",
+    "3": "All validation runs locally in your browser - your data never leaves your device.",
+    "4": "View your results as an interactive HTML report in your browser, with options to download, share, or print to PDF. BCF export is also available for BIM workflows."
   },
   "upload-card": {
     "title": "Model Validation and Rules",
     "description": "IFC Model Checker points to commonly found issues in .ifc files, leading to high quality data in the AEC industry. Checking your uploaded IFC files happens fully clientside, we don't save any data - nothing leaves your device and everything is deleted after session gets closed.",
+    "ids-title": "IDS Validation",
+    "ids-description": "The IDS Validator allows you to check if your IFC models comply with Information Delivery Specification (IDS) requirements. It performs comprehensive validation against the rules defined in the IDS file. All validation happens locally in your browser using WASM - your data never leaves your device. Results are provided in a detailed report that you can view online, download as HTML, print as PDF, or export as BCF for further use in your BIM workflow.",
+    "ids-info": {
+      "about-title": "About IDS:",
+      "about-text": "Information Delivery Specification (IDS) is a buildingSMART standard for defining information requirements in a computer interpretable form. It allows for automatic compliance checking of IFC models, increasing quality control and data fidelity.",
+      "about-link-text": "Learn more about IDS at:",
+      "about-link": "buildingSMART IDS Standard",
+      "how-it-works-title": "How it works:",
+      "how-it-works-text": "This validator uses IfcOpenShell running in WebAssembly (WASM), which allows the Python-based IfcOpenShell library to run directly in your browser. WebAssembly is a binary instruction format that enables high-performance applications to run in web browsers without plugins.",
+      "how-it-works-security": "This means all validation happens locally on your device - your data never leaves your browser, ensuring complete privacy and security.",
+      "wasm-link-text": "Learn more about WebAssembly at:",
+      "wasm-link": "WebAssembly.org"
+    },
     "rules": "Rules:",
     "info-card": {
       "0": "Project Name Validation: Ensures every project has a meaningful and valid name.",
@@ -32,10 +51,13 @@
   },
   "validate": "Validate",
   "dropzone": {
-    "drag": "Drag IFC files here or click to select files",
-    "attach": "Attach as many files as you like, each file should not exceed 500Mb",
-    "error": "Invalid file type. Only .ifc files are allowed.",
-    "error-message": "File"
+    "drag": {
+      "ifc": "Drop IFC files here or click to select",
+      "ids": "Drop IDS file here or click to select"
+    },
+    "error-message": "Error",
+    "attach": "You can add multiple files",
+    "attach-single": "Only one file can be added"
   },
   "results": "Results",
   "print": "Print",
@@ -55,7 +77,7 @@
     "site-name": "Is IfcSite Name filled out?",
     "building-name": "Is IfcBuilding Name filled out?",
     "story-name": "Are IfcBuilding Storey Names filled out?",
-    "story-relation": "Do, all Objects have a relation to a BuildingStory?",
+    "story-relation": "Do all Objects have a relation to a BuildingStory?",
     "building-relation": "Do all Objects have a relation to a Building?",
     "site-relation": "Do all Objects have a relation to a Site?",
     "project-relation": "Do all Objects have a relation to a Project?",
@@ -77,8 +99,101 @@
     "predefined-types": "IFC Object Predefined Type used",
     "building-element-proxies": "Do all BuildingElementProxy have a Name?"
   },
+  "validation-type": "Validation Type",
+  "ids-validation": "IDS Validation",
+  "standard-validation": "Standard Validation",
+  "Upload": {
+    "idsValidation": "Enable IDS Validation",
+    "dropIdsFile": "Drop IDS file here",
+    "dropIdsFileDescription": "Drag and drop your IDS (Information Delivery Specification) file here"
+  },
   "sponsored-by": "Sponsored by:",
-  "open-source": "Open source at:",
+  "open-source": "Open Source at:",
   "author": "Author",
-  "exported": "Exported"
+  "exported": "Exported",
+  "settings": {
+    "title": "Settings"
+  },
+  "validation": {
+    "title": "IFC Model Validation",
+    "description": "Validate your IFC models against IDS specifications. Drop your files below to get started."
+  },
+  "report-format": "Report Format",
+  "html-report": "HTML Report (view in browser)",
+  "bcf-report": "BCF Report (download for BIM tools)",
+  "report-format-description": "Select one or both report formats. HTML reports can be viewed and printed directly, while BCF reports can be used in BIM collaboration tools.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Please select at least one report format",
+  "report": {
+    "summary": "Summary",
+    "specifications": "Specifications",
+    "requirements": "Requirements",
+    "details": "Details",
+    "class": "Class",
+    "predefinedType": "PredefinedType",
+    "name": "Name",
+    "description": "Description",
+    "warning": "Warning",
+    "globalId": "GlobalId",
+    "tag": "Tag",
+    "reportBy": "Report by",
+    "and": "and",
+    "status": {
+      "pass": "PASS",
+      "fail": "FAIL",
+      "untested": "UNTESTED",
+      "skipped": "SKIPPED"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "The required property set does not exist",
+      "dataShallBeProvided": "data shall be provided in the dataset",
+      "propertyNotExist": "The required property does not exist",
+      "invalidValue": "has an invalid value",
+      "notInRange": "is not in the allowed range",
+      "notFound": "was not found",
+      "doesNotHave": "does not have",
+      "missingProperty": "is missing the required property"
+    },
+    "interface": {
+      "passed": "passed",
+      "failed": "failed",
+      "checksPassedPrefix": "Checks passed",
+      "specificationsPassedPrefix": "Specifications passed",
+      "requirementsPassedPrefix": "Requirements passed",
+      "elementsPassedPrefix": "Elements passed",
+      "applicability": "Applicability",
+      "all": "All",
+      "data": "data"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...",
+      "moreElementsNotShown": "... {{count}} more {{type}} elements not shown out of {{total}} total ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Loading Pyodide...",
+      "pyodideSuccess": "Pyodide loaded successfully",
+      "translations": "Loading translations...",
+      "packages": "Installing required packages...",
+      "micropipPatch": "Patching micropip for compatibility check bypass...",
+      "ifcOpenShell": "Installing IfcOpenShell...",
+      "dependencies": "Installing additional dependencies...",
+      "inputFiles": "Processing input files...",
+      "validation": "Running IFC validation...",
+      "processingLogs": "Processing Logs",
+      "entries": "entries",
+      "reloading": "Page will reload in 3 seconds..."
+    },
+    "error": {
+      "pyodideLoad": "Failed to load Pyodide: {{message}}",
+      "generic": "An error occurred: {{message}}",
+      "outOfMemory": "Pyodide ran out of memory. The page will reload automatically to free resources."
+    },
+    "success": {
+      "processingComplete": "Your files have been processed.",
+      "validationComplete": "Validation complete! View your results below."
+    }
+  }
 }

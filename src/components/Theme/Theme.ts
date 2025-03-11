@@ -5,13 +5,21 @@ export const theme = createTheme({
   headings: {
     fontFamily: 'Poppins, sans-serif',
     fontWeight: '700',
+    sizes: {
+      h1: { fontSize: rem(27) },
+      h2: { fontSize: rem(22) },
+      h3: { fontSize: rem(18) },
+      h4: { fontSize: rem(14) },
+      h5: { fontSize: rem(13) },
+      h6: { fontSize: rem(11) },
+    },
   },
   fontSizes: {
-    xs: rem(12),
-    sm: rem(14),
-    md: rem(16),
-    lg: rem(18),
-    xl: rem(20),
+    xs: rem(11),
+    sm: rem(13),
+    md: rem(14),
+    lg: rem(16),
+    xl: rem(18),
   },
   breakpoints: {
     xs: '36em',

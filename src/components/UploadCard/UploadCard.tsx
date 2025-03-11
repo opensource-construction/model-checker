@@ -1,123 +1,209 @@
-import { Button, Divider, Group, rem, Stack, Text } from '@mantine/core'
-import { Paper } from '@components'
-import { Dropzone, FileRejection } from '@mantine/dropzone'
-import { IconFile3d, IconUpload, IconX } from '@tabler/icons-react'
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
 import { useValidationContext } from '@context'
-import { processFile } from './processFile.ts'
+import { Box, Button, Paper, Stack, rem } from '@mantine/core'
+import { FileRejection } from '@mantine/dropzone'
+import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { BcfData, downloadBcfReport } from '../../utils/bcfUtils'
+import { processFile } from './processFile.ts'
+import {
+  ErrorDisplay,
+  FileDropzones,
+  ProcessingConsole,
+  ReportFormatOptions,
+  ResultsDisplay,
+  UploadInstructions,
+} from './components'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
-
-interface FileError {
-  code: string
-  message: string
-  file: string
-}
+import { useFileProcessor, useHtmlReport } from './hooks'
+import { FileError } from './hooks/useFileProcessor'
 
 export const UploadCard = () => {
   const navigate = useNavigate()
-  const { dispatch } = useValidationContext()
-  const [files, setFiles] = useState<File[]>([])
-  const [errors, setErrors] = useState<FileError[] | null>(null)
+  const { i18n } = useTranslation()
   const { t } = useTranslation()
+  const { dispatch } = useValidationContext()
+  const [ifcFiles, setIfcFiles] = useState<File[]>([])
+  const [idsFile, setIdsFile] = useState<File | null>(null)
+  const [errors, setErrors] = useState<FileError[] | null>(null)
+  const [isIdsValidation, setIsIdsValidation] = useState(false)
+  const [processingLogs, setProcessingLogs] = useState<string[]>([])
+  const [templateContent, setTemplateContent] = useState<string | null>(null)
+  const [reportFormats, setReportFormats] = useState({
+    html: true,
+    bcf: false,
+  })
+  const resultsRef = useRef<HTMLDivElement>(null)
 
-  const handleClick = () => {
-    if (!files.length) return
-    files.forEach((file) => {
-      processFile({ file: file as File, dispatch, fileId: file.name })
-    })
-    setFiles([])
-    navigate('/results')
+  const addLog = (message: string) => {
+    setProcessingLogs((prev) => [...prev, message])
   }
 
-  const handleDrop = (acceptedFiles: File[]) => {
+  const {
+    isProcessing,
+    uploadProgress,
+    uploadError,
+    processedResults,
+    setUploadError,
+    setProcessedResults,
+    processFiles,
+  } = useFileProcessor({
+    i18n,
+    addLog,
+  })
+
+  const { openHtmlReport } = useHtmlReport(templateContent, i18n)
+
+  // Function to scroll to results
+  const scrollToResults = () => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }
+
+  // Watch for when processing completes
+  useEffect(() => {
+    if (!isProcessing && processedResults.length > 0) {
+      // Scroll to results when processing is complete
+      setTimeout(scrollToResults, 200)
+    }
+  }, [isProcessing, processedResults.length])
+
+  useEffect(() => {
+    // Load the HTML template
+    fetch('/report.html')
+      .then((response) => response.text())
+      .then((content) => {
+        console.log('Template loaded, length:', content.length)
+        setTemplateContent(content)
+      })
+      .catch((error) => console.error('Error loading template:', error))
+  }, [])
+
+  const handleBcfDownload = (result: {
+    fileName: string
+    result: {
+      bcf_data?: BcfData
+    }
+  }) => {
+    if (result.result.bcf_data) {
+      try {
+        downloadBcfReport(result.result.bcf_data)
+      } catch (error) {
+        console.error('Failed to download BCF report:', error)
+        setUploadError(`Failed to download BCF report: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    } else {
+      setUploadError('No BCF data available for download')
+    }
+  }
+
+  const handleClick = async () => {
+    setUploadError(null)
+    setProcessedResults([])
+
+    if (isIdsValidation && idsFile) {
+      if (!ifcFiles.length) return
+      await processFiles(ifcFiles, idsFile, isIdsValidation)
+    } else {
+      if (!ifcFiles.length) return
+      ifcFiles.forEach((file) => {
+        processFile({ file, dispatch, fileId: file.name })
+      })
+      navigate('/results')
+    }
+
+    setIfcFiles([])
+    setIdsFile(null)
+  }
+
+  const handleIfcDrop = (acceptedFiles: File[]) => {
     setErrors([])
-    setFiles((prevFiles) => [...prevFiles, ...acceptedFiles])
+    setIfcFiles((prevFiles) => [...prevFiles, ...acceptedFiles])
+  }
+
+  const handleIdsDrop = (acceptedFiles: File[]) => {
+    setErrors([])
+    setIdsFile(acceptedFiles[0])
   }
 
   const handleReject = (fileRejections: FileRejection[]) => {
-    setErrors(fileRejections.map((rejection) => ({ ...rejection.errors[0], file: rejection.file.name })))
-  }
-
-  // Custom validator to check for .ifc file extension
-  const fileValidator = (file: File) => {
-    const validExtension = file.name.endsWith('.ifc')
-    if (!validExtension) {
-      return {
-        code: 'file-invalid-type',
-        message: t('dropzone.error'),
-      }
-    }
-    return null
+    setErrors(
+      fileRejections.map((rejection) => ({
+        code: rejection.errors[0].code,
+        message: rejection.errors[0].message,
+        file: rejection.file.name,
+      })),
+    )
   }
 
   return (
-    <Stack>
-      <Paper hide={false}>
-        <UploadCardTitle />
-        <Divider py={8} />
-        <Stack maw={650} mb='md' gap='xs'>
-          <Text size='sm'>{t('upload-description.0')}</Text>
-          <Text size='sm'>{t('upload-description.1')}</Text>
-          <Text size='sm'>{t('upload-description.2')}</Text>
-          <Text size='sm' fw={700}>
-            {t('upload-description.3')}
-          </Text>
-          <Text size='sm'>{t('upload-description.4')}</Text>
-        </Stack>
-        <Dropzone
-          onDrop={handleDrop}
-          onReject={handleReject}
-          maxSize={500 * 1024 ** 2}
-          multiple={true}
-          validator={fileValidator}
-        >
-          <Group justify='center' gap='xl' mih={220} style={{ pointerEvents: 'none' }}>
-            <Dropzone.Accept>
-              <IconUpload
-                style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-blue-6)' }}
-                stroke={1.5}
-              />
-            </Dropzone.Accept>
-            <Dropzone.Reject>
-              <IconX style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-red-6)' }} stroke={1.5} />
-            </Dropzone.Reject>
-            <Dropzone.Idle>
-              <IconFile3d
-                style={{ width: rem(52), height: rem(52), color: 'var(--mantine-color-dimmed)' }}
-                stroke={1.5}
-              />
-            </Dropzone.Idle>
+    <Stack maw={800} mx='auto' style={{ width: '100%', paddingTop: '30px' }}>
+      <Paper p='md' radius='md' shadow='sm' withBorder>
+        <Stack gap='md'>
+          <UploadCardTitle isIdsValidation={isIdsValidation} />
 
-            <Stack maw={500} gap='xs'>
-              <Text size='xl'>{t('dropzone.drag')}</Text>
-              <Text size='sm' c='dimmed' mt={7}>
-                {t('dropzone.attach')}
-              </Text>
-            </Stack>
-          </Group>
-          <div>
-            {files?.map((file, index) => (
-              <Group key={index}>
-                <IconFile3d stroke={0.7} />
-                <Text size='sm'>{file.name}</Text>
-              </Group>
-            ))}
+          <ReportFormatOptions
+            isIdsValidation={isIdsValidation}
+            setIsIdsValidation={setIsIdsValidation}
+            reportFormats={reportFormats}
+            setReportFormats={setReportFormats}
+          />
+
+          <UploadInstructions isIdsValidation={isIdsValidation} />
+
+          <Box>
+            <FileDropzones
+              isIdsValidation={isIdsValidation}
+              ifcFiles={ifcFiles}
+              idsFile={idsFile}
+              onIfcDrop={handleIfcDrop}
+              onIdsDrop={handleIdsDrop}
+              onReject={handleReject}
+            />
+          </Box>
+
+          <ErrorDisplay errors={errors} uploadProgress={uploadProgress} uploadError={uploadError} />
+
+          <ProcessingConsole isProcessing={isProcessing} logs={processingLogs} />
+
+          <div ref={resultsRef}>
+            <ResultsDisplay
+              processedResults={processedResults}
+              reportFormats={reportFormats}
+              onHtmlReport={openHtmlReport}
+              onBcfDownload={handleBcfDownload}
+              resultsRef={resultsRef}
+            />
           </div>
-          {errors ? (
-            <div>
-              {errors.map((error) => (
-                <Text size='sm' c='red'>
-                  {t('dropzone.error-message')}: {error.file} - {error.message}
-                </Text>
-              ))}
-            </div>
-          ) : null}
-        </Dropzone>
-        <Button mt='md' onClick={handleClick} disabled={!files.length}>
-          {t('validate')}
-        </Button>
+
+          <Button
+            onClick={handleClick}
+            disabled={
+              !ifcFiles.length ||
+              (isIdsValidation && !idsFile) ||
+              isProcessing ||
+              (isIdsValidation && !reportFormats.html && !reportFormats.bcf)
+            }
+            styles={(theme) => ({
+              root: {
+                height: rem(42),
+                backgroundColor: theme.colors.yellow[5],
+              },
+              label: {
+                color: theme.colors.dark[9],
+                fontSize: theme.fontSizes.md,
+              },
+            })}
+          >
+            {isProcessing ? 'Processing...' : t('validate')}
+          </Button>
+        </Stack>
       </Paper>
     </Stack>
   )

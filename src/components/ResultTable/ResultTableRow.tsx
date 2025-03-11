@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Progress, Skeleton, Table, Text } from '@mantine/core'
+import { ActionIcon, Group, Progress, Skeleton, Table, Text, useMantineColorScheme } from '@mantine/core'
 import { IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,7 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
   } = props
   const [opened, { toggle }] = useDisclosure(false)
   const { t } = useTranslation()
+  const { colorScheme } = useMantineColorScheme()
 
   return (
     <>
@@ -35,7 +36,12 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
         </Table.Td>
         <Table.Td>
           {value.length ? (
-            <ActionIcon variant='transparent' size='sm' onClick={toggle} color='black'>
+            <ActionIcon
+              variant='transparent'
+              size='sm'
+              onClick={toggle}
+              color={colorScheme === 'dark' ? 'gray.3' : 'dark'}
+            >
               {opened ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
           ) : null}
@@ -47,7 +53,15 @@ export const ResultTableRow = (props: ResultTableRowProps) => {
 }
 
 const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
-  const color = fulfilment === 100 ? 'blue' : 'violet'
+  const { colorScheme } = useMantineColorScheme()
+  const color =
+    fulfilment === 100
+      ? colorScheme === 'dark'
+        ? 'blue.5'
+        : '#0909ff'
+      : colorScheme === 'dark'
+        ? 'violet.5'
+        : '#f715f7'
 
   if (fulfilment > 15) {
     return (
@@ -60,13 +74,13 @@ const FulfilmentBar = ({ fulfilment }: { fulfilment: number }) => {
   }
 
   return (
-    <Progress.Root size='xxl' styles={{ label: { color: 'black' } }}>
+    <Progress.Root size='xxl' styles={{ label: { color: colorScheme === 'dark' ? '#a9b1d6' : 'black' } }}>
       <Progress.Section value={fulfilment} color={color}>
         <Progress.Label py={8}>
           <div style={{ paddingBlock: 'calc(0.25rem * var(--mantine-scale))' }} />
         </Progress.Label>
       </Progress.Section>
-      <Progress.Section value={100 - fulfilment} color='#E9ECEF' py={4}>
+      <Progress.Section value={100 - fulfilment} color='gray.1' py={4}>
         <Progress.Label>{fulfilment}%</Progress.Label>
       </Progress.Section>
     </Progress.Root>
@@ -90,6 +104,8 @@ interface StatusProps {
 const Status = (props: StatusProps) => {
   const { inProgress, passed } = props
   const { t } = useTranslation()
+  const { colorScheme } = useMantineColorScheme()
+
   if (inProgress) {
     return <Skeleton height={24} circle />
   }
@@ -97,19 +113,21 @@ const Status = (props: StatusProps) => {
   if (passed === null) {
     return null
   } else if (passed) {
+    const color = colorScheme === 'dark' ? 'blue.5' : '#0909ff'
     return (
       <Group>
-        <IconCircleCheck color='blue' />
-        <Text c='blue' visibleFrom='lg'>
+        <IconCircleCheck color={color} />
+        <Text c={color} visibleFrom='lg'>
           {t('result-table.passed')}
         </Text>
       </Group>
     )
   } else {
+    const color = colorScheme === 'dark' ? 'violet.5' : '#f715f7'
     return (
       <Group>
-        <IconCircleX color='violet' />
-        <Text c='violet' visibleFrom='lg'>
+        <IconCircleX color={color} />
+        <Text c={color} visibleFrom='lg'>
           {t('result-table.failed')}
         </Text>
       </Group>

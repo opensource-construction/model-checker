@@ -8,7 +8,7 @@ import '../Translation'
 import { Suspense } from 'react'
 
 export const App = () => (
-  <MantineProvider theme={theme}>
+  <MantineProvider theme={theme} defaultColorScheme='light'>
     <Suspense fallback={<Loading />}>
       <AppRouter />
     </Suspense>

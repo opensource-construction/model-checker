@@ -1,0 +1,428 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --border-color: #e0e0e0;
+  --accent-color: #007bff;
+  --theme-transition-duration: 0.5s;
+  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tokyo Night inspired dark theme */
+:root.dark {
+  /* Base colors */
+  --bg-primary: #1a1b26;
+  --bg-secondary: #24283b;
+  --text-primary: #a9b1d6;
+  --text-secondary: #787c99;
+  --border-color: #292e42;
+
+  /* Accent colors */
+  --accent-color: #7aa2f7;
+  --accent-yellow: #e0af68;
+  --accent-green: #9ece6a;
+  --accent-purple: #bb9af7;
+  --accent-orange: #ff9e64;
+  --accent-cyan: #7dcfff;
+  --accent-red: #f7768e;
+
+  /* Additional colors */
+  --comment: #565f89;
+  --terminal-black: #414868;
+  --selection-bg: #28344a;
+
+  /* Background colors */
+  --mantine-color-gray-0: var(--bg-primary);
+
+  /* ===== MANTINE COMPONENT OVERRIDES ===== */
+
+  /* Main layout */
+  .mantine-AppShell-main {
+    background-color: var(--bg-primary);
+    /* Gradient override */
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header/Navbar */
+  .mantine-Header-root,
+  .mantine-Navbar-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+
+  /* Paper components */
+  .mantine-Paper-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    /* Gradient override */
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  }
+
+  /* Text colors */
+  .mantine-Title-root,
+  .mantine-Text-root {
+    color: var(--text-primary);
+    transition: color var(--theme-transition-duration) var(--theme-transition-timing);
+  }
+
+  /* Buttons */
+  .mantine-Button-root {
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+  }
+
+  .mantine-UnstyledButton-root {
+    color: var(--text-primary);
+  }
+
+  /* Links */
+  a {
+    color: var(--accent-cyan);
+  }
+
+  /* Input fields */
+  .mantine-TextInput-input,
+  .mantine-Textarea-input,
+  .mantine-Select-input {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  /* Tables */
+  .mantine-Table-root {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+
+  .mantine-Table-row:hover {
+    background-color: var(--selection-bg);
+  }
+
+  /* Add these styles to fix table text color in dark mode */
+  .mantine-Table-th,
+  .mantine-Table-td {
+    color: var(--text-primary);
+  }
+
+  /* Improve table header style for better readability */
+  .mantine-Table-th {
+    font-weight: 600;
+    border-bottom-color: var(--border-color);
+  }
+
+  /* Group backgrounds */
+  .mantine-Group-root {
+    background-color: transparent;
+  }
+
+  /* Card styles in dark mode */
+  .mantine-Card-root {
+    background-color: var(--bg-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .mantine-Card-root:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Footer in dark mode */
+  .mantine-AppShell-footer {
+    background-color: var(--bg-secondary) !important; /* Using the secondary background for better contrast */
+  }
+}
+
+/* Base transitions and theme handling */
+* {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme transitions */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Prevent flash of white during dark mode transition */
+html.dark {
+  background-color: var(--bg-primary);
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: var(--bg-primary);
+}
+
+/* Card styles */
+.mantine-Card-root {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.mantine-Card-root:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Ensure the page background extends fully */
+body,
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mantine-color-gray-0);
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+.mantine-Paper-root {
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Style the ResultPage container */
+.ResultPage {
+  background-color: var(--bg-secondary) !important;
+  min-height: 100vh !important;
+  padding-top: 20px !important;
+}
+
+/* Add back border for Result page Paper component */
+.ResultPage .mantine-Paper-root,
+.ResultPage .mantine-Card-root {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 40px 30px 30px 30px !important;
+  margin: 40px 25px 25px 25px !important;
+  background-color: var(--bg-primary) !important;
+  position: relative !important;
+}
+
+/* Ensure dark mode also has the border */
+html.dark .ResultPage .mantine-Paper-root,
+html.dark .ResultPage .mantine-Card-root {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  padding: 40px 30px 30px 30px !important;
+  margin: 40px 25px 25px 25px !important;
+  background-color: var(--bg-primary) !important;
+  position: relative !important;
+}
+
+/* Component transitions */
+.mantine-Paper-root,
+.mantine-Card-root,
+.mantine-AppShell-main,
+.mantine-AppShell-footer {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+  backface-visibility: hidden; /* Prevent flickering in some browsers */
+}
+
+/* Ensure smooth transitions for all interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Base theme handling */
+body,
+html,
+#root,
+.mantine-AppShell-main,
+.mantine-Paper-root,
+.mantine-Card-root {
+  transition: all var(--theme-transition);
+}
+
+/* Update UploadFilePage height handling */
+.mantine-AppShell-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  background-color: inherit;
+}
+
+/* Remove unwanted borders in both light and dark modes */
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Ensure dark mode doesn't have unwanted borders */
+html.dark .mantine-Paper-root,
+html.dark .mantine-Container-root,
+html.dark .mantine-AppShell-main {
+  border: none !important;
+  box-shadow: none !important;
+  background-color: inherit;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove any potential white borders in dark mode */
+html.dark * {
+  box-shadow: none !important;
+}
+
+/* Fix for top and bottom whitespace */
+.mantine-AppShell-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: inherit;
+  min-height: 100vh;
+}
+
+/* Ensure containers don't add unwanted spacing */
+.mantine-Container-root {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure Paper components don't add unwanted spacing */
+.mantine-Paper-root {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Content padding should be handled by inner elements */
+.mantine-Paper-root > * {
+  padding: 20px;
+}
+
+/* Ensure full height for all elements */
+html,
+body {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: auto;
+}
+
+/* Remove any top/bottom margins from all elements */
+* {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Ensure content is properly contained */
+.mantine-AppShell-main > * {
+  height: 100%;
+  min-height: 100vh;
+}
+
+/* Specific styles for checkboxes in ReportFormatOptions */
+.mantine-Checkbox-root {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mantine-Checkbox-body {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mantine-Checkbox-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mantine-Checkbox-input {
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.mantine-Checkbox-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  margin: auto !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Center the SVG checkmark and make it smaller */
+.mantine-Checkbox-icon svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 70% !important;
+  height: 70% !important;
+}
+
+.mantine-Checkbox-label {
+  margin-left: 4px !important;
+  padding-left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Reduce the gap between checkbox and label */
+.mantine-Checkbox-labelWrapper {
+  margin-left: 2px !important;
+}

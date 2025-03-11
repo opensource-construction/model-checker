@@ -8,12 +8,28 @@ import { useReactToPrint } from 'react-to-print'
 
 export const ResultPage = () => {
   const { state } = useValidationContext()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const contentToPrint = useRef(null)
+
+  // Store current language in a ref to ensure it's up to date
+  const currentLanguageRef = useRef(i18n.language)
+
+  // Update ref when language changes
+  useEffect(() => {
+    currentLanguageRef.current = i18n.language
+  }, [i18n.language])
+
   const handlePrint = useReactToPrint({
     documentTitle: `model_checker_${new Date().toLocaleDateString()}`,
     removeAfterPrint: true,
+    content: () => {
+      // For basic checking results, we can just print what's currently displayed
+      console.log('ResultPage: Printing basic checking results')
+
+      // Return the current content for printing
+      return contentToPrint.current
+    },
   })
 
   useEffect(() => {
@@ -23,11 +39,19 @@ export const ResultPage = () => {
   }, [navigate, state])
 
   return (
-    <Container mt={36} size='xl'>
+    <Container
+      mt={0}
+      className='ResultPage'
+      style={{
+        width: '98%',
+        maxWidth: '98%',
+        margin: '0 auto',
+      }}
+    >
       <Paper hide={useMatches({ base: true, sm: false })}>
         <Group justify='space-between'>
           <Title order={2}>{t('results')}</Title>
-          <Button color='#B2B2B2' mt='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>
+          <Button color='gray.6' mt='md' onClick={() => handlePrint(null, () => contentToPrint.current)}>
             {t('print')}
           </Button>
         </Group>

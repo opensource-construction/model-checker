@@ -1,10 +1,16 @@
 import { UploadCard } from '@components'
-import { Stack } from '@mantine/core'
+import { Box } from '@mantine/core'
 
 export const UploadFilePage = () => {
   return (
-    <Stack align='center' justify='center' h='90vh'>
+    <Box
+      py={{ base: 32, lg: 48 }}
+      style={{
+        flex: 1,
+        backgroundColor: 'var(--mantine-color-gray-0)',
+      }}
+    >
       <UploadCard />
-    </Stack>
+    </Box>
   )
 }

@@ -1,0 +1,192 @@
+{
+  "upload-file": "Carica file",
+  "upload-description": {
+    "0": "La qualità del modello è al centro dei progetti BIM di successo.",
+    "1": "L'obiettivo di questo strumento è fornire una rapida panoramica delle condizioni di un modello. Include diversi test standard - se questi hanno successo, vale la pena esaminare più a fondo il modello.",
+    "2": "L'abbiamo progettato per essere semplice e sicuro.",
+    "3": "Tutti i dati rimangono sul tuo computer locale - nessun dato verrà inviato altrove, tutti i controlli vengono eseguiti localmente."
+  },
+  "upload-description-ids": {
+    "0": "La qualità del modello è al centro dei progetti BIM di successo.",
+    "1": "Verifica i modelli IFC in base ai requisiti definiti nel tuo file IDS.",
+    "2": "L'abbiamo progettato per essere semplice e sicuro.",
+    "3": "Tutta la validazione viene eseguita localmente nel tuo browser - i tuoi dati non lasciano mai il tuo dispositivo.",
+    "4": "Visualizza i risultati come report HTML interattivo direttamente nel browser, con opzioni per scaricare, condividere o stampare in PDF. È disponibile anche l'esportazione BCF per i flussi di lavoro BIM."
+  },
+  "upload-card": {
+    "title": "Validazione del modello e regole",
+    "description": "IFC Model Checker evidenzia i problemi comunemente riscontrati nei file .ifc, portando a dati di alta qualità nel settore AEC. Il controllo dei file IFC caricati avviene completamente lato client, non salviamo alcun dato - nulla lascia il tuo dispositivo e tutto viene eliminato dopo la chiusura della sessione.",
+    "ids-title": "Validazione IDS",
+    "ids-description": "Il validatore IDS ti permette di verificare se i tuoi modelli IFC sono conformi ai requisiti della Specifica di Consegna delle Informazioni (IDS). Esegue una validazione completa rispetto alle regole definite nel file IDS. Tutta la validazione avviene localmente nel tuo browser utilizzando WASM - i tuoi dati non lasciano mai il tuo dispositivo. I risultati sono forniti in un rapporto dettagliato che puoi visualizzare online, scaricare come HTML, stampare come PDF o esportare come BCF per un ulteriore utilizzo nel tuo flusso di lavoro BIM.",
+    "ids-info": {
+      "about-title": "Informazioni su IDS:",
+      "about-text": "Information Delivery Specification (IDS) è uno standard buildingSMART per definire i requisiti informativi in una forma interpretabile dal computer. Consente il controllo automatico di conformità dei modelli IFC, aumentando il controllo di qualità e la fedeltà dei dati.",
+      "about-link-text": "Ulteriori informazioni su IDS:",
+      "about-link": "Standard IDS buildingSMART",
+      "how-it-works-title": "Come funziona:",
+      "how-it-works-text": "Questo validatore utilizza IfcOpenShell in esecuzione in WebAssembly (WASM), che consente alla libreria IfcOpenShell basata su Python di funzionare direttamente nel tuo browser. WebAssembly è un formato di istruzioni binarie che permette alle applicazioni ad alte prestazioni di funzionare nei browser web senza plugin.",
+      "how-it-works-security": "Ciò significa che tutta la validazione avviene localmente sul tuo dispositivo - i tuoi dati non lasciano mai il tuo browser, garantendo completa privacy e sicurezza.",
+      "wasm-link-text": "Ulteriori informazioni su WebAssembly:",
+      "wasm-link": "WebAssembly.org"
+    },
+    "rules": "Regole",
+    "info-card": {
+      "0": "Validazione nome progetto: Assicura che ogni progetto abbia un nome significativo e valido.",
+      "1": "Associazioni progetto: Verifica che tutti gli elementi relativi al progetto siano correttamente collegati.",
+      "2": "Validazione nome sito: Conferma che i nomi dei siti siano definiti correttamente.",
+      "3": "Associazioni sito: Controlla il corretto collegamento degli elementi relativi al sito.",
+      "4": "Validazione nome edificio: Assicura che gli edifici nel progetto abbiano nomi chiari e validi.",
+      "5": "Associazioni edificio: Valida le connessioni tra edifici e altri elementi.",
+      "6": "Validazione piani: Conferma che ogni edificio abbia una struttura di piani valida.",
+      "7": "Validazione nome piani: Assicura che ogni piano di un edificio sia nominato correttamente.",
+      "8": "Associazioni piani: Verifica che gli elementi siano appropriatamente associati ai rispettivi piani.",
+      "9": "Validazione nome spazi: Assicura che tutti gli spazi siano nominati in modo chiaro e accurato.",
+      "10": "Validazione nome oggetti: Conferma che tutti gli oggetti nel progetto abbiano nomi validi.",
+      "11": "Validazione descrizione oggetti: Assicura che ogni oggetto abbia una descrizione appropriata.",
+      "12": "Validazione nome tipo: Verifica che i tipi siano nominati correttamente, evitando ambiguità.",
+      "13": "Associazioni materiali: Assicura che tutti gli oggetti abbiano definizioni di materiali associate.",
+      "14": "Controllo tipi predefiniti: Conferma che i tipi predefiniti siano validi (non UNDEFINED).",
+      "15": "Validazione elementi: Identifica i BuildingElementProxies."
+    }
+  },
+  "validate": "Convalida",
+  "dropzone": {
+    "drag": {
+      "ifc": "Trascina i file IFC qui o clicca per selezionare",
+      "ids": "Trascina il file IDS qui o clicca per selezionare"
+    },
+    "error-message": "Errore",
+    "attach": "Puoi aggiungere più file",
+    "attach-single": "Può essere aggiunto solo un file"
+  },
+  "results": "Risultati",
+  "print": "Stampa",
+  "result-table": {
+    "rule": "Regola",
+    "status": "Stato",
+    "level-of-fulfilment": "Livello di conformità",
+    "passed": "Superato",
+    "failed": "Fallito",
+    "statistics": "Statistiche",
+    "all-data": "Tutti i dati",
+    "count": "Conteggio",
+    "other": "Altro"
+  },
+  "rules": {
+    "project-name": "Il nome IfcProject è compilato?",
+    "site-name": "Il nome IfcSite è compilato?",
+    "building-name": "Il nome IfcBuilding è compilato?",
+    "story-name": "I nomi IfcBuilding Storey sono compilati?",
+    "story-relation": "Tutti gli oggetti hanno una relazione con un BuildingStory?",
+    "building-relation": "Tutti gli oggetti hanno una relazione con un edificio?",
+    "site-relation": "Tutti gli oggetti hanno una relazione con un sito?",
+    "project-relation": "Tutti gli oggetti hanno una relazione con un progetto?",
+    "space-name": "Se ci sono IfcSpaces, hanno il nome compilato?",
+    "object-name": "Tutti gli oggetti hanno un nome?",
+    "type-name": "Tutti gli oggetti hanno un nome tipo?",
+    "object-description": "Tutti gli oggetti hanno una descrizione?",
+    "material-name": "Tutti gli oggetti hanno un nome materiale?",
+    "predefined-type": "Se gli oggetti hanno un tipo predefinito, sono definiti?",
+    "object-count": "Quota di IfcBuildingElementProxy utilizzati:",
+    "project-names": "Nome progetto IFC utilizzato",
+    "site-names": "Nome sito IFC utilizzato",
+    "building-names": "Nome edificio IFC utilizzato",
+    "story-names": "Nomi piani IFC utilizzati",
+    "object-names": "Nomi oggetti IFC utilizzati",
+    "type-names": "Nome tipo oggetto IFC utilizzato",
+    "descriptions": "Descrizione oggetto IFC utilizzata",
+    "material-names": "Nome materiale oggetto IFC utilizzato",
+    "predefined-types": "Tipo predefinito oggetto IFC utilizzato",
+    "building-element-proxies": "Tutti i BuildingElementProxy hanno un nome?"
+  },
+  "validation-type": "Tipo di validazione",
+  "ids-validation": "Validazione IDS",
+  "standard-validation": "Validazione standard",
+  "Upload": {
+    "idsValidation": "Abilita validazione IDS",
+    "dropIdsFile": "Trascina il file IDS qui",
+    "dropIdsFileDescription": "Trascina e rilascia il tuo file IDS (Information Delivery Specification) qui"
+  },
+  "sponsored-by": "Sponsorizzato da:",
+  "open-source": "Open Source su:",
+  "author": "Autore",
+  "exported": "Esportato",
+  "report-format": "Formato rapporto",
+  "html-report": "Rapporto HTML (visualizza nel browser)",
+  "bcf-report": "Rapporto BCF (scarica per strumenti BIM)",
+  "report-format-description": "Seleziona uno o più formati di rapporto. I rapporti HTML possono essere visualizzati e stampati direttamente, mentre i rapporti BCF possono essere utilizzati negli strumenti di collaborazione BIM.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Seleziona almeno un formato di rapporto",
+  "report": {
+    "summary": "Riepilogo",
+    "specifications": "Specifiche",
+    "requirements": "Requisiti",
+    "details": "Dettagli",
+    "class": "Classe",
+    "predefinedType": "Tipo Predefinito",
+    "name": "Nome",
+    "description": "Descrizione",
+    "warning": "Avviso",
+    "globalId": "ID Globale",
+    "tag": "Tag",
+    "reportBy": "Report di",
+    "and": "e",
+    "status": {
+      "pass": "SUPERATO",
+      "fail": "FALLITO",
+      "untested": "NON TESTATO",
+      "skipped": "SALTATO"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "Il set di proprietà richiesto non esiste",
+      "dataShallBeProvided": "I dati devono essere forniti nel set di dati",
+      "propertyNotExist": "La proprietà richiesta non esiste",
+      "invalidValue": "ha un valore non valido",
+      "notInRange": "non è nell'intervallo consentito",
+      "notFound": "non è stato trovato",
+      "doesNotHave": "non ha",
+      "missingProperty": "manca la proprietà richiesta"
+    },
+    "interface": {
+      "passed": "superato",
+      "failed": "fallito",
+      "checksPassedPrefix": "Controlli superati",
+      "specificationsPassedPrefix": "Specifiche superate",
+      "requirementsPassedPrefix": "Requisiti soddisfatti",
+      "elementsPassedPrefix": "Elementi conformi",
+      "applicability": "Applicabilità",
+      "all": "Tutti",
+      "data": "Dati"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} altri dello stesso tipo di elemento ({{type}} con Tag {{tag}} e ID Globale {{id}}) non mostrati ...",
+      "moreElementsNotShown": "... {{count}} altri elementi {{type}} non mostrati su un totale di {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Caricamento di Pyodide...",
+      "pyodideSuccess": "Pyodide caricato con successo",
+      "translations": "Caricamento delle traduzioni...",
+      "packages": "Installazione dei pacchetti richiesti...",
+      "micropipPatch": "Applicazione della patch micropip per l'aggiramento del controllo di compatibilità...",
+      "ifcOpenShell": "Installazione di IfcOpenShell...",
+      "dependencies": "Installazione delle dipendenze aggiuntive...",
+      "inputFiles": "Elaborazione dei file di input...",
+      "validation": "Esecuzione della validazione IFC...",
+      "processingLogs": "Registri di elaborazione",
+      "entries": "voci",
+      "reloading": "La pagina si ricaricherà in 3 secondi..."
+    },
+    "error": {
+      "pyodideLoad": "Impossibile caricare Pyodide: {{message}}",
+      "generic": "Si è verificato un errore: {{message}}",
+      "outOfMemory": "Pyodide ha esaurito la memoria. La pagina si ricaricherà automaticamente per liberare risorse."
+    },
+    "success": {
+      "processingComplete": "I tuoi file sono stati elaborati.",
+      "validationComplete": "Validazione completata! Visualizza i risultati qui sotto."
+    }
+  }
+}

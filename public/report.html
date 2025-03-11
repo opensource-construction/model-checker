@@ -1,0 +1,430 @@
+<!--
+    IfcTester - IDS based model auditing
+    Copyright (C) 2022 Dion Moult <dion@thinkmoult.com>
+
+    This file is part of IfcTester.
+
+    IfcTester is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    IfcTester is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with IfcTester.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<!doctype html>
+<html lang="{{_lang}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="foobaro" />
+    <title>{{name}}</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Comfortaa|Inconsolata|Open+Sans&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --green: #97cc64;
+        --light-green: #b6cca1;
+        --red: #fb5a3e;
+        --light-red: #fbb4a8;
+      }
+      body {
+        font-family: 'Arial', sans-serif;
+        padding: 10px 40px;
+      }
+      section {
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #eee;
+        margin-bottom: 15px;
+      }
+      section > h2 {
+        margin-top: 0px;
+      }
+      span.time {
+        color: #999;
+        font-style: italic;
+        float: right;
+      }
+      span.step-time {
+        float: right;
+        color: #555;
+        font-size: 0.8em;
+        font-style: italic;
+      }
+      span.item {
+        padding: 5px;
+        border-radius: 5px;
+        margin-right: 5px;
+        border: 1px solid #eee;
+      }
+      span.item.pass,
+      span.item.fail {
+        color: #fff;
+        font-weight: bold;
+        border: 0px;
+      }
+      p.fail {
+        background-color: #fb5a3e;
+        padding: 5px;
+        border-radius: 5px;
+        color: #fff;
+      }
+      p.unspecified {
+        background-color: #994f00;
+        padding: 5px;
+        border-radius: 5px;
+        color: #fff;
+      }
+      p.skipped {
+        background-color: #8b8d8f;
+        padding: 5px;
+        border-radius: 5px;
+        color: #fff;
+      }
+      p.description {
+        background-color: #eee;
+        border-radius: 5px;
+        padding: 20px;
+        margin-left: auto;
+        margin-right: auto;
+        display: inline-block;
+        font-weight: bold;
+      }
+      li {
+        padding: 10px;
+        font-family: monospace;
+        border-radius: 5px;
+        margin-bottom: 5px;
+      }
+      li.pass {
+        background-color: var(--light-green);
+        color: #333;
+      }
+      li.fail {
+        background-color: var(--light-red);
+        color: #900;
+      }
+      li.unspecified {
+        background-color: #ffd37f;
+        color: #a30;
+      }
+      li.skipped {
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      li p {
+        margin-bottom: 0px;
+      }
+      footer {
+        color: #999;
+        font-size: 0.8em;
+      }
+      header {
+        text-align: center;
+      }
+      hr {
+        margin: 20px;
+        margin-left: 0px;
+        margin-right: 0px;
+        border: none;
+        border-top: 1px solid #ccc;
+      }
+      summary {
+        display: flex;
+        cursor: pointer;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      .container {
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 5px;
+      }
+      .percent {
+        text-align: left;
+        padding-top: 5px;
+        padding-left: 5px;
+        padding-bottom: 5px;
+        color: white;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+      .pass {
+        background-color: var(--green);
+      }
+      .fail {
+        background-color: var(--red);
+      }
+      table {
+        width: 100%;
+        border-spacing: 0;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        padding: 5px;
+        color: #000;
+      }
+      table.pass {
+        border-bottom: 2px solid var(--green);
+      }
+      table.fail {
+        border-bottom: 2px solid var(--red);
+      }
+      table thead > tr {
+        font-weight: bold;
+        color: #000;
+      }
+      table.pass tbody tr {
+        border-bottom: 1px solid var(--green);
+      }
+      table.fail tbody tr {
+        border-bottom: 1px solid var(--red);
+      }
+      tbody tr:nth-child(odd) {
+        background-color: rgba(1, 1, 1, 0.05);
+      }
+      tbody tr:nth-child(even) {
+        background-color: rgba(1, 1, 1, 0.1);
+      }
+      tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0);
+      }
+      div.info {
+        float: left;
+        width: 30%;
+      }
+      div.results {
+        float: left;
+        width: calc(70% - 20px);
+        margin-left: 20px;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #fafafa;
+      }
+      .percent[data-width='100'] {
+        width: 100%;
+      }
+      .percent[data-width='0'] {
+        width: 0%;
+      }
+      .percent[data-width='10'] {
+        width: 10%;
+      }
+      .percent[data-width='20'] {
+        width: 20%;
+      }
+      .percent[data-width='30'] {
+        width: 30%;
+      }
+      .percent[data-width='40'] {
+        width: 40%;
+      }
+      .percent[data-width='50'] {
+        width: 50%;
+      }
+      .percent[data-width='60'] {
+        width: 60%;
+      }
+      .percent[data-width='70'] {
+        width: 70%;
+      }
+      .percent[data-width='80'] {
+        width: 80%;
+      }
+      .percent[data-width='90'] {
+        width: 90%;
+      }
+      .percent[data-width='100'] {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>{{title}}</h1>
+      <p>
+        <strong>{{#filename}}{{filename}}<br />{{/filename}}{{date}}</strong>
+      </p>
+    </header>
+    <h2>{{t.summary}}</h2>
+    <div class="container">
+      <div
+        class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
+        data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
+      >
+        {{^total_checks}}{{t.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
+      </div>
+    </div>
+    <p>
+      <span class="item {{#status}}pass{{/status}}{{^status}}fail{{/status}}">{{status_text}}</span>
+      <span class="item">
+        Specifications passed: <strong>{{total_specifications_pass}}</strong> /
+        <strong>{{total_specifications}}</strong>
+      </span>
+      <span class="item">
+        Requirements passed: <strong>{{total_requirements_pass}}</strong> / <strong>{{total_requirements}}</strong>
+      </span>
+      <span class="item">
+        Checks passed: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
+      </span>
+    </p>
+    <hr />
+    {{#specifications}}
+    <section style="clear: both; overflow: hidden">
+      <div class="info">
+        <h2>{{name}}</h2>
+        {{#description}}
+        <p>{{description}}</p>
+        {{/description}} {{#instructions}}
+        <p><em>{{instructions}}</em></p>
+        {{/instructions}}
+
+        <div class="container">
+          <div
+            class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
+            data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
+          >
+            {{^total_checks}}Skipped{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
+          </div>
+        </div>
+        <p>
+          <span
+            class="item {{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}}"
+          >
+            {{^total_checks}}{{t.status.skipped}}{{/total_checks}} {{#total_checks}}{{status_text}}{{/total_checks}}
+          </span>
+          <span class="item">
+            Checks passed: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
+          </span>
+          <span class="item">
+            Elements passed: <strong>{{total_applicable_pass}}</strong> / <strong>{{total_applicable}}</strong>
+          </span>
+        </p>
+        {{^is_ifc_version}}
+        <p>
+          <span class="item"> <strong>Warning:</strong> specification does not apply to this IFC version </span>
+        </p>
+        {{/is_ifc_version}}
+      </div>
+      <div class="results">
+        <p>
+          <strong>Applicability</strong>
+        </p>
+        <ul>
+          {{#applicability}}
+          <li>{{.}}</li>
+          {{/applicability}}
+        </ul>
+        <p>
+          <strong>Requirements</strong>
+        </p>
+        <ol>
+          {{#requirements}}
+          <li
+            class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}}"
+          >
+            <details>
+              <summary>{{description}}</summary>
+              {{#total_ckecks}}
+              <table class="skipped">
+                <thead></thead>
+              </table>
+              {{/total_ckecks}} {{#total_pass}}
+              <table class="pass">
+                <thead>
+                  <tr>
+                    <th>{{t.class}}</th>
+                    <th>{{t.predefinedType}}</th>
+                    <th>{{t.name}}</th>
+                    <th>{{t.description}}</th>
+                    <th>{{t.globalId}}</th>
+                    <th>{{t.tag}}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#passed_entities}}
+                  <tr>
+                    <td>{{class}}</td>
+                    <td>{{predefined_type}}</td>
+                    <td>{{name}}</td>
+                    <td>{{description}}</td>
+                    <td>{{global_id}}</td>
+                    <td>{{tag}}</td>
+                  </tr>
+                  {{#extra_of_type}}
+                  <tr>
+                    <td colspan="7">{{t.moreOfSameType}}</td>
+                  </tr>
+                  {{/extra_of_type}} {{/passed_entities}} {{#has_omitted_passes}}
+                  <tr>
+                    <td colspan="7">{{t.moreElementsNotShown}}</td>
+                  </tr>
+                  {{/has_omitted_passes}}
+                </tbody>
+              </table>
+              {{/total_pass}} {{#total_fail}}
+              <table class="fail">
+                <thead>
+                  <tr>
+                    <th>{{t.class}}</th>
+                    <th>{{t.predefinedType}}</th>
+                    <th>{{t.name}}</th>
+                    <th>{{t.description}}</th>
+                    <th>{{t.warning}}</th>
+                    <th>{{t.globalId}}</th>
+                    <th>{{t.tag}}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#failed_entities}}
+                  <tr>
+                    <td>{{class}}</td>
+                    <td>{{predefined_type}}</td>
+                    <td>{{name}}</td>
+                    <td>{{description}}</td>
+                    <td>{{reason}}</td>
+                    <td>{{global_id}}</td>
+                    <td>{{tag}}</td>
+                  </tr>
+                  {{#extra_of_type}}
+                  <tr>
+                    <td colspan="7">{{t.moreOfSameType}}</td>
+                  </tr>
+                  {{/extra_of_type}} {{/failed_entities}} {{#has_omitted_failures}}
+                  <tr>
+                    <td colspan="7">{{t.moreElementsNotShown}}</td>
+                  </tr>
+                  {{/has_omitted_failures}}
+                </tbody>
+              </table>
+              {{/total_fail}}
+            </details>
+          </li>
+          {{/requirements}}
+        </ol>
+      </div>
+    </section>
+    {{/specifications}}
+    <hr />
+    <footer>
+      <p>
+        {{t.reportBy}} <a href="https://bonsaibim.org/" target="_blank" rel="noopener noreferrer">Bonsai</a> {{t.and}}
+        <a href="http://ifcopenshell.org/" target="_blank" rel="noopener noreferrer">IfcOpenShell</a>.
+      </p>
+    </footer>
+  </body>
+</html>

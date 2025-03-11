@@ -1,15 +1,33 @@
 {
   "upload-file": "Datei Hochladen",
   "upload-description": {
-    "0": "Die Modellqualität ist zentral für erfolgreiche BIM-Projekte.",
-    "1": "Das Ziel dieses Tools ist es, eine schnelle Überprüfung des allgemeinen Zustands eines Modells zu ermöglichen.",
-    "2": "Betrachten Sie es als das erstes \"Quality Gate\".",
-    "3": "Wir haben es so konzipiert, dass es sehr einfach UND sehr sicher ist.",
-    "4": "Legen Sie ein oder mehrere Modelle ab, und die Prüfungen werden automatisch durchgeführt. Alle Daten verbleiben auf Ihrem lokalen Rechner - es werden keine Daten an externe Server gesendet, alle Prüfungen werden lokal durchgeführt."
+    "0": "Model quality is at the center of successful BIM projects.",
+    "1": "Das Ziel dieses Tools ist es, einen schnellen Überblick über den Zustand eines Modells zu erhalten. Es kommt mit einigen Standardtests - wenn diese erfolgreich sind, lohnt es sich, tiefer in das Modell einzusteigen.",
+    "2": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
+    "3": "Alle Daten bleiben auf Ihrem lokalen Rechner – es werden keine Daten irgendwohin gesendet, alle Überprüfungen werden lokal durchgeführt."
+  },
+  "upload-description-ids": {
+    "1": "Überprüfen Sie IFC-Modelle anhand der in Ihrer IDS-Datei definierten Anforderungen.",
+    "2": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
+    "3": "Die gesamte Validierung erfolgt lokal in Ihrem Browser - Ihre Daten verlassen niemals Ihr Gerät.",
+    "4": "Betrachten Sie Ihre Ergebnisse als interaktiven HTML-Bericht direkt im Browser, mit Optionen zum Herunterladen, Teilen oder als PDF drucken. BCF-Export steht ebenfalls für BIM-Workflows zur Verfügung."
   },
   "upload-card": {
     "title": "Modell Validerung und Regeln",
     "description": "Der IFC Model Checker weist auf häufig auftretende Probleme in IFC-Dateien hin und sorgt so für qualitativ hochwertige Daten in der AEC-Branche. Die Überprüfung Ihrer hochgeladenen IFC-Dateien erfolgt vollständig clientseitig, wir speichern keine Daten – nichts verlässt Ihr Gerät und alles wird nach Schließen der Sitzung gelöscht.",
+    "ids-title": "IDS Validierung",
+    "ids-description": "Mit dem IDS-Validator können Sie überprüfen, ob Ihre IFC-Modelle den Anforderungen der Information Delivery Specification (IDS) entsprechen. Er führt eine umfassende Validierung anhand der in der IDS-Datei definierten Regeln durch. Die gesamte Validierung erfolgt lokal in Ihrem Browser mittels WASM - Ihre Daten verlassen niemals Ihr Gerät. Die Ergebnisse werden in einem detaillierten Bericht bereitgestellt, den Sie online ansehen, als HTML herunterladen, als PDF drucken oder als BCF für die weitere Verwendung in Ihrem BIM-Workflow exportieren können.",
+    "ids-info": {
+      "about-title": "Über IDS:",
+      "about-text": "Information Delivery Specification (IDS) ist ein buildingSMART-Standard zur Definition von Informationsanforderungen in einer computerinterpretierbaren Form. Es ermöglicht die automatische Konformitätsprüfung von IFC-Modellen und erhöht die Qualitätskontrolle und Datengenauigkeit.",
+      "about-link-text": "Erfahren Sie mehr über IDS unter:",
+      "about-link": "buildingSMART IDS Standard",
+      "how-it-works-title": "Wie es funktioniert:",
+      "how-it-works-text": "Dieser Validator verwendet IfcOpenShell, das in WebAssembly (WASM) läuft, wodurch die Python-basierte IfcOpenShell-Bibliothek direkt in Ihrem Browser ausgeführt werden kann. WebAssembly ist ein binäres Instruktionsformat, das leistungsstarke Anwendungen ohne Plugins in Webbrowsern ermöglicht.",
+      "how-it-works-security": "Das bedeutet, dass die gesamte Validierung lokal auf Ihrem Gerät stattfindet - Ihre Daten verlassen niemals Ihren Browser, was vollständige Privatsphäre und Sicherheit gewährleistet.",
+      "wasm-link-text": "Erfahren Sie mehr über WebAssembly unter:",
+      "wasm-link": "WebAssembly.org"
+    },
     "rules": "Reglen",
     "info-card": {
       "0": "Projektname-Validierung: Stellt sicher, dass IfcProject.Name einen Namen hat.",
@@ -31,10 +49,13 @@
   },
   "validate": "Validieren",
   "dropzone": {
-    "drag": "IFC Dateien hierher ziehen oder klicken, um eine Datei auszuwählen",
-    "attach": "Hängen Sie so viele Dateien an, wie Sie möchten. Jede Datei sollte 500 MB nicht überschreiten",
-    "error": "Dateityp ungültig. Nur .ifc Dateien sind erlaubt.",
-    "error-message": "Datei"
+    "drag": {
+      "ifc": "IFC-Dateien hier ablegen oder zum Auswählen klicken",
+      "ids": "IDS-Datei hier ablegen oder zum Auswählen klicken"
+    },
+    "error-message": "Fehler",
+    "attach": "Sie können mehrere Dateien hinzufügen",
+    "attach-single": "Es kann nur eine Datei hinzugefügt werden"
   },
   "results": "Resultate",
   "print": "Drucken",
@@ -45,7 +66,7 @@
     "passed": "Erfüllt",
     "failed": "Nicht erfüllt",
     "statistics": "Statistik",
-    "all-data": "Alle Entitäten",
+    "all-data": "Alle Daten",
     "count": "Anzahl",
     "other": "Andere"
   },
@@ -79,5 +100,91 @@
   "sponsored-by": "Gesponsert von:",
   "open-source": "Open Source auf:",
   "author": "Autor(in)",
-  "exported": "Exportiert"
+  "exported": "Exportiert",
+  "validation-type": "Validierungstyp",
+  "ids-validation": "IDS-Validierung",
+  "standard-validation": "Standard-Validierung",
+  "Upload": {
+    "idsValidation": "IDS-Validierung aktivieren",
+    "dropIdsFile": "IDS-Datei hier ablegen",
+    "dropIdsFileDescription": "Ziehen Sie Ihre IDS-Datei (Information Delivery Specification) hierher"
+  },
+  "report-format": "Berichtsformat",
+  "html-report": "HTML-Bericht (im Browser ansehen)",
+  "bcf-report": "BCF-Bericht (Download für BIM-Tools)",
+  "report-format-description": "Wählen Sie eines oder beide Berichtsformate. HTML-Berichte können direkt angezeigt und gedruckt werden, während BCF-Berichte in BIM-Kollaborationstools verwendet werden können.",
+  "view-html": "HTML",
+  "download-bcf": "BCF",
+  "select-report-format": "Bitte wählen Sie mindestens ein Berichtsformat aus",
+  "report": {
+    "summary": "Zusammenfassung",
+    "specifications": "Spezifikationen",
+    "requirements": "Anforderungen",
+    "details": "Details",
+    "class": "Klasse",
+    "predefinedType": "Vordefinierter Typ",
+    "name": "Name",
+    "description": "Beschreibung",
+    "warning": "Warnung",
+    "globalId": "Globale ID",
+    "tag": "Kennzeichnung",
+    "reportBy": "Bericht von",
+    "and": "und",
+    "status": {
+      "pass": "BESTANDEN",
+      "fail": "FEHLGESCHLAGEN",
+      "untested": "UNGETESTET",
+      "skipped": "ÜBERSPRUNGEN"
+    },
+    "errorMessages": {
+      "propertySetNotExist": "Der erforderliche Eigenschaftssatz existiert nicht",
+      "dataShallBeProvided": "Daten müssen im Datensatz bereitgestellt werden",
+      "propertyNotExist": "Die erforderliche Eigenschaft existiert nicht",
+      "invalidValue": "hat einen ungültigen Wert",
+      "notInRange": "liegt nicht im erlaubten Bereich",
+      "notFound": "wurde nicht gefunden",
+      "doesNotHave": "hat keine",
+      "missingProperty": "fehlt die erforderliche Eigenschaft"
+    },
+    "interface": {
+      "passed": "erfüllt",
+      "failed": "nicht erfüllt",
+      "checksPassedPrefix": "Checks erfüllt",
+      "specificationsPassedPrefix": "Spezifikationen erfüllt",
+      "requirementsPassedPrefix": "Anforderungen erfüllt",
+      "elementsPassedPrefix": "Elemente erfüllt",
+      "applicability": "Anwendbarkeit",
+      "all": "Alle",
+      "data": "Daten"
+    },
+    "phrases": {
+      "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",
+      "moreElementsNotShown": "... {{count}} weitere {{type}} Elemente nicht angezeigt von insgesamt {{total}} ..."
+    }
+  },
+  "console": {
+    "loading": {
+      "pyodide": "Pyodide wird geladen...",
+      "pyodideSuccess": "Pyodide erfolgreich geladen",
+      "translations": "Übersetzungen werden geladen...",
+      "packages": "Erforderliche Pakete werden installiert...",
+      "micropipPatch": "Micropip wird für Kompatibilitätsprüfungen angepasst...",
+      "ifcOpenShell": "IfcOpenShell wird installiert...",
+      "dependencies": "Zusätzliche Abhängigkeiten werden installiert...",
+      "inputFiles": "Eingabedateien werden verarbeitet...",
+      "validation": "IFC-Validierung wird ausgeführt...",
+      "processingLogs": "Verarbeitungsprotokolle",
+      "entries": "Einträge",
+      "reloading": "Seite wird in 3 Sekunden neu geladen..."
+    },
+    "error": {
+      "pyodideLoad": "Fehler beim Laden von Pyodide: {{message}}",
+      "generic": "Ein Fehler ist aufgetreten: {{message}}",
+      "outOfMemory": "Pyodide hat zu wenig Arbeitsspeicher. Die Seite wird automatisch neu geladen, um Ressourcen freizugeben."
+    },
+    "success": {
+      "processingComplete": "Ihre Dateien wurden verarbeitet.",
+      "validationComplete": "Validierung abgeschlossen! Sehen Sie sich die Ergebnisse unten an."
+    }
+  }
 }
