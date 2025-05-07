@@ -225,10 +225,10 @@ await micropip.install('https://cdn.jsdelivr.net/gh/IfcOpenShell/wasm-wheels@33b
     })
 
     await pyodide.runPythonAsync(`
-await micropip.install('lark')
-await micropip.install('ifctester')
-await micropip.install('bcf-client')
-await micropip.install('pystache')
+import micropip
+print("Attempting to install ifctester 0.8.1, bcf-client 0.8.1 and dependencies...")
+await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystache'], keep_going=True)
+print("Finished attempting to install ifctester 0.8.1, bcf-client 0.8.1 and dependencies.")
     `)
 
     self.postMessage({
