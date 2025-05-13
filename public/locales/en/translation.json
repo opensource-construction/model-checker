@@ -169,6 +169,21 @@
     "phrases": {
       "moreOfSameType": "... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...",
       "moreElementsNotShown": "... {{count}} more {{type}} elements not shown out of {{total}} total ..."
+    },
+    "ids": {
+      "section": {
+        "loadBearing": "Load Bearing"
+      },
+      "description": {
+        "shouldHaveLoadBearing": "All Structure Elements should have a load bearing"
+      },
+      "pattern": {
+        "nameShallBe": "The Name shall be {{value}}",
+        "descriptionRequired": "The Description shall be provided",
+        "propertyRequired": "{{property}} shall be provided in the dataset {{propertySet}}",
+        "propertyValue": "{{property}} shall be {{value}} in the dataset {{propertySet}}",
+        "enumRequired": "One of the enumeration values {{values}} shall be provided in the dataset {{propertySet}}"
+      }
     }
   },
   "console": {

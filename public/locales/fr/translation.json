@@ -162,6 +162,21 @@
     "phrases": {
       "moreOfSameType": "... {{count}} autres du même type d'élément ({{type}} avec l'étiquette {{tag}} et l'ID global {{id}}) non affichés ...",
       "moreElementsNotShown": "... {{count}} autres éléments {{type}} non affichés sur un total de {{total}} ..."
+    },
+    "ids": {
+      "section": {
+        "loadBearing": "Structure Porteuse"
+      },
+      "description": {
+        "shouldHaveLoadBearing": "Tous les éléments structuraux devraient avoir une structure porteuse"
+      },
+      "pattern": {
+        "nameShallBe": "Le nom doit être {{value}}",
+        "descriptionRequired": "La description doit être fournie",
+        "propertyRequired": "{{property}} doit être fourni dans l'ensemble de propriétés {{propertySet}}",
+        "propertyValue": "{{property}} doit être {{value}} dans l'ensemble de propriétés {{propertySet}}",
+        "enumRequired": "L'une des valeurs d'énumération {{values}} doit être fournie dans l'ensemble de propriétés {{propertySet}}"
+      }
     }
   },
   "console": {

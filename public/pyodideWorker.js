@@ -157,6 +157,237 @@ async function loadPyodide() {
   }
 }
 
+// Apply translations to the HTML report
+function applyTranslations(html, translations, language) {
+  if (!translations || language === 'en') {
+    return html
+  }
+
+  let translatedHtml = html;
+
+  // Simple translation of key terms and phrases using patterns from the translation file
+  if (translations.ids && translations.ids.pattern) {
+    // Apply pattern-based translations using the templated strings in translation files
+    const patterns = translations.ids.pattern;
+
+    // Replace name pattern
+    if (patterns.nameShallBe) {
+      translatedHtml = translatedHtml.replace(/The Name shall be (.*)/g,
+        (match, value) => patterns.nameShallBe.replace('{{value}}', value));
+    }
+
+    // Replace description pattern
+    if (patterns.descriptionRequired) {
+      translatedHtml = translatedHtml.replace(/The Description shall be provided/g,
+        patterns.descriptionRequired);
+    }
+
+    // Replace property required pattern
+    if (patterns.propertyRequired) {
+      translatedHtml = translatedHtml.replace(/(\w+) shall be provided in the dataset (\w+)/g,
+        (match, property, propertySet) => patterns.propertyRequired
+          .replace('{{property}}', property)
+          .replace('{{propertySet}}', propertySet));
+    }
+
+    // Replace property value pattern
+    if (patterns.propertyValue) {
+      translatedHtml = translatedHtml.replace(/(\w+) shall be (.*?) in the dataset (\w+)/g,
+        (match, property, value, propertySet) => patterns.propertyValue
+          .replace('{{property}}', property)
+          .replace('{{value}}', value)
+          .replace('{{propertySet}}', propertySet));
+    }
+
+    // Replace enumeration pattern
+    if (patterns.enumRequired) {
+      translatedHtml = translatedHtml.replace(/One of the enumeration values \[(.*?)\] shall be provided in the dataset (\w+)/g,
+        (match, values, propertySet) => patterns.enumRequired
+          .replace('{{values}}', values)
+          .replace('{{propertySet}}', propertySet));
+    }
+  }
+
+  // Basic term replacements
+  const basicTerms = [
+    { en: 'Summary', field: 'summary' },
+    { en: 'Specifications', field: 'specifications' },
+    { en: 'Requirements', field: 'requirements' },
+    { en: 'Details', field: 'details' },
+    { en: 'Class', field: 'class' },
+    { en: 'PredefinedType', field: 'predefinedType' },
+    { en: 'Name', field: 'name' },
+    { en: 'Description', field: 'description' },
+    { en: 'Warning', field: 'warning' },
+    { en: 'GlobalId', field: 'globalId' },
+    { en: 'Tag', field: 'tag' },
+    { en: 'Report by', field: 'reportBy' },
+    { en: 'and', field: 'and' },
+    { en: 'PASS', field: 'status.pass' },
+    { en: 'FAIL', field: 'status.fail' },
+    { en: 'UNTESTED', field: 'status.untested' },
+    { en: 'SKIPPED', field: 'status.skipped' }
+  ];
+
+  basicTerms.forEach(term => {
+    const fieldPath = term.field.split('.');
+    let translation;
+
+    if (fieldPath.length > 1) {
+      if (translations[fieldPath[0]] && translations[fieldPath[0]][fieldPath[1]]) {
+        translation = translations[fieldPath[0]][fieldPath[1]];
+      }
+    } else {
+      translation = translations[term.field];
+    }
+
+    if (translation) {
+      const regex = new RegExp(`\\b${term.en}\\b`, 'g');
+      translatedHtml = translatedHtml.replace(regex, translation);
+    }
+  });
+
+  // Interface element translations
+  if (translations.interface) {
+    // Replace passed/failed
+    if (translations.interface.passed) {
+      translatedHtml = translatedHtml.replace(/\bpassed\b/g, translations.interface.passed);
+    }
+    if (translations.interface.failed) {
+      translatedHtml = translatedHtml.replace(/\bfailed\b/g, translations.interface.failed);
+    }
+
+    // Replace prefix phrases
+    [
+      { prefix: 'Checks passed', field: 'checksPassedPrefix' },
+      { prefix: 'Specifications passed', field: 'specificationsPassedPrefix' },
+      { prefix: 'Requirements passed', field: 'requirementsPassedPrefix' },
+      { prefix: 'Elements passed', field: 'elementsPassedPrefix' },
+      { prefix: 'Applicability', field: 'applicability' },
+      { prefix: 'All', field: 'all' },
+    ].forEach(term => {
+      if (translations.interface[term.field]) {
+        const regex = new RegExp(`\\b${term.prefix}\\b`, 'g');
+        translatedHtml = translatedHtml.replace(regex, translations.interface[term.field]);
+      }
+    });
+
+    // Handle "All X data" patterns
+    if (translations.interface.all && translations.interface.data) {
+      const regex = new RegExp(`All ([\\w]+) data`, 'g');
+      translatedHtml = translatedHtml.replace(regex, (match, type) => {
+        return `${translations.interface.all} ${type} ${translations.interface.data}`;
+      });
+    }
+  }
+
+  // Error message translations
+  if (translations.errorMessages) {
+    Object.entries(translations.errorMessages).forEach(([key, translation]) => {
+      if (translation) {
+        // Match based on the English error messages
+        let pattern;
+        switch (key) {
+          case 'propertySetNotExist':
+            pattern = 'The required property set does not exist';
+            break;
+          case 'dataShallBeProvided':
+            pattern = 'data shall be provided in the dataset';
+            break;
+          case 'propertyNotExist':
+            pattern = 'The required property does not exist';
+            break;
+          case 'invalidValue':
+            pattern = 'has an invalid value';
+            break;
+          case 'notInRange':
+            pattern = 'is not in the allowed range';
+            break;
+          case 'notFound':
+            pattern = 'was not found';
+            break;
+          case 'doesNotHave':
+            pattern = 'does not have';
+            break;
+          case 'missingProperty':
+            pattern = 'is missing the required property';
+            break;
+        }
+
+        if (pattern) {
+          translatedHtml = translatedHtml.replace(new RegExp(pattern, 'g'), translation);
+        }
+      }
+    });
+  }
+
+  // Handle complex phrases with placeholders
+  if (translations.phrases) {
+    // More of same type message
+    if (translations.phrases.moreOfSameType) {
+      const regex = /\.\.\. (\d+) more of the same element type \((.*?) with Tag (.*?) and GlobalId (.*?)\) not shown \.\.\./g;
+      translatedHtml = translatedHtml.replace(regex, (match, count, type, tag, id) => {
+        return translations.phrases.moreOfSameType
+          .replace('{{count}}', count)
+          .replace('{{type}}', type)
+          .replace('{{tag}}', tag)
+          .replace('{{id}}', id);
+      });
+    }
+
+    // More elements not shown message
+    if (translations.phrases.moreElementsNotShown) {
+      const regex = /\.\.\. (\d+) more (.*?) elements not shown out of (\d+) total \.\.\./g;
+      translatedHtml = translatedHtml.replace(regex, (match, count, type, total) => {
+        return translations.phrases.moreElementsNotShown
+          .replace('{{count}}', count)
+          .replace('{{type}}', type)
+          .replace('{{total}}', total);
+      });
+    }
+  }
+
+  // Handle section title translations for IDS
+  if (translations.ids && translations.ids.section) {
+    Object.entries(translations.ids.section).forEach(([key, translation]) => {
+      // Match based on English section titles
+      let pattern;
+      switch (key) {
+        case 'loadBearing':
+          pattern = 'Load Bearing';
+          break;
+        // Add more sections as needed
+      }
+
+      if (pattern && translation) {
+        const regex = new RegExp(`\\b${pattern}\\b`, 'g');
+        translatedHtml = translatedHtml.replace(regex, translation);
+      }
+    });
+  }
+
+  // Handle description translations for IDS
+  if (translations.ids && translations.ids.description) {
+    Object.entries(translations.ids.description).forEach(([key, translation]) => {
+      // Match based on English descriptions
+      let pattern;
+      switch (key) {
+        case 'shouldHaveLoadBearing':
+          pattern = 'All Structure Elements should have a load bearing';
+          break;
+        // Add more descriptions as needed  
+      }
+
+      if (pattern && translation) {
+        const regex = new RegExp(pattern, 'g');
+        translatedHtml = translatedHtml.replace(regex, translation);
+      }
+    });
+  }
+
+  return translatedHtml;
+}
+
 self.onmessage = async (event) => {
   const { arrayBuffer, idsContent, fileName, language = 'en' } = event.data
 
@@ -277,24 +508,92 @@ model = ifcopenshell.open("model.ifc")
 from ifctester.ids import Ids, get_schema
 import xml.etree.ElementTree as ET
 
+# Register XML namespaces for correct parsing
+ET.register_namespace('xs', 'http://www.w3.org/2001/XMLSchema')
+ET.register_namespace('', 'http://standards.buildingsmart.org/IDS')
+
 if os.path.exists("spec.ids"):
     try:
         # 1. Read the IDS XML content
         with open("spec.ids", "r") as f:
             ids_content = f.read()
+        
         # 2. Build an ElementTree from the XML
         tree = ET.ElementTree(ET.fromstring(ids_content))
-        # 3. Decode the XML using the IDS schema
+        
+        # 3. Decode the XML using the IDS schema with proper namespace handling
         decoded = get_schema().decode(
             tree,
             strip_namespaces=True,
-            namespaces={"": "http://standards.buildingsmart.org/IDS"}
+            namespaces={
+                "": "http://standards.buildingsmart.org/IDS",
+                "xs": "http://www.w3.org/2001/XMLSchema"
+            }
         )
+        
         # If "@ifcVersion" is missing, add a default list of supported versions
         if "@ifcVersion" not in decoded:
             decoded["@ifcVersion"] = ["IFC2X3", "IFC4", "IFC4X3_ADD2"]
+            
+        # 3.5 Process schema values for proper type conversion and format simplification
+        def process_schema_values(obj):
+            """
+            Recursively process schema values for compatibility with Pyodide:
+            1. Convert string numeric values to actual numeric types
+            2. Transform complex XML schema structures into simpler formats
+            3. Flatten nested restriction types into a format that ifctester can handle
+            """
+            if isinstance(obj, dict):
+                # Handle special case of XSD restriction type
+                if 'xs:restriction' in obj:
+                    restriction = obj['xs:restriction']
+                    base_type = restriction.get('@base', '')
+                    result = {}
+                    
+                    # Process numeric restrictions (decimal, double, float)
+                    if base_type in ('xs:decimal', 'xs:double', 'xs:float'):
+                        # Extract min/max values
+                        if 'xs:minInclusive' in restriction:
+                            min_value = restriction['xs:minInclusive'].get('@value')
+                            if min_value is not None:
+                                result['min'] = float(min_value)
+                        
+                        if 'xs:maxInclusive' in restriction:
+                            max_value = restriction['xs:maxInclusive'].get('@value')
+                            if max_value is not None:
+                                result['max'] = float(max_value)
+                        
+                        # Return simplified restriction
+                        return result
+                
+                # Process standard numeric attributes
+                numeric_attrs = ['@min', '@max', '@minInclusive', '@maxInclusive', 
+                                '@minExclusive', '@maxExclusive', '@value']
+                for attr in numeric_attrs:
+                    if attr in obj and obj[attr] is not None:
+                        try:
+                            if isinstance(obj[attr], str) and (obj[attr].replace('.', '', 1).isdigit() or 
+                                                              (obj[attr].startswith('-') and obj[attr][1:].replace('.', '', 1).isdigit())):
+                                obj[attr] = float(obj[attr])
+                        except (ValueError, TypeError):
+                            pass
+                
+                # Process nested structures
+                for key, value in list(obj.items()):
+                    if isinstance(value, (dict, list)):
+                        obj[key] = process_schema_values(value)
+            
+            elif isinstance(obj, list):
+                return [process_schema_values(item) for item in obj]
+            
+            return obj
+        
+        # Apply schema processing
+        decoded = process_schema_values(decoded)
+        
         # 4. Create an Ids instance and parse the decoded IDS
         ids = Ids().parse(decoded)
+        
         # 5. Validate specifications against the model
         ids.validate(model)
     except Exception as e:
@@ -312,6 +611,44 @@ else:
 # Generate reports using ifctester's built-in reporter classes
 from ifctester import reporter
 
+# Patch the reporter classes to handle complex value structures
+def patch_reporters():
+    """
+    Apply runtime patches to ifctester reporter classes to handle 
+    complex value structures in the browser environment
+    """
+    # Save the original to_ids_value method
+    original_to_ids_value = reporter.Facet.to_ids_value
+    
+    # Define a patched version that can handle complex structures
+    def patched_to_ids_value(self, parameter):
+        try:
+            # First try the original method
+            return original_to_ids_value(self, parameter)
+        except Exception as e:
+            # If that fails, handle complex structures more gracefully
+            if isinstance(parameter, dict):
+                # If it's a dictionary with min/max values, convert to a simple range string
+                if 'min' in parameter or 'max' in parameter:
+                    min_val = parameter.get('min', '*')
+                    max_val = parameter.get('max', '*')
+                    return f"Range: [{min_val}, {max_val}]"
+                
+                # Handle other dictionary types
+                return str(parameter)
+            elif isinstance(parameter, (list, tuple)):
+                # Convert lists to comma-separated strings
+                return ", ".join(str(x) for x in parameter)
+            else:
+                # For other types, use string representation
+                return str(parameter)
+    
+    # Apply the patch
+    reporter.Facet.to_ids_value = patched_to_ids_value
+
+# Apply reporter patches
+patch_reporters()
+
 # Generate HTML report
 html_report_path = "report.html"
 html_reporter = reporter.Html(ids)
@@ -326,16 +663,11 @@ print(f"Python: Using language code: {language_code}")
 
 # Function to translate HTML content based on language
 def translate_html(html_content, language_code):
-    if language_code == "en":  # No translation needed for English
-        return html_content
-    
-    # Dictionary of translations from JavaScript to be populated by JS
-    translations_dict = {}
-    
-    # Return the translated content
+    # We'll leave translations to the JavaScript side
+    # This is a placeholder function as we handle translations in JS
     return html_content
     
-# We'll get translations from JavaScript after we return to the worker
+    # We'll get translations from JavaScript after we return to the worker
 
 # Generate JSON report
 json_reporter = reporter.Json(ids)
@@ -385,149 +717,17 @@ validation_result_json = json.dumps(results, default=str, ensure_ascii=False)
 
     // Apply translations to the HTML report
     if (results.language_code && results.language_code !== 'en') {
-      const lang = results.language_code
+      const lang = results.language_code;
 
       // Load translations if they're not already loaded
       if (Object.keys(translations).length === 0) {
-        translations = await loadTranslations(lang)
+        translations = await loadTranslations(lang);
       }
 
       if (translations) {
-        let translatedHtml = results.html_content
-
-        // Simple translation of key phrases
-        const translatableTerms = [
-          { en: 'Summary', field: 'summary' },
-          { en: 'Specifications', field: 'specifications' },
-          { en: 'Requirements', field: 'requirements' },
-          { en: 'Details', field: 'details' },
-          { en: 'Class', field: 'class' },
-          { en: 'PredefinedType', field: 'predefinedType' },
-          { en: 'Name', field: 'name' },
-          { en: 'Description', field: 'description' },
-          { en: 'Warning', field: 'warning' },
-          { en: 'GlobalId', field: 'globalId' },
-          { en: 'Tag', field: 'tag' },
-          { en: 'Report by', field: 'reportBy' },
-          { en: 'and', field: 'and' },
-          { en: 'PASS', field: 'status.pass' },
-          { en: 'FAIL', field: 'status.fail' },
-          { en: 'UNTESTED', field: 'status.untested' },
-          { en: 'SKIPPED', field: 'status.skipped' },
-        ]
-
-        // Perform the translations
-        translatableTerms.forEach((term) => {
-          const fieldPath = term.field.split('.')
-          let translation
-
-          // Handle nested fields like status.pass
-          if (fieldPath.length > 1) {
-            if (translations[fieldPath[0]] && translations[fieldPath[0]][fieldPath[1]]) {
-              translation = translations[fieldPath[0]][fieldPath[1]]
-            }
-          } else {
-            translation = translations[term.field]
-          }
-
-          if (translation) {
-            // Use a regex with word boundaries to avoid partial word replacements
-            const regex = new RegExp(`\\b${term.en}\\b`, 'g')
-            translatedHtml = translatedHtml.replace(regex, translation)
-          }
-        })
-
-        // Add interface element translations
-        if (translations.interface) {
-          // Simple word replacements first (like 'passed' and 'failed')
-          if (translations.interface.passed) {
-            translatedHtml = translatedHtml.replace(/\bpassed\b/g, translations.interface.passed)
-          }
-          if (translations.interface.failed) {
-            translatedHtml = translatedHtml.replace(/\bfailed\b/g, translations.interface.failed)
-          }
-
-          // Then handle phrases with prefixes
-          [
-            { prefix: 'Checks passed', field: 'checksPassedPrefix' },
-            { prefix: 'Specifications passed', field: 'specificationsPassedPrefix' },
-            { prefix: 'Requirements passed', field: 'requirementsPassedPrefix' },
-            { prefix: 'Elements passed', field: 'elementsPassedPrefix' },
-            { prefix: 'Applicability', field: 'applicability' },
-            { prefix: 'All', field: 'all' },
-          ].forEach((term) => {
-            if (translations.interface[term.field]) {
-              const regex = new RegExp(`\\b${term.prefix}\\b`, 'g')
-              translatedHtml = translatedHtml.replace(regex, translations.interface[term.field])
-            }
-          })
-
-          // Handle "All X data" patterns
-          if (translations.interface.all && translations.interface.data) {
-            const regex = new RegExp(`All ([\\w]+) data`, 'g')
-            translatedHtml = translatedHtml.replace(regex, (match, type) => {
-              return `${translations.interface.all} ${type} ${translations.interface.data}`
-            })
-          }
-        }
-
-        // Add error message translations
-        if (translations.errorMessages) {
-          // Direct matches for common error messages
-          const errorMessages = [
-            { en: 'The required property set does not exist', field: 'propertySetNotExist' },
-            { en: 'data shall be provided in the dataset', field: 'dataShallBeProvided' },
-            { en: 'The required property does not exist', field: 'propertyNotExist' },
-            { en: 'has an invalid value', field: 'invalidValue' },
-            { en: 'is not in the allowed range', field: 'notInRange' },
-            { en: 'was not found', field: 'notFound' },
-            { en: 'does not have', field: 'doesNotHave' },
-            { en: 'is missing the required property', field: 'missingProperty' },
-          ]
-
-          // Translate error messages
-          errorMessages.forEach((term) => {
-            let translation = translations.errorMessages[term.field]
-
-            if (translation) {
-              // We need to be careful with these phrases as they might appear in the middle of sentences
-              // Using case-sensitive replace to maintain the original capitalization pattern
-              translatedHtml = translatedHtml.replace(new RegExp(term.en, 'g'), translation)
-            }
-          })
-        }
-
-        // Handle more complex phrases with placeholders
-        // More of same type message
-        const moreOfSameTypeRegex =
-          /\.\.\. (\d+) more of the same element type \((.*?) with Tag (.*?) and GlobalId (.*?)\) not shown \.\.\./g
-        translatedHtml = translatedHtml.replace(moreOfSameTypeRegex, (match, count, type, tag, id) => {
-          if (translations.phrases && translations.phrases.moreOfSameType) {
-            return translations.phrases.moreOfSameType
-              .replace('{{count}}', count)
-              .replace('{{type}}', type)
-              .replace('{{tag}}', tag)
-              .replace('{{id}}', id)
-          }
-          return match
-        })
-
-        // More elements not shown message
-        const moreElementsNotShownRegex = /\.\.\. (\d+) more (.*?) elements not shown out of (\d+) total \.\.\./g
-        translatedHtml = translatedHtml.replace(moreElementsNotShownRegex, (match, count, type, total) => {
-          if (translations.phrases && translations.phrases.moreElementsNotShown) {
-            return translations.phrases.moreElementsNotShown
-              .replace('{{count}}', count)
-              .replace('{{type}}', type)
-              .replace('{{total}}', total)
-          }
-          return match
-        })
-
-        // Update the HTML content with translations
-        results.html_content = translatedHtml
-
-        console.log('Worker: HTML report translated to', lang)
+        // Apply translations using our simplified function
+        results.html_content = applyTranslations(results.html_content, translations, lang);
+        console.log('Worker: HTML report translated to', lang);
       }
     }
 
