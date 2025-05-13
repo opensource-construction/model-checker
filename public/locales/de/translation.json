@@ -1,14 +1,15 @@
 {
   "upload-file": "Datei Hochladen",
   "upload-description": {
-    "0": "Model quality is at the center of successful BIM projects.",
+    "0": "Modellqualität ist ein zentrales Element erfolgreicher BIM-Projekte.",
     "1": "Das Ziel dieses Tools ist es, einen schnellen Überblick über den Zustand eines Modells zu erhalten. Es kommt mit einigen Standardtests - wenn diese erfolgreich sind, lohnt es sich, tiefer in das Modell einzusteigen.",
-    "2": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
+    "2": "Wir haben es so konzipiert, dass die Prüfung unkompliziert und sicher ist.",
     "3": "Alle Daten bleiben auf Ihrem lokalen Rechner – es werden keine Daten irgendwohin gesendet, alle Überprüfungen werden lokal durchgeführt."
   },
   "upload-description-ids": {
+    "0": "Modellqualität ist ein zentrales Element erfolgreicher BIM-Projekte.",
     "1": "Überprüfen Sie IFC-Modelle anhand der in Ihrer IDS-Datei definierten Anforderungen.",
-    "2": "Wir haben es so konzipiert, dass es unkompliziert und sicher ist.",
+    "2": "Wir haben es so konzipiert, dass die Prüfung unkompliziert und sicher ist.",
     "3": "Die gesamte Validierung erfolgt lokal in Ihrem Browser - Ihre Daten verlassen niemals Ihr Gerät.",
     "4": "Betrachten Sie Ihre Ergebnisse als interaktiven HTML-Bericht direkt im Browser, mit Optionen zum Herunterladen, Teilen oder als PDF drucken. BCF-Export steht ebenfalls für BIM-Workflows zur Verfügung."
   },
@@ -160,6 +161,21 @@
     "phrases": {
       "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",
       "moreElementsNotShown": "... {{count}} weitere {{type}} Elemente nicht angezeigt von insgesamt {{total}} ..."
+    },
+    "ids": {
+      "section": {
+        "loadBearing": "Tragende Struktur"
+      },
+      "description": {
+        "shouldHaveLoadBearing": "Alle Structure Elements sollte haben eine tragende Struktur"
+      },
+      "pattern": {
+        "nameShallBe": "Der Name muss {{value}} sein",
+        "descriptionRequired": "Die Beschreibung muss angegeben werden",
+        "propertyRequired": "{{property}} muss im Eigenschaftssatz {{propertySet}} angegeben werden",
+        "propertyValue": "{{property}} muss {{value}} im Eigenschaftssatz {{propertySet}} sein",
+        "enumRequired": "Eine der Aufzählungswerte {{values}} muss im Eigenschaftssatz {{propertySet}} angegeben werden"
+      }
     }
   },
   "console": {
