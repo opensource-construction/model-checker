@@ -136,7 +136,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ## 🙏 Acknowledgements
 
 - [IfcOpenShell](https://ifcopenshell.org/) - Open source IFC library
-- [Bonsai](https://bonsaibim.org/) - BIM technology for sustainability
+- [Bonsai](https://bonsaibim.org/) - BIM for Blender
 - [Pyodide](https://pyodide.org/) - Python for the browser
 - All contributors who have helped this project grow
 
