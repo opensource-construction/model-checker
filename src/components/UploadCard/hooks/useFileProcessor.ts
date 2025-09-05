@@ -16,9 +16,10 @@ export interface ProcessedResult {
 export interface UseFileProcessorProps {
   i18n: I18nType
   addLog: (message: string) => void
+  reportFormats: { html: boolean; bcf: boolean }
 }
 
-export const useFileProcessor = ({ i18n, addLog }: UseFileProcessorProps) => {
+export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcessorProps) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -97,6 +98,7 @@ export const useFileProcessor = ({ i18n, addLog }: UseFileProcessorProps) => {
                 idsContent: currentIdsContent,
                 fileName: file.name,
                 language: i18n.language,
+                generateBcf: reportFormats.bcf.toString(),
               })
 
               console.log(`Worker started with language: ${i18n.language}`)

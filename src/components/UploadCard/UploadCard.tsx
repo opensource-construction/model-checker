@@ -50,6 +50,7 @@ export const UploadCard = () => {
   } = useFileProcessor({
     i18n,
     addLog,
+    reportFormats,
   })
 
   const { openHtmlReport } = useHtmlReport(templateContent, i18n)
