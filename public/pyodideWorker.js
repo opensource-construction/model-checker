@@ -419,10 +419,11 @@ self.onmessage = async (event) => {
     // Import required packages
     self.postMessage({
       type: 'progress',
-      message: getConsoleMessage('console.loading.packages', 'Installing required packages...'),
+      message: getConsoleMessage('console.loading.packages', 'Preloading essential packages...'),
     })
 
-    await pyodide.loadPackage(['micropip'])
+    // Preload essential packages for better performance
+    await pyodide.loadPackage(['micropip', 'python-dateutil', 'six', 'numpy'])
 
     // Bypass the Emscripten version compatibility check for wheels.
     self.postMessage({
@@ -457,9 +458,12 @@ await micropip.install('https://cdn.jsdelivr.net/gh/IfcOpenShell/wasm-wheels@33b
 
     await pyodide.runPythonAsync(`
 import micropip
-print("Attempting to install ifctester 0.8.1, bcf-client 0.8.1 and dependencies...")
+DEBUG = False
+if DEBUG:
+    print("Installing core validation packages...")
 await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystache'], keep_going=True)
-print("Finished attempting to install ifctester 0.8.1, bcf-client 0.8.1 and dependencies.")
+if DEBUG:
+    print("Core packages installed successfully")
     `)
 
     self.postMessage({
@@ -473,8 +477,7 @@ print("Finished attempting to install ifctester 0.8.1, bcf-client 0.8.1 and depe
       message: getConsoleMessage('console.loading.validation', 'Running IFC validation...'),
     })
 
-    // Load sqlite3 package from Pyodide (needed by some dependencies)
-    await pyodide.loadPackage('sqlite3')
+    // Skip sqlite3 loading as it's not needed for basic IFC validation
 
     // Create virtual files for IFC and IDS data
     self.postMessage({
@@ -486,41 +489,6 @@ print("Finished attempting to install ifctester 0.8.1, bcf-client 0.8.1 and depe
 
     if (idsContent) {
       pyodide.FS.writeFile('spec.ids', idsContent)
-    }
-
-    // First, detect IFC version from the file
-    self.postMessage({
-      type: 'progress',
-      message: getConsoleMessage('console.detecting.ifcVersion', 'Detecting IFC version from file...'),
-    })
-
-    const ifcVersionResult = await pyodide.runPythonAsync(`
-import ifcopenshell
-try:
-    m = ifcopenshell.open("model.ifc")
-    schema_raw = getattr(m, 'schema_identifier', None)
-    schema_raw = schema_raw() if callable(schema_raw) else getattr(m, 'schema', '')
-    schema = (schema_raw or '').upper()
-    if 'IFC4X3' in schema:
-        detected = 'IFC4X3_ADD2'
-    elif 'IFC4' in schema:
-        detected = 'IFC4'
-    elif 'IFC2X3' in schema:
-        detected = 'IFC2X3'
-    else:
-        detected = 'IFC4'
-    detected
-except Exception:
-    None
-    `)
-
-    const detectedIfCVersion = ifcVersionResult || null
-
-    if (detectedIfCVersion) {
-      self.postMessage({
-        type: 'progress',
-        message: getConsoleMessage('console.detected.ifcVersion', `Detected IFC version: ${detectedIfCVersion}`),
-      })
     }
 
     // Run the validation and generate reports directly using ifctester
@@ -536,20 +504,33 @@ import base64
 import re
 from datetime import datetime
 
-# Optimization flags - set to False for production
+# Optimization flags - set to True for debugging empty reports issue
 DEBUG = False
 
 # Performance note: This conditional BCF generation saves ~30-50% time
 # when BCF is not requested by the user
 
-# Store the detected IFC version for later use
-detected_ifc_version = "${detectedIfCVersion}"
-
 # Get BCF generation flag from worker data
-generate_bcf = "${generateBcf}" == "true"
+generate_bcf = "` + generateBcf + `" == "true"
 
-# Open the IFC model from the virtual file system
+# Open the IFC model from the virtual file system and detect version inline
 model = ifcopenshell.open("model.ifc")
+
+# Detect IFC version from the loaded model
+try:
+    schema_raw = getattr(model, 'schema_identifier', None)
+    schema_raw = schema_raw() if callable(schema_raw) else getattr(model, 'schema', '')
+    schema = (schema_raw or '').upper()
+    if 'IFC4X3' in schema:
+        detected_ifc_version = 'IFC4X3_ADD2'
+    elif 'IFC4' in schema:
+        detected_ifc_version = 'IFC4'
+    elif 'IFC2X3' in schema:
+        detected_ifc_version = 'IFC2X3'
+    else:
+        detected_ifc_version = 'IFC4'
+except Exception:
+    detected_ifc_version = 'IFC4'
 
 # Create and load IDS specification
 from ifctester.ids import Ids, get_schema
@@ -642,14 +623,18 @@ if os.path.exists("spec.ids"):
             ids_content = f.read()
 
         # 1a. Ensure ifcVersion exists on all specifications (in-memory only)
-        inferred_version = _detect_ifc_version_from_model(model)
-        ids_content = _augment_ids_ifcversion(ids_content, inferred_version)
+        # Use the IFC version detected from the loaded model
+        ids_content = _augment_ids_ifcversion(ids_content, detected_ifc_version)
+        if DEBUG:
+            print(f"Using detected IFC version for IDS augmentation: {detected_ifc_version}")
 
-        print(f"Original IDS content length: {len(ids_content)}")
-        print(f"First 300 chars: {ids_content[:300]}")
+        if DEBUG:
+            print(f"Original IDS content length: {len(ids_content)}")
+            print(f"First 300 chars: {ids_content[:300]}")
 
 
         # 2. Build an ElementTree from the XML
+        # Note: Pyodide doesn't support resolve_entities parameter, so we use basic parsing
         tree = ET.ElementTree(ET.fromstring(ids_content))
         
         # 3. Decode the XML using the IDS schema with proper namespace handling
@@ -663,11 +648,12 @@ if os.path.exists("spec.ids"):
                     "xs": "http://www.w3.org/2001/XMLSchema"
                 }
             )
-            print("Standard schema decode succeeded")
+            if DEBUG:
+                print("Standard schema decode succeeded")
         except Exception as decode_error:
-            print(f"Standard schema decode failed: {decode_error}")
-            # Try without validation - create a minimal decoded structure
-            print("Attempting manual decode without strict validation...")
+            if DEBUG:
+                print(f"Standard schema decode failed: {decode_error}")
+                print("Attempting manual decode without strict validation...")
             
             # Parse the XML manually to extract specifications
             root = tree.getroot()
@@ -700,8 +686,9 @@ if os.path.exists("spec.ids"):
                         'requirements': []
                     }
                     
-                    print(f"Processing specification: {spec_dict['name']}")
-                    
+                    if DEBUG:
+                        print(f"Processing specification: {spec_dict['name']}")
+
                     # Extract applicability
                     for app_elem in spec_elem.findall('.//{http://standards.buildingsmart.org/IDS}applicability'):
                         app_dict = {'entity': []}
@@ -712,11 +699,12 @@ if os.path.exists("spec.ids"):
                                 if simple_value is not None:
                                     entity_name = simple_value.text
                                     app_dict['entity'].append({'name': entity_name})
-                                    print(f"  Found entity: {entity_name}")
+                                    if DEBUG:
+                                        print(f"  Found entity: {entity_name}")
                         if app_dict['entity']:
                             spec_dict['applicability'].append(app_dict)
-                    
-                    # Extract requirements  
+
+                    # Extract requirements
                     for req_elem in spec_elem.findall('.//{http://standards.buildingsmart.org/IDS}requirements'):
                         req_dict = {'attribute': []}
                         for attr_elem in req_elem.findall('.//{http://standards.buildingsmart.org/IDS}attribute'):
@@ -730,18 +718,21 @@ if os.path.exists("spec.ids"):
                                 if simple_value is not None:
                                     attr_name = simple_value.text
                                     attr_dict['name'] = attr_name
-                                    print(f"  Found attribute: {attr_name}")
+                                    if DEBUG:
+                                        print(f"  Found attribute: {attr_name}")
                             if attr_dict['name']:
                                 req_dict['attribute'].append(attr_dict)
                         if req_dict['attribute']:
                             spec_dict['requirements'].append(req_dict)
-                    
-                    print(f"  Applicability count: {len(spec_dict['applicability'])}")
-                    print(f"  Requirements count: {len(spec_dict['requirements'])}")
+
+                    if DEBUG:
+                        print(f"  Applicability count: {len(spec_dict['applicability'])}")
+                        print(f"  Requirements count: {len(spec_dict['requirements'])}")
                     
                     decoded['specifications'].append(spec_dict)
                 
-                print(f"Manual decode created {len(decoded['specifications'])} specifications")
+                if DEBUG:
+                    print(f"Manual decode created {len(decoded['specifications'])} specifications")
             else:
                 print("Could not find specifications element, creating empty structure")
                 decoded = {
@@ -752,6 +743,9 @@ if os.path.exists("spec.ids"):
         # Note: ifcVersion is now added to XML before parsing, so this fallback is no longer needed
             
         # 3.5 Process schema values for proper type conversion and format simplification
+        if DEBUG:
+            print("Processing schema values for compatibility...")
+
         def process_schema_values(obj):
             """
             Recursively process schema values for compatibility with Pyodide:
@@ -806,15 +800,17 @@ if os.path.exists("spec.ids"):
         
         # Apply schema processing
         decoded = process_schema_values(decoded)
-        
+
         # 4. Create an Ids instance and parse the decoded IDS
-        print(f"About to parse decoded structure with {len(decoded.get('specifications', []))} specifications")
-        print(f"Decoded structure keys: {list(decoded.keys())}")
-        print(f"Decoded info: {decoded.get('info', 'Missing')}")
-        
+        if DEBUG:
+            print(f"About to parse decoded structure with {len(decoded.get('specifications', []))} specifications")
+            print(f"Decoded structure keys: {list(decoded.keys())}")
+            print(f"Decoded info: {decoded.get('info', 'Missing')}")
+
         try:
             ids = Ids().parse(decoded)
-            print(f"After parsing: IDS object has {len(ids.specifications)} specifications")
+            if DEBUG:
+                print(f"After parsing: IDS object has {len(ids.specifications)} specifications")
         except Exception as parse_error:
             print(f"IDS parsing failed: {parse_error}")
             print(f"Creating minimal IDS object without complex validation...")
@@ -1003,26 +999,30 @@ if os.path.exists("spec.ids"):
                 spec_obj = MinimalSpec(spec_name, spec_data)
                 ids.specifications.append(spec_obj)
             
+        if DEBUG:
             print(f"Created minimal IDS with {len(ids.specifications)} specifications")
 
         # 4.5. Force add ifcVersion to ALL specifications (object level)
         if detected_ifc_version and detected_ifc_version != "null":
             fallback_version = [detected_ifc_version]
-            print(f"Using detected IFC version: {detected_ifc_version}")
+            if DEBUG:
+                print(f"Using detected IFC version: {detected_ifc_version}")
         else:
             fallback_version = ["IFC2X3", "IFC4", "IFC4X3_ADD2"]
-            print("Using fallback IFC versions: IFC2X3, IFC4, IFC4X3_ADD2")
-            
-        print(f"Total specifications found: {len(ids.specifications)}")
-        for i, spec in enumerate(ids.specifications):
-            print(f"Specification {i+1}: {getattr(spec, 'name', 'Unknown')}")
-            print(f"  - Current ifcVersion: {getattr(spec, 'ifcVersion', 'None')}")
-            
-            # Always set ifcVersion regardless of current value
-            spec.ifcVersion = fallback_version
-            print(f"  - Set ifcVersion to: {fallback_version}")
-            
-        print(f"Finished setting ifcVersion for {len(ids.specifications)} specifications")
+            if DEBUG:
+                print("Using fallback IFC versions: IFC2X3, IFC4, IFC4X3_ADD2")
+
+        if DEBUG:
+            print(f"Total specifications found: {len(ids.specifications)}")
+            for i, spec in enumerate(ids.specifications):
+                print(f"Specification {i+1}: {getattr(spec, 'name', 'Unknown')}")
+                print(f"  - Current ifcVersion: {getattr(spec, 'ifcVersion', 'None')}")
+
+                # Always set ifcVersion regardless of current value
+                spec.ifcVersion = fallback_version
+                print(f"  - Set ifcVersion to: {fallback_version}")
+
+            print(f"Finished setting ifcVersion for {len(ids.specifications)} specifications")
 
         # 4.6. Validate IFC compatibility using schema utilities
         try:
@@ -1040,56 +1040,67 @@ if os.path.exists("spec.ids"):
                                         # Check if the entity name is a valid IFC class
                                         declaration = schema.declaration_by_name(entity.name)
                                         if declaration:
-                                            print(f"Validated IFC class '{entity.name}' in specification: {getattr(spec, 'name', 'Unknown')}")
+                                            if DEBUG:
+                                                print(f"Validated IFC class '{entity.name}' in specification: {getattr(spec, 'name', 'Unknown')}")
                                         else:
-                                            print(f"Warning: '{entity.name}' is not a valid IFC class in {detected_ifc_version}")
+                                            if DEBUG:
+                                                print(f"Warning: '{entity.name}' is not a valid IFC class in {detected_ifc_version}")
                                     except Exception as class_error:
-                                        print(f"Could not validate IFC class '{entity.name}': {class_error}")
+                                        if DEBUG:
+                                            print(f"Could not validate IFC class '{entity.name}': {class_error}")
         except Exception as schema_validation_error:
-            print(f"Schema validation skipped: {schema_validation_error}")
+            if DEBUG:
+                print(f"Schema validation skipped: {schema_validation_error}")
 
         # 5. Validate specifications against the model
-        print(f"About to validate {len(ids.specifications)} specifications against the model")
+        if DEBUG:
+            print(f"About to validate {len(ids.specifications)} specifications against the model")
         try:
             ids.validate(model)
-            print(f"Validation completed. Checking results...")
-            
-            # Debug: Check what happened during validation
-            for i, spec in enumerate(ids.specifications):
-                print(f"Spec {i+1} '{spec.name}': status={getattr(spec, 'status', 'Unknown')}")
-                print(f"  - failed_entities: {len(getattr(spec, 'failed_entities', []))}")
-                print(f"  - applicable_entities: {len(getattr(spec, 'applicable_entities', []))}")
+            if DEBUG:
+                print(f"Validation completed. Checking results...")
 
-            # Debug: Check IFC model contents
-            print(f"IFC model info:")
-            print(f"  - Schema: {getattr(model, 'schema', 'Unknown')}")
-            try:
-                # Count entities by type
-                entity_counts = {}
-                for entity in model:
-                    entity_type = entity.is_a()
-                    if entity_type in entity_counts:
-                        entity_counts[entity_type] += 1
-                    else:
-                        entity_counts[entity_type] = 1
+            # Memory optimization: Force garbage collection after validation
+            import gc
+            gc.collect()
 
-                print(f"  - Total entities: {len(list(model))}")
-                print(f"  - Entity types found: {list(entity_counts.keys())[:10]}")  # Show first 10
+            if DEBUG:
+                # Debug: Check what happened during validation
+                for i, spec in enumerate(ids.specifications):
+                    print(f"Spec {i+1} '{spec.name}': status={getattr(spec, 'status', 'Unknown')}")
+                    print(f"  - failed_entities: {len(getattr(spec, 'failed_entities', []))}")
+                    print(f"  - applicable_entities: {len(getattr(spec, 'applicable_entities', []))}")
 
-                # Check for expected entities from IDS
-                expected_entities = ['IfcProject', 'IfcBuildingStorey', 'IfcBuilding', 'IfcSpace', 'IfcSite', 'IfcBuildingElementProxy']
-                found_entities = [entity for entity in expected_entities if entity in entity_counts]
-                missing_entities = [entity for entity in expected_entities if entity not in entity_counts]
+                # Debug: Check IFC model contents
+                print(f"IFC model info:")
+                print(f"  - Schema: {getattr(model, 'schema', 'Unknown')}")
+                try:
+                    # Count entities by type
+                    entity_counts = {}
+                    for entity in model:
+                        entity_type = entity.is_a()
+                        if entity_type in entity_counts:
+                            entity_counts[entity_type] += 1
+                        else:
+                            entity_counts[entity_type] = 1
 
-                print(f"  - Expected entities found: {found_entities}")
-                print(f"  - Expected entities missing: {missing_entities}")
+                    print(f"  - Total entities: {len(list(model))}")
+                    print(f"  - Entity types found: {list(entity_counts.keys())[:10]}")  # Show first 10
 
-                if found_entities:
-                    for entity_type in found_entities:
-                        print(f"    - {entity_type}: {entity_counts[entity_type]} instances")
+                    # Check for expected entities from IDS
+                    expected_entities = ['IfcProject', 'IfcBuildingStorey', 'IfcBuilding', 'IfcSpace', 'IfcSite', 'IfcBuildingElementProxy']
+                    found_entities = [entity for entity in expected_entities if entity in entity_counts]
+                    missing_entities = [entity for entity in expected_entities if entity not in entity_counts]
 
-            except Exception as model_error:
-                print(f"  - Error inspecting model: {model_error}")
+                    print(f"  - Expected entities found: {found_entities}")
+                    print(f"  - Expected entities missing: {missing_entities}")
+
+                    if found_entities:
+                        for entity_type in found_entities:
+                            print(f"    - {entity_type}: {entity_counts[entity_type]} instances")
+
+                except Exception as model_error:
+                    print(f"  - Error inspecting model: {model_error}")
         except Exception as validation_error:
             print(f"Validation failed: {validation_error}")
             # Continue anyway to see if we can generate reports
@@ -1235,39 +1246,90 @@ def patch_reporters():
     except Exception as base_patch_error:
         print(f"Could not patch base Reporter: {base_patch_error}")
 
-# Apply reporter patches
-patch_reporters()
-
-# Generate HTML report
+# Generate HTML report (only if pystache is available and we have validation results)
 html_report_path = "report.html"
-html_reporter = reporter.Html(ids)
+html_content = None
+generate_html = False
 
-print(f"About to generate HTML report for {len(ids.specifications)} specifications")
 try:
-    html_reporter.report()
-    print("HTML reporter.report() completed successfully")
-    
-    # Check if the reporter has results
-    if hasattr(html_reporter, 'results'):
-        print(f"HTML reporter results: {html_reporter.results}")
-    
-    html_reporter.to_file(html_report_path)
-    with open(html_report_path, "r", encoding="utf-8") as f:
-        html_content = f.read()
-    
-    print(f"HTML report generated, length: {len(html_content)}")
-    if "Spezifikationen erfüllt:" in html_content:
-        print("HTML contains German specification text - good!")
-    else:
-        print("HTML might be empty or not translated properly")
-        
-except Exception as html_error:
-    print(f"HTML report generation failed: {html_error}")
-    html_content = "<html><body><h1>Report Generation Failed</h1></body></html>"
+    # Try to import pystache first
+    import pystache
+    pystache_available = True
+    generate_html = True
+    if DEBUG:
+        print("pystache available, will generate HTML report")
+except ImportError:
+    pystache_available = False
+    if DEBUG:
+        print("pystache not available, skipping HTML report generation")
+
+if generate_html:
+    html_reporter = reporter.Html(ids)
+
+    if DEBUG:
+        print(f"About to generate HTML report for {len(ids.specifications)} specifications")
+    html_patch_applied = False
+    try:
+        html_reporter.report()
+        if DEBUG:
+            print("HTML reporter.report() completed successfully")
+
+        # Check if the reporter has results
+        if hasattr(html_reporter, 'results') and DEBUG:
+            print(f"HTML reporter results: {html_reporter.results}")
+
+        html_reporter.to_file(html_report_path)
+        with open(html_report_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        if DEBUG:
+            print(f"HTML report generated, length: {len(html_content)}")
+            if "Spezifikationen erfüllt:" in html_content:
+                print("HTML contains German specification text - good!")
+            else:
+                print("HTML might be empty or not translated properly")
+
+    except Exception as html_error:
+        if DEBUG:
+            print(f"HTML report generation failed: {html_error}")
+        # Only apply patches if HTML generation failed
+        if not html_patch_applied:
+            try:
+                patch_reporters()
+                html_patch_applied = True
+                if DEBUG:
+                    print("Applied HTML reporter patches due to error")
+                # Try again with patches
+                html_reporter.report()
+                html_reporter.to_file(html_report_path)
+                with open(html_report_path, "r", encoding="utf-8") as f:
+                    html_content = f.read()
+                if DEBUG:
+                    print(f"HTML report generated after patching, length: {len(html_content)}")
+            except Exception as retry_error:
+                if DEBUG:
+                    print(f"HTML report generation still failed after patching: {retry_error}")
+                html_content = "<html><body><h1>Report Generation Failed</h1></body></html>"
+        else:
+            html_content = "<html><body><h1>Report Generation Failed</h1></body></html>"
+else:
+    # Generate a simple HTML report without pystache
+    html_content = f"""<html>
+<head><title>IDS Validation Report</title></head>
+<body>
+<h1>IDS Validation Report</h1>
+<p>Validation completed successfully for {len(ids.specifications)} specifications.</p>
+<p>Note: Full HTML report generation skipped due to missing pystache dependency.</p>
+<p>JSON report is available for detailed results.</p>
+</body>
+</html>"""
+    if DEBUG:
+        print("Generated simplified HTML report without pystache")
 
 # Language code passed from JavaScript
 language_code = "` + effectiveLanguage + `"
-print(f"Python: Using language code: {language_code}")
+if DEBUG:
+    print(f"Python: Using language code: {language_code}")
 
 # Function to translate HTML content based on language
 def translate_html(html_content, language_code):
@@ -1280,7 +1342,8 @@ def translate_html(html_content, language_code):
 # Generate JSON report
 json_reporter = reporter.Json(ids)
 
-print(f"About to generate JSON report for {len(ids.specifications)} specifications")
+if DEBUG:
+    print(f"About to generate JSON report for {len(ids.specifications)} specifications")
 try:
     json_reporter.report()
     print("JSON reporter.report() completed successfully")
@@ -1352,7 +1415,8 @@ bcf_b64 = None
 if generate_bcf:
     bcf_reporter = reporter.Bcf(ids)
 
-    print(f"About to generate BCF report for {len(ids.specifications)} specifications")
+    if DEBUG:
+        print(f"About to generate BCF report for {len(ids.specifications)} specifications")
     try:
         bcf_reporter.report()
         bcf_path = "report.bcf"
@@ -1366,7 +1430,8 @@ if generate_bcf:
         # Create a minimal BCF file
         bcf_b64 = "UEsFBgAAAAAAAAAAAAAAAAAAAAA="  # Empty ZIP file in base64
 else:
-    print("BCF generation skipped - not requested by user")
+    if DEBUG:
+        print("BCF generation skipped - not requested by user")
 
 # Create final results object
 report_file_name = "` + fileName + `" or "Report_" + datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1384,6 +1449,12 @@ results['available_languages'] = ` + JSON.stringify(Object.keys(translations)) +
 
 # Determine validation status
 results['validation_status'] = "success" if not any(spec.failed_entities for spec in ids.specifications) else "failed"
+
+# Memory optimization: Clean up large objects before serialization
+del model  # Remove the IFC model from memory
+del ids   # Remove IDS object from memory
+import gc
+gc.collect()
 
 # Export the results as JSON
 validation_result_json = json.dumps(results, default=str, ensure_ascii=False)
