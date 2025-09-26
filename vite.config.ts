@@ -10,6 +10,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    snapshotSerializers: ['src/__test__/snapshotSerializer.ts']
+    // Removed snapshot serializer due to missing file in current setup
   },
 })

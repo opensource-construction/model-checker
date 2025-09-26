@@ -135,6 +135,8 @@
     "name": "Name",
     "description": "Description",
     "warning": "Warning",
+    "specNotApplyToVersion": "specification does not apply to this IFC version",
+    "failureReason": "Failure Reason",
     "globalId": "GlobalId",
     "tag": "Tag",
     "reportBy": "Report by",
@@ -190,6 +192,7 @@
     "loading": {
       "pyodide": "Loading Pyodide...",
       "pyodideSuccess": "Pyodide loaded successfully",
+      "idsFile": "Reading IDS file content...",
       "translations": "Loading translations...",
       "packages": "Installing required packages...",
       "micropipPatch": "Patching micropip for compatibility check bypass...",

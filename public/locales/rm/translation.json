@@ -159,6 +159,11 @@
       "all": "Tut",
       "data": "Datas"
     },
+    "specificationsPassedPrefix": "Specificaziuns reussidas",
+    "requirementsPassedPrefix": "Pretensiuns satisfatgas",
+    "applicability": "Applicabilitad",
+    "specNotApplyToVersion": "la specificaziun na s'applitgescha betg a questa versiun IFC",
+    "failureReason": "Motiv dal falliment",
     "phrases": {
       "moreOfSameType": "... {{count}} dapli dal medem tip d'element ({{type}} cun Tag {{tag}} ed ID global {{id}}) betg mussads ...",
       "moreElementsNotShown": "... {{count}} ulteriurs elements {{type}} betg mussads ord in total da {{total}} ..."

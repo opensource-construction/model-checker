@@ -159,6 +159,11 @@
       "all": "Tutti",
       "data": "Dati"
     },
+    "specificationsPassedPrefix": "Specifiche superate",
+    "requirementsPassedPrefix": "Requisiti soddisfatti",
+    "applicability": "Applicabilità",
+    "specNotApplyToVersion": "la specifica non si applica a questa versione IFC",
+    "failureReason": "Motivo del fallimento",
     "phrases": {
       "moreOfSameType": "... {{count}} altri dello stesso tipo di elemento ({{type}} con Tag {{tag}} e ID Globale {{id}}) non mostrati ...",
       "moreElementsNotShown": "... {{count}} altri elementi {{type}} non mostrati su un totale di {{total}} ..."

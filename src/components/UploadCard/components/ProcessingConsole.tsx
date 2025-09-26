@@ -1,5 +1,5 @@
 import { Group, Paper, ScrollArea, Stack, Text } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface ProcessingConsoleProps {
@@ -25,6 +25,7 @@ const consoleStyles = {
 export const ProcessingConsole = ({ isProcessing, logs }: ProcessingConsoleProps) => {
   const { t } = useTranslation()
   const [loadingDots, setLoadingDots] = useState('')
+  const bottomRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (isProcessing) {
@@ -34,6 +35,15 @@ export const ProcessingConsole = ({ isProcessing, logs }: ProcessingConsoleProps
       return () => clearInterval(interval)
     }
   }, [isProcessing])
+
+  // Auto-scroll to the latest log entry whenever logs update or processing state changes
+  useEffect(() => {
+    // Slight delay ensures DOM has rendered the new log before scrolling
+    const id = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }, 0)
+    return () => clearTimeout(id)
+  }, [logs.length, isProcessing])
 
   if (!isProcessing && logs.length === 0) {
     return null
@@ -77,6 +87,7 @@ export const ProcessingConsole = ({ isProcessing, logs }: ProcessingConsoleProps
               {loadingDots}
             </Text>
           )}
+          <div ref={bottomRef} />
         </Stack>
       </ScrollArea>
     </Paper>

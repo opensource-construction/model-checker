@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Report Viewer</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; }
+      .msg { color: #444; }
+    </style>
+  </head>
+  <body>
+    <div class="msg">Loading report...</div>
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var id = params.get('id');
+          if (!id) return;
+          var key = 'generated_report_html_' + id;
+          var content = localStorage.getItem(key);
+          if (!content) return;
+
+          // Replace the entire document content robustly
+          document.documentElement.innerHTML = content;
+          // Ensure title is updated even if head parsing lags
+          var m = content.match(/<title>(.*?)<\/title>/i);
+          if (m && m[1]) {
+            document.title = m[1];
+          }
+          // Cleanup shortly after to reduce storage usage
+          setTimeout(function(){ try { localStorage.removeItem(key); } catch(_){} }, 10000);
+        } catch (e) {
+          console.error('Report viewer error:', e);
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

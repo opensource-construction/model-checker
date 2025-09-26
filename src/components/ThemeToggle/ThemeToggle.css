@@ -35,7 +35,8 @@
 }
 
 .sun-icon,
-.moon-icon {
+.moon-icon,
+.system-icon {
   position: absolute;
   top: 0;
   left: 0;
@@ -56,12 +57,31 @@
   color: #7aa2f7; /* Tokyo Night blue */
 }
 
+/* System icon defaults hidden; shown when wrapper has .system */
+.system-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0);
+  color: var(--text-primary);
+}
+
 .dark .sun-icon {
   opacity: 0;
   transform: rotate(90deg) scale(0);
 }
 
 .dark .moon-icon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+/* When explicitly in system mode, show only the system icon */
+.system .sun-icon,
+.system .moon-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0);
+}
+
+.system .system-icon {
   opacity: 1;
   transform: rotate(0) scale(1);
 }

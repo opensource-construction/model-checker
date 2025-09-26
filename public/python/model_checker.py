@@ -6,48 +6,9 @@ import pkg_resources
 import os
 import re
 import argparse
-
-# Dictionary of translations (we'll keep a small set here for demo purposes)
-TRANSLATIONS = {
-    "en": {
-        "summary": "Summary",
-        "specifications": "Specifications",
-        "requirements": "Requirements",
-        "details": "Details",
-        "class": "Class",
-        "predefinedType": "PredefinedType",
-        "name": "Name",
-        "description": "Description",
-        "warning": "Warning",
-        "globalId": "GlobalId",
-        "tag": "Tag",
-        "status": {
-            "pass": "PASS",
-            "fail": "FAIL",
-            "untested": "UNTESTED",
-            "skipped": "SKIPPED"
-        }
-    },
-    "de": {
-        "summary": "Zusammenfassung",
-        "specifications": "Spezifikationen",
-        "requirements": "Anforderungen",
-        "details": "Details",
-        "class": "Klasse",
-        "predefinedType": "Vordefinierter Typ",
-        "name": "Name",
-        "description": "Beschreibung",
-        "warning": "Warnung",
-        "globalId": "Globale ID",
-        "tag": "Kennzeichnung",
-        "status": {
-            "pass": "BESTANDEN",
-            "fail": "FEHLGESCHLAGEN",
-            "untested": "UNGETESTET",
-            "skipped": "ÜBERSPRUNGEN"
-        }
-    }
-}
+import json
+import base64
+from datetime import datetime
 
 def check_dependencies():
     """Check and install required dependencies."""
@@ -70,83 +31,137 @@ check_dependencies()
 import ifcopenshell
 from ifctester import ids, reporter
 
-def translate_html_report(html_content, lang):
-    """
-    Translate key phrases in the HTML report based on the language.
+def extract_requirement_data(requirement):
+    """Extract structured data from IDS requirement for JSON output"""
+    req_data = {
+        "type": requirement.__class__.__name__,
+        "cardinality": getattr(requirement, 'cardinality', 'required'),
+        "status": "pass" if not getattr(requirement, 'failed_entities', []) else "fail"
+    }
     
-    Args:
-        html_content: HTML content to translate
-        lang: Language code (e.g., 'en', 'de')
+    # Extract requirement details based on type
+    if hasattr(requirement, 'name') and requirement.name:
+        req_data["name"] = str(requirement.name)
+    if hasattr(requirement, 'value') and requirement.value:
+        req_data["value"] = str(requirement.value)
+    if hasattr(requirement, 'propertySet') and requirement.propertySet:
+        req_data["propertySet"] = str(requirement.propertySet)
+    if hasattr(requirement, 'baseName') and requirement.baseName:
+        req_data["baseName"] = str(requirement.baseName)
+    if hasattr(requirement, 'system') and requirement.system:
+        req_data["system"] = str(requirement.system)
+    if hasattr(requirement, 'instructions') and requirement.instructions:
+        req_data["instructions"] = str(requirement.instructions)
         
-    Returns:
-        Translated HTML content
-    """
-    if lang == "en" or lang not in TRANSLATIONS:
-        print(f"No translation needed for language: {lang}")
-        return html_content
+    # Handle restrictions and patterns
+    if hasattr(requirement, 'restriction'):
+        restriction = requirement.restriction
+        if hasattr(restriction, 'enumeration') and restriction.enumeration:
+            req_data["enumeration"] = [str(val) for val in restriction.enumeration]
+        if hasattr(restriction, 'pattern') and restriction.pattern:
+            req_data["pattern"] = str(restriction.pattern)
+        if hasattr(restriction, 'bounds') and restriction.bounds:
+            req_data["bounds"] = str(restriction.bounds)
     
-    print(f"Translating HTML report to {lang}")
-    translations = TRANSLATIONS[lang]
+    # Extract failed/passed entities for detailed reporting
+    if hasattr(requirement, 'failed_entities'):
+        req_data["failed_entities"] = []
+        for entity in requirement.failed_entities[:10]:  # Limit to first 10
+            entity_data = {
+                "global_id": getattr(entity, 'GlobalId', ''),
+                "class": entity.__class__.__name__,
+                "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
+                "name": getattr(entity, 'Name', ''),
+                "tag": getattr(entity, 'Tag', ''),
+                "description": getattr(entity, 'Description', ''),
+                "reason": ''  # TODO: Add failure reason if available
+            }
+            req_data["failed_entities"].append(entity_data)
     
-    # Simple translation of key phrases
-    translatable_terms = [
-        ("Summary", "summary"),
-        ("Specifications", "specifications"),
-        ("Requirements", "requirements"),
-        ("Details", "details"),
-        ("Class", "class"),
-        ("PredefinedType", "predefinedType"),
-        ("Name", "name"),
-        ("Description", "description"),
-        ("Warning", "warning"),
-        ("GlobalId", "globalId"),
-        ("Tag", "tag"),
-        ("PASS", "status.pass"),
-        ("FAIL", "status.fail"),
-        ("UNTESTED", "status.untested"),
-        ("SKIPPED", "status.skipped")
-    ]
-    
-    # Apply translations
-    for english_term, field_path in translatable_terms:
-        # Handle nested fields like status.pass
-        field_parts = field_path.split('.')
-        if len(field_parts) > 1:
-            translation = translations[field_parts[0]][field_parts[1]]
-        else:
-            translation = translations[field_path]
-        
-        # Use regex with word boundaries to avoid partial replacements
-        html_content = re.sub(r'\b' + english_term + r'\b', translation, html_content)
-    
-    print(f"HTML report translation to {lang} completed")
-    return html_content
+    if hasattr(requirement, 'passed_entities'):
+        req_data["passed_entities"] = []
+        for entity in requirement.passed_entities[:10]:  # Limit to first 10
+            entity_data = {
+                "global_id": getattr(entity, 'GlobalId', ''),
+                "class": entity.__class__.__name__,
+                "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
+                "name": getattr(entity, 'Name', ''),
+                "tag": getattr(entity, 'Tag', ''),
+                "description": getattr(entity, 'Description', ''),
+                "reason": ''
+            }
+            req_data["passed_entities"].append(entity_data)
+            
+    return req_data
 
-def test_ifc(ifc_path: str, ids_path: str, report_path: str = "report.html", lang: str = "en"):
+def extract_applicability_data(applicability):
+    """Extract applicability data for JSON output"""
+    if not applicability:
+        return None
+        
+    app_data = {}
+    
+    if hasattr(applicability, 'entity') and applicability.entity:
+        app_data["entity"] = {
+            "name": str(applicability.entity.name) if applicability.entity.name else None,
+            "predefinedType": str(applicability.entity.predefinedType) if hasattr(applicability.entity, 'predefinedType') and applicability.entity.predefinedType else None
+        }
+    
+    if hasattr(applicability, 'classification') and applicability.classification:
+        app_data["classification"] = []
+        classifications = applicability.classification if isinstance(applicability.classification, list) else [applicability.classification]
+        for cls in classifications:
+            cls_data = {
+                "system": str(cls.system) if cls.system else None,
+                "value": str(cls.value) if cls.value else None
+            }
+            app_data["classification"].append(cls_data)
+    
+    if hasattr(applicability, 'attribute') and applicability.attribute:
+        app_data["attribute"] = []
+        attributes = applicability.attribute if isinstance(applicability.attribute, list) else [applicability.attribute]
+        for attr in attributes:
+            attr_data = {
+                "name": str(attr.name) if attr.name else None,
+                "value": str(attr.value) if attr.value else None
+            }
+            app_data["attribute"].append(attr_data)
+    
+    if hasattr(applicability, 'property') and applicability.property:
+        app_data["property"] = []
+        properties = applicability.property if isinstance(applicability.property, list) else [applicability.property]
+        for prop in properties:
+            prop_data = {
+                "propertySet": str(prop.propertySet) if prop.propertySet else None,
+                "baseName": str(prop.baseName) if prop.baseName else None,
+                "value": str(prop.value) if prop.value else None
+            }
+            app_data["property"].append(prop_data)
+    
+    if hasattr(applicability, 'material') and applicability.material:
+        app_data["material"] = []
+        materials = applicability.material if isinstance(applicability.material, list) else [applicability.material]
+        for mat in materials:
+            mat_data = {
+                "value": str(mat.value) if mat.value else None
+            }
+            app_data["material"].append(mat_data)
+            
+    return app_data if app_data else None
+
+def validate_ifc_ids_json(ifc_path: str, ids_path: str, lang: str = "en"):
     """
-    Test an IFC file against an IDS specification and generate reports in multiple formats.
+    Validate IFC against IDS and return structured JSON data for frontend processing.
+    This generates the same data that would be used in HTML templates but in JSON format.
     
     Args:
         ifc_path: Path to the IFC file
-        ids_path: Path to the IDS specification file
-        report_path: Path where to save the HTML report (default: report.html)
-        lang: Language for the report (default: en) - Note: Language selection is implemented via post-processing
-    
+        ids_path: Path to the IDS specification file  
+        lang: Language code for report (used for metadata only)
+        
     Returns:
-        Dictionary with validation status and paths to generated reports
+        JSON string with structured validation results
     """
-    print(f"Using language: {lang}")
-    
-    # Normalize language code (e.g., 'DE' -> 'de', 'de-de' -> 'de')
-    lang = lang.lower().split('-')[0]
-    
-    # Check if language is supported
-    if lang not in TRANSLATIONS:
-        print(f"Warning: Language '{lang}' not supported, falling back to English")
-        lang = "en"
-    else:
-        print(f"Language '{lang}' is supported")
-    
     try:
         # Validate paths
         if not os.path.exists(ifc_path):
@@ -166,83 +181,231 @@ def test_ifc(ifc_path: str, ids_path: str, report_path: str = "report.html", lan
         print("Validating IFC against IDS...")
         ids_spec.validate(ifc_model)
         
-        # Generate results in multiple formats
-        results = {}
-        
-        # HTML Report
-        print("Generating HTML report...")
-        html_reporter = reporter.Html(ids_spec)
-        html_reporter.report()
-        html_reporter.to_file(report_path)
-        
-        # Apply translations to HTML
-        if lang != "en" and lang in TRANSLATIONS:
-            print(f"Translating report to {lang}...")
-            with open(report_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
+        # Build structured results that match the HTML template structure
+        results = {
+            # Template metadata
+            "title": f"IDS Validation Report",
+            "filename": os.path.basename(ifc_path),
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "language_code": lang,
+            "_lang": lang,
             
-            translated_html = translate_html_report(html_content, lang)
+            # Overall summary statistics  
+            "total_specifications": len(ids_spec.specifications),
+            "total_specifications_pass": 0,
+            "total_specifications_fail": 0,
+            "total_requirements": 0,
+            "total_requirements_pass": 0, 
+            "total_requirements_fail": 0,
+            "total_checks": 0,
+            "total_checks_pass": 0,
+            "total_checks_fail": 0,
+            "total_applicable": 0,
+            "total_applicable_pass": 0,
+            "total_applicable_fail": 0,
             
-            with open(report_path, "w", encoding="utf-8") as f:
-                f.write(translated_html)
-        
-        results["html_path"] = os.path.abspath(report_path)
-        
-        # JSON Report
-        json_path = report_path.replace('.html', '.json')
-        print("Generating JSON report...")
-        json_reporter = reporter.Json(ids_spec)
-        json_reporter.report()
-        json_reporter.write(json_path)
-        results["json_path"] = os.path.abspath(json_path)
-        
-        # BCF Report
-        bcf_path = report_path.replace('.html', '.bcf')
-        print("Generating BCF report...")
-        bcf_reporter = reporter.Bcf(ids_spec)
-        bcf_reporter.report()
-        bcf_reporter.to_file(bcf_path)
-        results["bcf_path"] = os.path.abspath(bcf_path)
-        
-        # Return validation status and report paths
-        validation_status = "success" if not any(spec.failed_entities for spec in ids_spec.specifications) else "failed"
-        return {
-            "status": validation_status,
-            "reports": results
+            # Individual specifications
+            "specifications": []
         }
+        
+        # Process each specification to match HTML template structure
+        for spec in ids_spec.specifications:
+            spec_data = {
+                "name": spec.name,
+                "description": getattr(spec, 'description', ''),
+                "instructions": getattr(spec, 'instructions', ''),
+                "identifier": getattr(spec, 'identifier', ''),
+                "ifcVersion": getattr(spec, 'ifcVersion', []),
+                "is_ifc_version": True,  # Assume valid for now
+                
+                # Status and statistics
+                "status": not bool(getattr(spec, 'failed_entities', [])),
+                "status_text": "PASS" if not getattr(spec, 'failed_entities', []) else "FAIL",
+                "total_checks": 0,
+                "total_checks_pass": 0,
+                "total_checks_fail": 0,
+                "percent_checks_pass": 0,
+                "total_applicable": 0,
+                "total_applicable_pass": 0,
+                "total_applicable_fail": 0,
+                
+                # Applicability and requirements
+                "applicability": [],
+                "requirements": []
+            }
+            
+            # Extract applicability
+            if hasattr(spec, 'applicability') and spec.applicability:
+                app_data = extract_applicability_data(spec.applicability)
+                if app_data:
+                    # Convert to display format for template
+                    app_display = []
+                    if app_data.get('entity'):
+                        entity_text = f"All {app_data['entity']['name']} data"
+                        if app_data['entity']['predefinedType']:
+                            entity_text += f" with PredefinedType {app_data['entity']['predefinedType']}"
+                        app_display.append(entity_text)
+                    
+                    for prop in app_data.get('property', []):
+                        prop_text = f"Property {prop['baseName']} in set {prop['propertySet']}"
+                        if prop['value']:
+                            prop_text += f" with value {prop['value']}"
+                        app_display.append(prop_text)
+                    
+                    spec_data["applicability"] = app_display
+            
+            # Extract requirements
+            if hasattr(spec, 'requirements') and spec.requirements:
+                for req in spec.requirements:
+                    req_data = extract_requirement_data(req)
+                    
+                    # Build requirement display data that matches template structure
+                    req_display = {
+                        "description": format_requirement_description(req_data),
+                        "status": req_data["status"] == "pass",
+                        "total_checks": len(req_data.get("failed_entities", [])) + len(req_data.get("passed_entities", [])),
+                        "total_pass": len(req_data.get("passed_entities", [])),
+                        "total_fail": len(req_data.get("failed_entities", [])),
+                        "passed_entities": req_data.get("passed_entities", []),
+                        "failed_entities": req_data.get("failed_entities", []),
+                        "has_omitted_passes": len(req_data.get("passed_entities", [])) > 10,
+                        "has_omitted_failures": len(req_data.get("failed_entities", [])) > 10
+                    }
+                    
+                    spec_data["requirements"].append(req_display)
+                    
+                    # Update counters
+                    spec_data["total_checks"] += req_display["total_checks"]
+                    spec_data["total_checks_pass"] += req_display["total_pass"]
+                    spec_data["total_checks_fail"] += req_display["total_fail"]
+            
+            # Calculate percentages
+            if spec_data["total_checks"] > 0:
+                spec_data["percent_checks_pass"] = round((spec_data["total_checks_pass"] / spec_data["total_checks"]) * 100)
+            
+            results["specifications"].append(spec_data)
+            
+            # Update overall counters
+            if spec_data["status"]:
+                results["total_specifications_pass"] += 1
+            else:
+                results["total_specifications_fail"] += 1
+                
+            results["total_checks"] += spec_data["total_checks"]
+            results["total_checks_pass"] += spec_data["total_checks_pass"]
+            results["total_checks_fail"] += spec_data["total_checks_fail"]
+        
+        # Calculate overall percentages
+        if results["total_checks"] > 0:
+            results["percent_checks_pass"] = round((results["total_checks_pass"] / results["total_checks"]) * 100)
+        else:
+            results["percent_checks_pass"] = 0
+            
+        results["status"] = results["total_specifications_fail"] == 0
+        results["status_text"] = "PASS" if results["status"] else "FAIL"
+        
+        # Generate BCF data
+        print("Generating BCF data...")
+        try:
+            bcf_reporter = reporter.Bcf(ids_spec)
+            bcf_reporter.report()
+            
+            # Create BCF in memory
+            import tempfile
+            with tempfile.NamedTemporaryFile(suffix='.bcf', delete=False) as tmp_file:
+                bcf_reporter.to_file(tmp_file.name)
+                with open(tmp_file.name, 'rb') as f:
+                    bcf_bytes = f.read()
+                results["bcf_data"] = {
+                    "zip_content": base64.b64encode(bcf_bytes).decode('utf-8'),
+                    "filename": f"{os.path.splitext(os.path.basename(ifc_path))[0]}.bcf"
+                }
+                os.unlink(tmp_file.name)  # Clean up
+        except Exception as bcf_error:
+            print(f"BCF generation failed: {bcf_error}")
+            results["bcf_data"] = None
+        
+        return json.dumps(results, ensure_ascii=False, indent=2)
+        
     except Exception as e:
-        print(f"Error during IFC testing: {str(e)}")
-        raise
+        error_result = {
+            "error": str(e),
+            "status": "error",
+            "title": "Validation Error",
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return json.dumps(error_result, ensure_ascii=False)
+
+def format_requirement_description(req_data):
+    """Format requirement data into human-readable description"""
+    req_type = req_data.get("type", "")
+    
+    if "Property" in req_type:
+        if req_data.get("value"):
+            return f"{req_data.get('baseName', 'Property')} shall be {req_data.get('value')} in the dataset {req_data.get('propertySet', 'PropertySet')}"
+        else:
+            return f"{req_data.get('baseName', 'Property')} shall be provided in the dataset {req_data.get('propertySet', 'PropertySet')}"
+    
+    elif "Entity" in req_type:
+        if req_data.get("enumeration"):
+            return f"The {req_data.get('name', 'Name')} shall be {{{{'enumeration': {req_data.get('enumeration', [])}}}}}"
+        else:
+            return f"The {req_data.get('name', 'Name')} shall be {req_data.get('value', '')}"
+    
+    elif "Attribute" in req_type:
+        return f"The {req_data.get('name', 'Attribute')} shall be {req_data.get('value', '')}"
+    
+    elif "Classification" in req_type:
+        return f"Classification {req_data.get('value', '')} in system {req_data.get('system', '')}"
+    
+    elif "Material" in req_type:
+        return f"Material shall be {req_data.get('value', '')}"
+    
+    else:
+        return f"{req_type}: {req_data.get('name', '')} = {req_data.get('value', '')}"
 
 def main():
-    # Set up argument parser
+    # Set up argument parser  
     parser = argparse.ArgumentParser(description="IFC Model Checker - Validate IFC files against IDS specifications")
     parser.add_argument("--ifc", "-i", help="Path to the IFC file")
-    parser.add_argument("--ids", "-s", help="Path to the IDS specification file")
-    parser.add_argument("--report", "-r", default="report.html", help="Path for the HTML report (default: report.html)")
-    parser.add_argument("--lang", "-l", default="en", choices=list(TRANSLATIONS.keys()), 
-                        help="Language for the report (default: en)")
-    parser.add_argument("--interactive", "-int", action="store_true", help="Run in interactive mode")
+    parser.add_argument("--ids", "-s", help="Path to the IDS specification file") 
+    parser.add_argument("--lang", "-l", default="en", help="Language for the report (default: en)")
+    parser.add_argument("--json", action="store_true", help="Output JSON instead of running interactively")
     args = parser.parse_args()
     
-    # If interactive mode or no required args, prompt for input
-    if args.interactive or not (args.ifc and args.ids):
-        if not args.ifc:
-            args.ifc = input("Enter path to IFC file: ")
-        if not args.ids:
-            args.ids = input("Enter path to IDS file: ")
-        if not args.report:
-            args.report = input("Enter path for report (default: report.html): ") or "report.html"
-        if not args.lang:
-            args.lang = input(f"Enter language code (default: en, available: {', '.join(TRANSLATIONS.keys())}): ") or "en"
+    # If JSON mode, return structured data for the worker
+    if args.json and args.ifc and args.ids:
+        try:
+            result_json = validate_ifc_ids_json(args.ifc, args.ids, args.lang)
+            print(result_json)  # This will be captured by the worker
+        except Exception as e:
+            error_json = json.dumps({"error": str(e)}, ensure_ascii=False)
+            print(error_json)
+        return
     
-    # Run the validation
+    # Interactive mode for testing
+    if not args.ifc:
+        args.ifc = input("Enter path to IFC file: ")
+    if not args.ids:
+        args.ids = input("Enter path to IDS file: ")
+    if not args.lang:
+        args.lang = input("Enter language code (default: en): ") or "en"
+    
     try:
-        result = test_ifc(args.ifc, args.ids, args.report, args.lang)
-        print(f"\nValidation {result['status']}!")
-        print(f"Generated reports:")
-        for report_type, path in result['reports'].items():
-            print(f"- {report_type}: {path}")
+        result_json = validate_ifc_ids_json(args.ifc, args.ids, args.lang)
+        result = json.loads(result_json)
+        
+        if "error" in result:
+            print(f"Error: {result['error']}")
+            sys.exit(1)
+        else:
+            print(f"\nValidation {result['status_text']}!")
+            print(f"Total specifications: {result['total_specifications']}")
+            print(f"Passed: {result['total_specifications_pass']}")
+            print(f"Failed: {result['total_specifications_fail']}")
+            print(f"Total checks: {result['total_checks']}")
+            print(f"Success rate: {result['percent_checks_pass']}%")
+            
     except Exception as e:
         print(f"Error: {str(e)}")
         sys.exit(1)

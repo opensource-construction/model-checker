@@ -127,6 +127,8 @@
     "name": "Name",
     "description": "Beschreibung",
     "warning": "Warnung",
+    "specNotApplyToVersion": "Spezifikation gilt nicht für diese IFC-Version",
+    "failureReason": "Fehlergrund",
     "globalId": "Globale ID",
     "tag": "Kennzeichnung",
     "reportBy": "Bericht von",
@@ -156,25 +158,56 @@
       "elementsPassedPrefix": "Elemente erfüllt",
       "applicability": "Anwendbarkeit",
       "all": "Alle",
-      "data": "Daten"
+      "data": "Daten",
+      "allEntityData": "Alle {{entity}} Daten"
     },
     "phrases": {
       "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",
       "moreElementsNotShown": "... {{count}} weitere {{type}} Elemente nicht angezeigt von insgesamt {{total}} ..."
     },
     "ids": {
-      "section": {
-        "loadBearing": "Tragende Struktur"
+      "sections": {
+        "projectDesignation": "Projektbezeichnung",
+        "projectPerimeter": "Projektperimeter",
+        "buildingDesignation": "Gebäudebezeichnung",
+        "storeyDesignation": "Geschossbezeichnung"
       },
-      "description": {
-        "shouldHaveLoadBearing": "Alle Structure Elements sollte haben eine tragende Struktur"
+      "entities": {
+        "IfcProject": "Projekt",
+        "IfcSite": "Grundstück",
+        "IfcBuilding": "Gebäude",
+        "IfcBuildingStorey": "Geschoss"
       },
-      "pattern": {
-        "nameShallBe": "Der Name muss {{value}} sein",
+      "fields": {
+        "name": "Name",
+        "description": "Beschreibung",
+        "phase": "Phase"
+      },
+      "propertySets": {
+        "Pset_PropertyAgreement": "Eigenschaftsvereinbarung",
+        "Cust_Site": "Standort-Eigenschaften"
+      },
+      "patterns": {
+        "nameShallBe": "{{field}} muss {{value}} sein",
         "descriptionRequired": "Die Beschreibung muss angegeben werden",
         "propertyRequired": "{{property}} muss im Eigenschaftssatz {{propertySet}} angegeben werden",
         "propertyValue": "{{property}} muss {{value}} im Eigenschaftssatz {{propertySet}} sein",
-        "enumRequired": "Eine der Aufzählungswerte {{values}} muss im Eigenschaftssatz {{propertySet}} angegeben werden"
+        "dataRequired": "{{property}} Daten müssen {{value}} sein und im Eigenschaftssatz {{propertySet}}",
+        "enumRequired": "{{field}} muss einer der folgenden Werte sein: {{values}}",
+        "propertyInSet": "Eigenschaft {{property}} im Satz {{propertySet}}",
+        "propertyWithValue": "Eigenschaft {{property}} im Satz {{propertySet}} mit Wert {{value}}"
+      },
+      "enumerations": {
+        "51_0": "51.0",
+        "52_0": "52.0",
+        "53_0": "53.0",
+        "untergeschoss": "Untergeschoss",
+        "erdgeschoss": "Erdgeschoss",
+        "obergeschoss": "Obergeschoss",
+        "zwischengeschoss": "Zwischengeschoss",
+        "dach": "Dach",
+        "u01": "U01",
+        "da": "DA"
       }
     }
   },
@@ -182,6 +215,7 @@
     "loading": {
       "pyodide": "Pyodide wird geladen...",
       "pyodideSuccess": "Pyodide erfolgreich geladen",
+      "idsFile": "IDS-Datei wird gelesen...",
       "translations": "Übersetzungen werden geladen...",
       "packages": "Erforderliche Pakete werden installiert...",
       "micropipPatch": "Micropip wird für Kompatibilitätsprüfungen angepasst...",

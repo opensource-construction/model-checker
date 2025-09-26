@@ -14,20 +14,27 @@ export const Footer = () => {
     <Group w='100%' justify='space-between' align='center' style={{ flexWrap: 'nowrap' }}>
       <Group gap='xs' wrap='nowrap' align='center'>
         <Text size={textSize}>{t('sponsored-by')}</Text>
-        <img
-          src={righettiLogo}
-          alt='Righetti and Partner'
-          style={{
-            maxWidth: useMatches({ base: '72px', lg: '200px' }),
-            height: 'auto',
-            display: 'block',
-            filter: isDarkMode
-              ? 'invert(89%) sepia(58%) saturate(638%) hue-rotate(359deg) brightness(97%) contrast(91%) drop-shadow(0 -1px 2px rgba(255, 238, 9, 0.2))'
-              : 'none',
-            transition: 'filter 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            // Adds inverted gradient and smooth transition
-          }}
-        />
+        <a
+          href='https://www.righettipartner.ch/'
+          target='_blank'
+          rel='noopener noreferrer'
+          style={{ display: 'inline-flex' }}
+        >
+          <img
+            src={righettiLogo}
+            alt='Righetti and Partner'
+            style={{
+              maxWidth: useMatches({ base: '72px', lg: '200px' }),
+              height: 'auto',
+              display: 'block',
+              filter: isDarkMode
+                ? 'invert(89%) sepia(58%) saturate(638%) hue-rotate(359deg) brightness(97%) contrast(91%) drop-shadow(0 -1px 2px rgba(255, 238, 9, 0.2))'
+                : 'none',
+              transition: 'filter 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              // Adds inverted gradient and smooth transition
+            }}
+          />
+        </a>
       </Group>
       <Group gap='xs' wrap='nowrap' align='center'>
         <Text size={textSize}>{t('open-source')}</Text>
