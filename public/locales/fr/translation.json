@@ -160,6 +160,15 @@
       "all": "Tous",
       "data": "Données"
     },
+    "allEntityData": "Toutes les données {{entity}}",
+    "matchesPattern": "correspond au modèle {{pattern}}",
+    "equals": "est {{value}}",
+    "oneOf": "est l'un de : {{values}}",
+    "range": "est entre {{min}} et {{max}}",
+    "greaterOrEqual": "est supérieur ou égal à {{value}}",
+    "greaterThan": "est supérieur à {{value}}",
+    "lessOrEqual": "est inférieur ou égal à {{value}}",
+    "lessThan": "est inférieur à {{value}}"
     "specNotApplyToVersion": "la spécification ne s'applique pas à cette version IFC",
     "failureReason": "Raison de l'échec",
     "phrases": {

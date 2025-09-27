@@ -27,10 +27,19 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         i18n.language,
       )
 
+      // Ensure all required fields are present with defaults
+      const completeResults = {
+        ...translatedResults,
+        name: translatedResults.name || translatedResults.title || 'IDS Validation Report',
+        total_applicable: translatedResults.total_applicable || 0,
+        total_applicable_pass: translatedResults.total_applicable_pass || 0,
+        total_applicable_fail: translatedResults.total_applicable_fail || 0,
+      }
+
       // Generate HTML using our template renderer logic
       return await generateHtmlReport(
         templateContent,
-        translatedResults as unknown as ValidationResult,
+        completeResults as unknown as ValidationResult,
         t as (key: string, defaultValue?: string) => string,
       )
     },
@@ -42,53 +51,29 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
       try {
         const htmlContent = await generateHtmlContent(result)
 
-        // Robust viewer approach: store HTML in localStorage and open lightweight viewer with a stable URL
-        const token = Math.random().toString(36).slice(2)
-        try {
-          // Build a detailed title matching original format
-          const ifc = result.filename || 'report.ifc'
-          const rawIds = result.ids_filename || 'ids'
-          const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
-          const now = new Date()
-          const yyyy = now.getFullYear()
-          const mm = String(now.getMonth() + 1).padStart(2, '0')
-          const dd = String(now.getDate()).padStart(2, '0')
-          const yy = String(yyyy).slice(-2)
-          const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
-          const escapedTitle = escapeHtml(pageTitle)
+        // Build detailed title matching original format
+        const ifc = result.filename || 'report.ifc'
+        const rawIds = result.ids_filename || 'ids'
+        const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
+        const now = new Date()
+        const yyyy = now.getFullYear()
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+        const yy = String(yyyy).slice(-2)
+        const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
+        const escapedTitle = escapeHtml(pageTitle)
 
-          const titleReplacement = `<title>${escapedTitle}</title>`
-          const headReplacement = `<head><title>${escapedTitle}</title>`
-          const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
-          const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, () => titleReplacement)
-            : htmlContent.replace(/<head>/i, () => headReplacement)
-          localStorage.setItem(`generated_report_html_${token}`, withTitle)
-        } catch (e) {
-          // Fallback to blob URL if storage is unavailable or full
-          const ifc = result.filename || 'report.ifc'
-          const rawIds = result.ids_filename || 'ids'
-          const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
-          const now = new Date()
-          const yyyy = now.getFullYear()
-          const mm = String(now.getMonth() + 1).padStart(2, '0')
-          const dd = String(now.getDate()).padStart(2, '0')
-          const yy = String(yyyy).slice(-2)
-          const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
-          const escapedTitle = escapeHtml(pageTitle)
-          const titleReplacement = `<title>${escapedTitle}</title>`
-          const headReplacement = `<head><title>${escapedTitle}</title>`
-          const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
-          const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, () => titleReplacement)
-            : htmlContent.replace(/<head>/i, () => headReplacement)
-          const blob = new Blob([withTitle], { type: 'text/html;charset=utf-8' })
-          const url = window.URL.createObjectURL(blob)
-          window.open(url, '_blank', 'noopener')
-          return
-        }
-        const viewerUrl = `/report-viewer.html?id=${token}`
-        window.open(viewerUrl, '_blank', 'noopener')
+        const titleReplacement = `<title>${escapedTitle}</title>`
+        const headReplacement = `<head><title>${escapedTitle}</title>`
+        const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
+        const withTitle = hasTitle
+          ? htmlContent.replace(/<title>.*?<\/title>/i, () => titleReplacement)
+          : htmlContent.replace(/<head>/i, () => headReplacement)
+
+        // Create blob URL and open directly - same as download but in new tab
+        const blob = new Blob([withTitle], { type: 'text/html;charset=utf-8' })
+        const url = window.URL.createObjectURL(blob)
+        window.open(url, '_blank', 'noopener')
       } catch (error) {
         console.error('Error generating HTML report:', error)
       }
@@ -233,6 +218,7 @@ export async function generateHtmlReport(
   // Replace simple top-level variables after scoped content is inserted
   const simpleVars = [
     'title',
+    'name',
     'filename',
     'date',
     '_lang',
@@ -247,6 +233,9 @@ export async function generateHtmlReport(
     'total_checks_fail',
     'percent_checks_pass',
     'status_text',
+    'total_applicable',
+    'total_applicable_pass',
+    'total_applicable_fail',
   ]
 
   simpleVars.forEach((varName) => {
@@ -304,7 +293,7 @@ function processConditionalSections(template: string, data: Record<string, unkno
   }
 
   // Handle generic field conditionals for all string fields
-  const fields = ['description', 'instructions', 'filename', 'is_ifc_version']
+  const fields = ['description', 'instructions', 'filename']
   fields.forEach((field) => {
     const hasValue = data[field] && String(data[field]).trim() !== ''
     if (hasValue) {
@@ -348,7 +337,7 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
         let specSection = specContent
 
         // Handle specification-level conditionals
-        const specFields = ['description', 'instructions', 'is_ifc_version']
+        const specFields = ['description', 'instructions']
         specFields.forEach((field) => {
           const hasValue = spec[field] && String(spec[field]).trim() !== ''
           if (hasValue) {

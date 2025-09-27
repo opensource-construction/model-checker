@@ -991,10 +991,6 @@ if os.path.exists("spec.ids"):
                         
                     def is_applicable(self, element):
                         return True
-                        
-                    def is_ifc_version(self, version):
-                        """Check if this specification applies to the given IFC version"""
-                        return version in self.ifcVersion
                 
                 spec_obj = MinimalSpec(spec_name, spec_data)
                 ids.specifications.append(spec_obj)

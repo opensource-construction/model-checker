@@ -160,7 +160,15 @@
       "applicability": "Anwendbarkeit",
       "all": "Alle",
       "data": "Daten",
-      "allEntityData": "Alle {{entity}} Daten"
+      "allEntityData": "Alle {{entity}} Daten",
+      "matchesPattern": "entspricht dem Muster {{pattern}}",
+      "equals": "ist {{value}}",
+      "oneOf": "ist einer von: {{values}}",
+      "range": "liegt zwischen {{min}} und {{max}}",
+      "greaterOrEqual": "ist grösser oder gleich {{value}}",
+      "greaterThan": "ist grösser als {{value}}",
+      "lessOrEqual": "ist kleiner oder gleich {{value}}",
+      "lessThan": "ist kleiner als {{value}}"
     },
     "phrases": {
       "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",

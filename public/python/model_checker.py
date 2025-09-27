@@ -10,6 +10,85 @@ import json
 import base64
 from datetime import datetime
 
+
+def _clean_ids_text(value: str) -> str:
+    if not value:
+        return ''
+
+    cleaned = re.sub(r'\s+', ' ', value)
+    for token in ('{{#applicability}}', '{{/applicability}}', '{{.}}', '{{#value}}', '{{/value}}'):
+        cleaned = cleaned.replace(token, '')
+    return cleaned.strip()
+
+
+def _format_enumeration(raw_list) -> str:
+    if raw_list is None:
+        return ''
+
+    if isinstance(raw_list, (list, tuple)):
+        items = [str(item).strip() for item in raw_list if str(item).strip()]
+    else:
+        items = [part.strip().strip("'\" ") for part in str(raw_list).split(',') if part.strip()]
+
+    if not items:
+        return ''
+
+    formatted_items = [f'"{item}"' if re.search(r'[\s,]', item) else item for item in items]
+    return ', '.join(formatted_items)
+
+
+def format_ids_constraint(value) -> str:
+    if value is None:
+        return ''
+
+    value_str = _clean_ids_text(str(value))
+    if not value_str:
+        return ''
+
+    pattern_match = re.search(r"pattern':\s*'([^']+)'", value_str)
+    if pattern_match:
+        return f'matches pattern "{pattern_match.group(1)}"'
+
+    enum_match = re.search(r"enumeration':\s*\[([^\]]+)\]", value_str)
+    if enum_match:
+        formatted = _format_enumeration(enum_match.group(1))
+        if formatted:
+            return f'is one of {formatted}'
+
+    min_inc = re.search(r"minInclusive':\s*'([^']+)'", value_str)
+    max_inc = re.search(r"maxInclusive':\s*'([^']+)'", value_str)
+    min_exc = re.search(r"minExclusive':\s*'([^']+)'", value_str)
+    max_exc = re.search(r"maxExclusive':\s*'([^']+)'", value_str)
+
+    if min_inc and max_inc:
+        return f'is between {min_inc.group(1)} and {max_inc.group(1)}'
+    if min_exc and max_exc:
+        return f'is between {min_exc.group(1)} and {max_exc.group(1)}'
+    if min_inc:
+        return f'is greater than or equal to {min_inc.group(1)}'
+    if min_exc:
+        return f'is greater than {min_exc.group(1)}'
+    if max_inc:
+        return f'is less than or equal to {max_inc.group(1)}'
+    if max_exc:
+        return f'is less than {max_exc.group(1)}'
+
+    value_match = re.search(r"value':\s*'([^']+)'", value_str)
+    if value_match:
+        return f'equals "{value_match.group(1)}"'
+
+    simple_match = re.search(r"simpleValue':\s*'([^']+)'", value_str)
+    if simple_match:
+        return f'equals "{simple_match.group(1)}"'
+
+    bare = value_str.strip("'")
+    if re.fullmatch(r'-?\d+(?:\.\d+)?', bare):
+        return f'equals {bare}'
+    if bare.lower() in {'true', 'false'}:
+        return f'equals {bare.lower()}'
+
+    return f'equals "{bare}"'
+
 def check_dependencies():
     """Check and install required dependencies."""
     required = {'ifcopenshell', 'ifctester'}
@@ -112,9 +191,12 @@ def extract_applicability_data(applicability):
     app_data = {}
     
     if hasattr(applicability, 'entity') and applicability.entity:
+        entity = applicability.entity
+        entity_name = getattr(entity, 'name', None) or getattr(entity, 'Name', None)
+        predefined_type = getattr(entity, 'predefinedType', None) or getattr(entity, 'PredefinedType', None)
         app_data["entity"] = {
-            "name": str(applicability.entity.name) if applicability.entity.name else None,
-            "predefinedType": str(applicability.entity.predefinedType) if hasattr(applicability.entity, 'predefinedType') and applicability.entity.predefinedType else None
+            "name": str(entity_name) if entity_name else None,
+            "predefinedType": str(predefined_type) if predefined_type else None
         }
     
     if hasattr(applicability, 'classification') and applicability.classification:
@@ -133,7 +215,7 @@ def extract_applicability_data(applicability):
         for attr in attributes:
             attr_data = {
                 "name": str(attr.name) if attr.name else None,
-                "value": str(attr.value) if attr.value else None
+                "value": format_ids_constraint(attr.value)
             }
             app_data["attribute"].append(attr_data)
     
@@ -144,7 +226,7 @@ def extract_applicability_data(applicability):
             prop_data = {
                 "propertySet": str(prop.propertySet) if prop.propertySet else None,
                 "baseName": str(prop.baseName) if prop.baseName else None,
-                "value": str(prop.value) if prop.value else None
+                "value": format_ids_constraint(prop.value)
             }
             app_data["property"].append(prop_data)
     
@@ -226,8 +308,7 @@ def validate_ifc_ids_json(ifc_path: str, ids_path: str, lang: str = "en"):
                 "instructions": getattr(spec, 'instructions', ''),
                 "identifier": getattr(spec, 'identifier', ''),
                 "ifcVersion": getattr(spec, 'ifcVersion', []),
-                "is_ifc_version": True,  # Assume valid for now
-                
+
                 # Status and statistics (will be computed from actual requirement results)
                 "status": True,
                 "status_text": "PASS",
@@ -370,28 +451,45 @@ def format_requirement_description(req_data):
     req_type = req_data.get("type", "")
     
     if "Property" in req_type:
-        if req_data.get("value"):
-            return f"{req_data.get('baseName', 'Property')} shall be {req_data.get('value')} in the dataset {req_data.get('propertySet', 'PropertySet')}"
-        else:
-            return f"{req_data.get('baseName', 'Property')} shall be provided in the dataset {req_data.get('propertySet', 'PropertySet')}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        if constraint:
+            return f"{req_data.get('baseName', 'Property')} shall be {constraint} in the dataset {req_data.get('propertySet', 'PropertySet')}"
+        return f"{req_data.get('baseName', 'Property')} shall be provided in the dataset {req_data.get('propertySet', 'PropertySet')}"
     
     elif "Entity" in req_type:
         if req_data.get("enumeration"):
-            return f"The {req_data.get('name', 'Name')} shall be {{{{'enumeration': {req_data.get('enumeration', [])}}}}}"
-        else:
-            return f"The {req_data.get('name', 'Name')} shall be {req_data.get('value', '')}"
+            formatted_enum = ', '.join(req_data.get("enumeration", []))
+            if formatted_enum:
+                return f"The {req_data.get('name', 'Name')} shall be one of {formatted_enum}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        if constraint:
+            return f"The {req_data.get('name', 'Name')} shall be {constraint}"
+        return f"The {req_data.get('name', 'Name')} shall be provided"
     
     elif "Attribute" in req_type:
-        return f"The {req_data.get('name', 'Attribute')} shall be {req_data.get('value', '')}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        if constraint:
+            return f"The {req_data.get('name', 'Attribute')} shall be {constraint}"
+        return f"The {req_data.get('name', 'Attribute')} shall be provided"
     
     elif "Classification" in req_type:
-        return f"Classification {req_data.get('value', '')} in system {req_data.get('system', '')}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        descr = f"Classification {constraint or ''}"
+        if req_data.get('system'):
+            descr += f" in system {req_data.get('system')}"
+        return descr.strip()
     
     elif "Material" in req_type:
-        return f"Material shall be {req_data.get('value', '')}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        if constraint:
+            return f"Material shall be {constraint}"
+        return "Material shall be provided"
     
     else:
-        return f"{req_type}: {req_data.get('name', '')} = {req_data.get('value', '')}"
+        constraint = format_ids_constraint(req_data.get("value"))
+        if constraint:
+            return f"{req_type}: {req_data.get('name', '')} {constraint}"
+        return f"{req_type}: {req_data.get('name', '')} shall be provided"
 
 def main():
     # Set up argument parser  

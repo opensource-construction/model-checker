@@ -25,15 +25,11 @@
           var m = content.match(/<title>(.*?)<\/title>/i);
           if (m && m[1]) document.title = m[1];
 
-          // Render report in a sandboxed iframe to prevent script execution / XSS
-          var iframe = document.createElement('iframe');
-          iframe.setAttribute('sandbox', 'allow-same-origin'); // no scripts, keeps CSS working
-          iframe.style.border = '0';
-          iframe.style.width = '100%';
-          iframe.style.height = '100vh';
-          iframe.srcdoc = content;
-          document.body.innerHTML = '';
-          document.body.appendChild(iframe);
+          // Replace the entire document with the report content
+          // This ensures that right-click save downloads the actual report HTML
+          document.open();
+          document.write(content);
+          document.close();
           
           // Reports persist indefinitely for multi-tab access
           // No automatic cleanup - reports remain available across tabs/reloads

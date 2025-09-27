@@ -37,7 +37,6 @@ export interface ValidationRequirement {
 
 export interface ValidationSpecification {
   name: string
-  is_ifc_version: boolean
   status: boolean
   status_text?: string
   description: string
@@ -53,6 +52,7 @@ export interface ValidationSpecification {
 
 export interface ValidationResult {
   title: string
+  name?: string
   date: string
   filename: string
   status: boolean
@@ -70,6 +70,9 @@ export interface ValidationResult {
   total_checks_pass: number
   total_checks_fail?: number
   percent_checks_pass: number
+  total_applicable?: number
+  total_applicable_pass?: number
+  total_applicable_fail?: number
   language_code?: string
   _lang?: string
   ui_language?: string

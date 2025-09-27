@@ -1,7 +1,23 @@
 /* global importScripts */
-importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js')
+importScripts('https://cdn.jsdelivr.net/pyodide/v0.28.0/full/pyodide.js')
 
 let pyodide = null
+
+const WHEEL_PATH = './wasm/ifcopenshell-0.8.4+b1b95ec-cp313-cp313-emscripten_4_0_9_wasm32.whl'
+
+function normalizeIfc4x3Header(arrayBuffer) {
+  try {
+    const text = new TextDecoder().decode(new Uint8Array(arrayBuffer))
+    const normalized = text.replace(
+      /FILE_SCHEMA\s*\(\s*\(\s*'IFC4X3(?:_[A-Z0-9]+)?'\s*\)\s*\)/,
+      "FILE_SCHEMA(('IFC4X3_ADD2'))"
+    )
+    return new TextEncoder().encode(normalized)
+  } catch (err) {
+    console.warn('Schema normalization failed, using original buffer', err)
+    return new Uint8Array(arrayBuffer)
+  }
+}
 
 // Simple console message function
 function getConsoleMessage(key, defaultMessage) {
@@ -21,7 +37,7 @@ async function initializePyodide() {
     })
 
     pyodide = await self.loadPyodide({
-      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.28.0/full/',
     })
 
     self.postMessage({
@@ -55,19 +71,34 @@ self.onmessage = async function (e) {
       message: getConsoleMessage('console.loading.packages', 'Installing required packages...'),
     })
 
-    await pyodide.loadPackage(['micropip', 'python-dateutil', 'six', 'numpy', 'setuptools'])
+    await pyodide.loadPackage(['micropip', 'python-dateutil', 'six', 'numpy', 'setuptools', 'typing-extensions', 'sqlite3', 'shapely'])
+
+    await pyodide.runPythonAsync(`
+import micropip
+
+def _allow(_):
+    return None
+
+try:
+    import micropip._utils as _utils
+    _utils.check_compatible = _allow
+except Exception:
+    pass
+
+try:
+    from micropip._micropip import WheelInfo
+except ModuleNotFoundError:
+    WheelInfo = None
+
+if "WheelInfo" in globals() and WheelInfo is not None:
+    WheelInfo.check_compatible = lambda self: None
+    `)
     
     // Bypass the Emscripten version compatibility check for wheels
     self.postMessage({
       type: 'progress',
       message: getConsoleMessage('console.loading.micropipPatch', 'Patching micropip for compatibility...'),
     })
-    
-    await pyodide.runPythonAsync(`
-import micropip
-from micropip._micropip import WheelInfo
-WheelInfo.check_compatible = lambda self: None
-    `)
 
     // Install IfcOpenShell and IfcTester
     self.postMessage({
@@ -77,7 +108,13 @@ WheelInfo.check_compatible = lambda self: None
     
     await pyodide.runPythonAsync(`
 import micropip
-await micropip.install('https://cdn.jsdelivr.net/gh/IfcOpenShell/wasm-wheels@33b437e5fd5425e606f34aff602c42034ff5e6dc/ifcopenshell-0.8.1+latest-cp312-cp312-emscripten_3_1_58_wasm32.whl')
+
+WHEEL_URL = ${JSON.stringify(new URL(WHEEL_PATH, self.location).toString())}
+
+await micropip.install(WHEEL_URL, deps=False, keep_going=False)
+
+import ifcopenshell
+print('IfcOpenShell version:', getattr(ifcopenshell, '__version__', 'unknown'))
     `)
 
     self.postMessage({
@@ -96,7 +133,8 @@ await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystac
       message: getConsoleMessage('console.loading.inputFiles', 'Processing input files...'),
     })
 
-    pyodide.FS.writeFile('/input.ifc', new Uint8Array(arrayBuffer))
+    const normalizedIfc = normalizeIfc4x3Header(arrayBuffer)
+    pyodide.FS.writeFile('/input.ifc', normalizedIfc)
     if (idsContent) {
       pyodide.FS.writeFile('/input.ids', idsContent)
     }
@@ -150,6 +188,7 @@ ifc = ifcopenshell.open('/input.ifc')
 # Initialize basic results structure
 results = {
     "title": "IDS Validation Report",
+    "name": "IDS Validation Report",
     "filename": ${pythonFileName},
     "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     "language_code": ${pythonLanguage},
@@ -247,6 +286,11 @@ if generate_bcf and ids_spec and getattr(ids_spec, 'specifications', None):
         print('BCF report generated successfully')
     except Exception as bcf_error:
         results['bcf_error'] = f"BCF generation failed: {bcf_error}"
+
+# Calculate top-level totals for applicable entities
+results["total_applicable"] = sum(spec.get("total_applicable", 0) for spec in results.get("specifications", []))
+results["total_applicable_pass"] = sum(spec.get("total_applicable_pass", 0) for spec in results.get("specifications", []))
+results["total_applicable_fail"] = sum(spec.get("total_applicable_fail", 0) for spec in results.get("specifications", []))
 
 # Return JSON string - let frontend handle all translations and enhancements
 json.dumps(results, default=str, ensure_ascii=False)

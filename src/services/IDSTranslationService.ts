@@ -1,5 +1,6 @@
 export interface ValidationResult {
   title: string
+  name?: string
   filename: string
   date: string
   language_code: string
@@ -16,6 +17,9 @@ export interface ValidationResult {
   total_checks_pass: number
   total_checks_fail: number
   percent_checks_pass: number
+  total_applicable?: number
+  total_applicable_pass?: number
+  total_applicable_fail?: number
   status: boolean
   status_text: string
   specifications: SpecificationResult[]
@@ -162,11 +166,11 @@ export class IDSTranslationService {
    * Translate applicability text based on language
    */
   private translateApplicabilityText(applicability: string, language: string): string {
-    let translated = applicability
+    let translated = this.normalizeApplicabilityText(applicability)
 
     // Handle "All X data" patterns first
     const allDataPattern = /All (\w+) data/
-    const match = applicability.match(allDataPattern)
+    const match = translated.match(allDataPattern)
 
     if (match) {
       const entityType = match[1]
@@ -186,22 +190,74 @@ export class IDSTranslationService {
     if (language === 'de') {
       translated = translated.replace(/Data where the/g, 'Daten wo')
       translated = translated.replace(/Elements with/g, 'Elemente mit')
-      translated = translated.replace(/data (?:equal to|of)/g, 'gleich')
+      translated = translated.replace(/matches pattern/g, 'entspricht dem Muster')
+      translated = translated.replace(/matching pattern/g, 'entsprechend dem Muster')
+      translated = translated.replace(/is one of/g, 'ist einer von')
+      translated = translated.replace(/equals one of/g, 'ist einer von')
+      translated = translated.replace(/equals/g, 'ist')
+      translated = translated.replace(/with value matching pattern/g, 'mit Wert entsprechend dem Muster')
+      translated = translated.replace(/with value one of/g, 'mit Wert einer von')
+      translated = translated.replace(/with value between/g, 'mit Wert zwischen')
+      translated = translated.replace(/with value greater than or equal to/g, 'mit Wert mindestens')
+      translated = translated.replace(/with value greater than/g, 'mit Wert grösser als')
+      translated = translated.replace(/with value less than or equal to/g, 'mit Wert höchstens')
+      translated = translated.replace(/with value less than/g, 'mit Wert kleiner als')
+      translated = translated.replace(/with value/g, 'mit Wert')
+      translated = translated.replace(/ data (?:equal to|of)/g, 'gleich')
       translated = translated.replace(/in the dataset\s+(?=Pset)/g, 'im ')
     } else if (language === 'fr') {
       translated = translated.replace(/Data where the/g, 'Données où')
       translated = translated.replace(/Elements with/g, 'Éléments avec')
-      translated = translated.replace(/data (?:equal to|of)/g, 'égal à')
+      translated = translated.replace(/matches pattern/g, 'correspond au motif')
+      translated = translated.replace(/matching pattern/g, 'correspondant au motif')
+      translated = translated.replace(/is one of/g, 'est parmi')
+      translated = translated.replace(/equals one of/g, 'est parmi')
+      translated = translated.replace(/equals/g, 'est égal à')
+      translated = translated.replace(/with value matching pattern/g, 'avec une valeur correspondant au motif')
+      translated = translated.replace(/with value one of/g, 'avec une valeur parmi')
+      translated = translated.replace(/with value between/g, 'avec une valeur entre')
+      translated = translated.replace(/with value greater than or equal to/g, 'avec une valeur supérieure ou égale à')
+      translated = translated.replace(/with value greater than/g, 'avec une valeur supérieure à')
+      translated = translated.replace(/with value less than or equal to/g, 'avec une valeur inférieure ou égale à')
+      translated = translated.replace(/with value less than/g, 'avec une valeur inférieure à')
+      translated = translated.replace(/with value/g, 'avec une valeur')
+      translated = translated.replace(/ data (?:equal to|of)/g, 'égal à')
       translated = translated.replace(/in the dataset\s+(?=Pset)/g, 'dans le ')
     } else if (language === 'it') {
       translated = translated.replace(/Data where the/g, 'Dati dove')
       translated = translated.replace(/Elements with/g, 'Elementi con')
-      translated = translated.replace(/data (?:equal to|of)/g, 'uguale a')
+      translated = translated.replace(/matches pattern/g, 'corrisponde al modello')
+      translated = translated.replace(/matching pattern/g, 'corrispondente al modello')
+      translated = translated.replace(/is one of/g, 'è uno dei')
+      translated = translated.replace(/equals one of/g, 'è uno dei')
+      translated = translated.replace(/equals/g, 'è uguale a')
+      translated = translated.replace(/with value matching pattern/g, 'con valore corrispondente al modello')
+      translated = translated.replace(/with value one of/g, 'con valore uno dei')
+      translated = translated.replace(/with value between/g, 'con valore tra')
+      translated = translated.replace(/with value greater than or equal to/g, 'con valore maggiore o uguale a')
+      translated = translated.replace(/with value greater than/g, 'con valore maggiore di')
+      translated = translated.replace(/with value less than or equal to/g, 'con valore minore o uguale a')
+      translated = translated.replace(/with value less than/g, 'con valore minore di')
+      translated = translated.replace(/with value/g, 'con valore')
+      translated = translated.replace(/ data (?:equal to|of)/g, 'uguale a')
       translated = translated.replace(/in the dataset\s+(?=Pset)/g, 'nel ')
     } else if (language === 'rm') {
       translated = translated.replace(/Data where the/g, 'Datas nua che')
       translated = translated.replace(/Elements with/g, 'Elements cun')
-      translated = translated.replace(/data (?:equal to|of)/g, 'ugual a')
+      translated = translated.replace(/matches pattern/g, 'correspundent al model')
+      translated = translated.replace(/matching pattern/g, 'correspundent al model')
+      translated = translated.replace(/is one of/g, 'è ina da')
+      translated = translated.replace(/equals one of/g, 'è ina da')
+      translated = translated.replace(/equals/g, 'è ugual a')
+      translated = translated.replace(/with value matching pattern/g, 'cun valur correspundent al model')
+      translated = translated.replace(/with value one of/g, 'cun valur ina da')
+      translated = translated.replace(/with value between/g, 'cun valur tranter')
+      translated = translated.replace(/with value greater than or equal to/g, 'cun valur pli grond u egal a')
+      translated = translated.replace(/with value greater than/g, 'cun valur pli grond che')
+      translated = translated.replace(/with value less than or equal to/g, 'cun valur pli pitschen u egal a')
+      translated = translated.replace(/with value less than/g, 'cun valur pli pitschen che')
+      translated = translated.replace(/with value/g, 'cun valur')
+      translated = translated.replace(/ data (?:equal to|of)/g, 'ugual a')
       translated = translated.replace(/in the dataset\s+(?=Pset)/g, 'en il ')
     }
 
@@ -209,6 +265,34 @@ export class IDSTranslationService {
     translated = translated.replace(/\s{2,}/g, ' ').trim()
 
     return translated
+  }
+
+  private normalizeApplicabilityText(applicability: string): string {
+    if (!applicability) {
+      return ''
+    }
+
+    let normalized = applicability
+
+    normalized = normalized.replace(/\{\{#applicability\}\}/g, '')
+    normalized = normalized.replace(/\{\{\/applicability\}\}/g, '')
+    normalized = normalized.replace(/\{\{\.\}\}/g, '')
+
+    normalized = normalized.replace(/\{'pattern':\s*'([^']+)'\}/g, 'matching pattern "$1"')
+    normalized = normalized.replace(/\{'enumeration':\s*\[([^\]]+)\]\}/g, 'one of $1')
+    normalized = normalized.replace(/\{'value':\s*'([^']+)'\}/g, 'equals "$1"')
+    normalized = normalized.replace(
+      /\{'minInclusive':\s*'([^']+)',\s*'maxInclusive':\s*'([^']+)'\}/g,
+      'between $1 and $2',
+    )
+    normalized = normalized.replace(/\{'minExclusive':\s*'([^']+)'\}/g, 'greater than $1')
+    normalized = normalized.replace(/\{'minInclusive':\s*'([^']+)'\}/g, 'greater than or equal to $1')
+    normalized = normalized.replace(/\{'maxExclusive':\s*'([^']+)'\}/g, 'less than $1')
+    normalized = normalized.replace(/\{'maxInclusive':\s*'([^']+)'\}/g, 'less than or equal to $1')
+
+    normalized = normalized.replace(/\s+/g, ' ').trim()
+
+    return normalized
   }
 
   /**
@@ -235,21 +319,54 @@ export class IDSTranslationService {
    * Translate requirement descriptions by language
    */
   private translateRequirementDescriptionByLanguage(description: string, language: string): string {
-    // Apply language-specific translations while preserving IFC nomenclature
-    let translated = description
+    const normalized = this.normalizeRequirementDescription(description)
+    let translated = normalized
 
     if (language === 'de') {
-      translated = this.applyGermanTranslations(description)
+      translated = this.applyGermanTranslations(normalized)
     } else if (language === 'fr') {
-      translated = this.applyFrenchTranslations(description)
+      translated = this.applyFrenchTranslations(normalized)
     } else if (language === 'it') {
-      translated = this.applyItalianTranslations(description)
+      translated = this.applyItalianTranslations(normalized)
     } else if (language === 'rm') {
-      translated = this.applyRumantschTranslations(description)
+      translated = this.applyRumantschTranslations(normalized)
     }
 
     // Normalize common artifacts that can appear when upstream already partially translated text
     return this.normalizeTranslatedDescription(translated, language)
+  }
+
+  private normalizeRequirementDescription(description: string): string {
+    if (!description) {
+      return ''
+    }
+
+    let normalized = description.trim()
+
+    normalized = normalized.replace(/\{\{'pattern':\s*'([^']+)'\}\}/g, 'matching pattern "$1"')
+    normalized = normalized.replace(/\{\{'enumeration':\s*\[([^\]]+)\]\}\}/g, 'one of $1')
+    normalized = normalized.replace(/\{\{'value':\s*'([^']+)'\}\}/g, 'equals "$1"')
+    normalized = normalized.replace(/\{\{'minInclusive':\s*'([^']+)',\s*'maxInclusive':\s*'([^']+)'\}\}/g, 'between $1 and $2')
+    normalized = normalized.replace(/\{\{'minExclusive':\s*'([^']+)'\}\}/g, 'greater than $1')
+    normalized = normalized.replace(/\{\{'minInclusive':\s*'([^']+)'\}\}/g, 'greater than or equal to $1')
+    normalized = normalized.replace(/\{\{'maxExclusive':\s*'([^']+)'\}\}/g, 'less than $1')
+    normalized = normalized.replace(/\{\{'maxInclusive':\s*'([^']+)'\}\}/g, 'less than or equal to $1')
+
+    normalized = normalized.replace(/\{'pattern':\s*'([^']+)'\}/g, 'matching pattern "$1"')
+    normalized = normalized.replace(/\{'enumeration':\s*\[([^\]]+)\]\}/g, 'one of $1')
+    normalized = normalized.replace(/\{'value':\s*'([^']+)'\}/g, 'equals "$1"')
+    normalized = normalized.replace(
+      /\{'minInclusive':\s*'([^']+)',\s*'maxInclusive':\s*'([^']+)'\}/g,
+      'between $1 and $2',
+    )
+    normalized = normalized.replace(/\{'minExclusive':\s*'([^']+)'\}/g, 'greater than $1')
+    normalized = normalized.replace(/\{'minInclusive':\s*'([^']+)'\}/g, 'greater than or equal to $1')
+    normalized = normalized.replace(/\{'maxExclusive':\s*'([^']+)'\}/g, 'less than $1')
+    normalized = normalized.replace(/\{'maxInclusive':\s*'([^']+)'\}/g, 'less than or equal to $1')
+
+    normalized = normalized.replace(/\s+/g, ' ').trim()
+
+    return normalized
   }
 
   /**

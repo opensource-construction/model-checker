@@ -160,6 +160,15 @@
       "all": "Tutti",
       "data": "Dati"
     },
+    "allEntityData": "Tutti i dati {{entity}}",
+    "matchesPattern": "corrisponde al modello {{pattern}}",
+    "equals": "è {{value}}",
+    "oneOf": "è uno di: {{values}}",
+    "range": "è compreso tra {{min}} e {{max}}",
+    "greaterOrEqual": "è maggiore o uguale a {{value}}",
+    "greaterThan": "è maggiore di {{value}}",
+    "lessOrEqual": "è minore o uguale a {{value}}",
+    "lessThan": "è minore di {{value}}",
     "specNotApplyToVersion": "la specifica non si applica a questa versione IFC",
     "failureReason": "Motivo del fallimento",
     "phrases": {

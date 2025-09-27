@@ -160,6 +160,15 @@
       "all": "Tut",
       "data": "Datas"
     },
+    "allEntityData": "Tut las datas {{entity}}",
+    "matchesPattern": "correspunda al model {{pattern}}",
+    "equals": "è {{value}}",
+    "oneOf": "è in dad: {{values}}",
+    "range": "è tranter {{min}} e {{max}}",
+    "greaterOrEqual": "è pli grond u ugual a {{value}}",
+    "greaterThan": "è pli grond che {{value}}",
+    "lessOrEqual": "è pli pitschen u ugual a {{value}}",
+    "lessThan": "è pli pitschen che {{value}}"
     "specNotApplyToVersion": "la specificaziun na s'applitgescha betg a questa versiun IFC",
     "failureReason": "Motiv dal falliment",
     "phrases": {
