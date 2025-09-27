@@ -52,13 +52,14 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
           const dd = String(now.getDate()).padStart(2, '0')
           const yy = String(yyyy).slice(-2)
           const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
+          const escapedTitle = escapeHtml(pageTitle)
 
-          const titleReplacement = `<title>${pageTitle}</title>`
-          const headReplacement = `<head><title>${pageTitle}</title>`
+          const titleReplacement = `<title>${escapedTitle}</title>`
+          const headReplacement = `<head><title>${escapedTitle}</title>`
           const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
           const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, titleReplacement)
-            : htmlContent.replace(/<head>/i, headReplacement)
+            ? htmlContent.replace(/<title>.*?<\/title>/i, () => titleReplacement)
+            : htmlContent.replace(/<head>/i, () => headReplacement)
           localStorage.setItem(`generated_report_html_${token}`, withTitle)
         } catch (e) {
           // Fallback to blob URL if storage is unavailable or full
@@ -71,12 +72,13 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
           const dd = String(now.getDate()).padStart(2, '0')
           const yy = String(yyyy).slice(-2)
           const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
-          const titleReplacement = `<title>${pageTitle}</title>`
-          const headReplacement = `<head><title>${pageTitle}</title>`
+          const escapedTitle = escapeHtml(pageTitle)
+          const titleReplacement = `<title>${escapedTitle}</title>`
+          const headReplacement = `<head><title>${escapedTitle}</title>`
           const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
           const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, titleReplacement)
-            : htmlContent.replace(/<head>/i, headReplacement)
+            ? htmlContent.replace(/<title>.*?<\/title>/i, () => titleReplacement)
+            : htmlContent.replace(/<head>/i, () => headReplacement)
           const blob = new Blob([withTitle], { type: 'text/html;charset=utf-8' })
           const url = window.URL.createObjectURL(blob)
           window.open(url, '_blank', 'noopener')
@@ -235,8 +237,10 @@ export async function generateHtmlReport(
 
   simpleVars.forEach((varName) => {
     const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
+    const raw = templateData[varName as keyof ValidationResult]
+    const safe = typeof raw === 'string' ? escapeHtml(raw) : raw
     // Insert literally to preserve characters like $ in regex patterns
-    htmlContent = htmlContent.replace(regex, () => String(templateData[varName as keyof ValidationResult] ?? ''))
+    htmlContent = htmlContent.replace(regex, () => String(safe ?? ''))
   })
 
   // Handle conditional sections

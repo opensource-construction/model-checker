@@ -118,11 +118,17 @@ await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystac
     const idsBaseName = (idsFilename || 'ids').toString().split(/[/\\]/).pop()
     const combinedName = `${yy}${mm}${dd}-${ifcBaseName}-${idsBaseName}`
     const sanitizedReportBaseName = (combinedName || 'report')
-      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_')
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .split('')
+      .map((char) => (char.charCodeAt(0) < 32 ? '_' : char))
+      .join('')
       .replace(/\s+/g, ' ')
       .trim()
       .replace(/\.+$/, '') || 'report'
     const safeReportBaseName = JSON.stringify(sanitizedReportBaseName)
+
+    const pythonFileName = JSON.stringify(fileName ?? '')
+    const pythonLanguage = JSON.stringify(language ?? '')
 
     const validationResult = await pyodide.runPythonAsync(`
 import json
@@ -144,9 +150,9 @@ ifc = ifcopenshell.open('/input.ifc')
 # Initialize basic results structure
 results = {
     "title": "IDS Validation Report",
-    "filename": "${fileName}",
+    "filename": ${pythonFileName},
     "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    "language_code": "${language}",
+    "language_code": ${pythonLanguage},
     "status": True,
     "validation_status": "success"
 }
@@ -170,8 +176,8 @@ if os.path.exists('/input.ids'):
             
             # Transform IfcTester's structure to match our frontend expectations
             results.update(native_results)
-            results["filename"] = "${fileName}"
-            results["language_code"] = "${language}"
+            results["filename"] = ${pythonFileName}
+            results["language_code"] = ${pythonLanguage}
             results["validation_status"] = "success" if results.get("status", False) else "failed"
             
             # Transform specifications to add missing fields our frontend expects

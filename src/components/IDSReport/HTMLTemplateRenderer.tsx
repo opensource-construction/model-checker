@@ -126,7 +126,8 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     simpleVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
       const value = data[varName]
-      result = result.replace(regex, value !== null && value !== undefined ? String(value) : '')
+      const safe = typeof value === 'string' ? escapeHtml(value) : value
+      result = result.replace(regex, () => String(safe ?? ''))
     })
 
     // Translation variables
@@ -238,7 +239,9 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
 
           specVars.forEach((varName) => {
             const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-            specSection = specSection.replace(regex, String(spec[varName] || ''))
+            const raw = spec[varName]
+            const safe = typeof raw === 'string' ? escapeHtml(String(raw)) : raw
+            specSection = specSection.replace(regex, () => String(safe ?? ''))
           })
 
           // Handle applicability loop
@@ -250,7 +253,9 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
               const appContent = appTemplate
                 .replace(/\{\{#applicability\}\}/, '')
                 .replace(/\{\{\/applicability\}\}/, '')
-              const appHtml = spec.applicability.map((app: string) => appContent.replace(/\{\{\.\}\}/g, app)).join('')
+              const appHtml = spec.applicability
+                .map((app: string) => appContent.replace(/\{\{\.\}\}/g, () => escapeHtml(String(app))))
+                .join('')
 
               specSection = specSection.replace(appLoopRegex, appHtml)
             }
@@ -271,7 +276,9 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
                   const reqVars = ['description', 'total_checks', 'total_pass', 'total_fail']
                   reqVars.forEach((varName) => {
                     const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-                    reqSection = reqSection.replace(regex, String(req[varName] || ''))
+                    const raw = req[varName]
+                    const safe = typeof raw === 'string' ? escapeHtml(String(raw)) : raw
+                    reqSection = reqSection.replace(regex, () => String(safe ?? ''))
                   })
 
                   // Handle entity tables (passed and failed)
