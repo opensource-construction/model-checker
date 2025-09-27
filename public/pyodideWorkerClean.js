@@ -39,7 +39,7 @@ async function initializePyodide() {
   }
 }
 
-const WORKER_VERSION = '3.0.0-clean'
+const WORKER_VERSION = '3.1.0-clean-bcf'
 console.log('pyodideWorkerClean version:', WORKER_VERSION)
 
 self.onmessage = async function (e) {
@@ -107,12 +107,35 @@ await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystac
       message: getConsoleMessage('console.loading.validation', 'Running IFC validation...'),
     })
 
+    const wantBcf = !!generateBcf
+
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    const yy = String(yyyy).slice(-2)
+    const ifcBaseName = (fileName || 'report.ifc').toString().split(/[/\\]/).pop()
+    const idsBaseName = (idsFilename || 'ids').toString().split(/[/\\]/).pop()
+    const combinedName = `${yy}${mm}${dd}-${ifcBaseName}-${idsBaseName}`
+    const sanitizedReportBaseName = (combinedName || 'report')
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\.+$/, '') || 'report'
+    const safeReportBaseName = JSON.stringify(sanitizedReportBaseName)
+
     const validationResult = await pyodide.runPythonAsync(`
 import json
 import os
+import base64
+import re
 import ifcopenshell
 from ifctester import ids, reporter
 from datetime import datetime
+
+# Flag for optional BCF generation
+generate_bcf = ${wantBcf ? 'True' : 'False'}
+report_basename = ${safeReportBaseName}
 
 # Open IFC file
 print("Opening IFC file: /input.ifc")
@@ -127,6 +150,9 @@ results = {
     "status": True,
     "validation_status": "success"
 }
+
+# Track IDS specification for optional reporting
+ids_spec = None
 
 # Check if IDS file exists and validate
 if os.path.exists('/input.ids'):
@@ -197,6 +223,24 @@ if os.path.exists('/input.ids'):
 else:
     print("No IDS file provided")
     results["specifications"] = []
+
+# Generate BCF report if requested and a valid IDS specification is available
+if generate_bcf and ids_spec and getattr(ids_spec, 'specifications', None):
+    try:
+        bcf_reporter = reporter.Bcf(ids_spec)
+        bcf_reporter.report()
+        bcf_path = '/report.bcf'
+        bcf_reporter.to_file(bcf_path)
+        with open(bcf_path, 'rb') as bcf_file:
+            bcf_bytes = bcf_file.read()
+        bcf_b64 = base64.b64encode(bcf_bytes).decode('utf-8')
+        results['bcf_data'] = {
+            'zip_content': bcf_b64,
+            'filename': f"{report_basename}.bcf"
+        }
+        print('BCF report generated successfully')
+    except Exception as bcf_error:
+        results['bcf_error'] = f"BCF generation failed: {bcf_error}"
 
 # Return JSON string - let frontend handle all translations and enhancements
 json.dumps(results, default=str, ensure_ascii=False)
