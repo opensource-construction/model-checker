@@ -117,6 +117,7 @@
   "report-format-description": "Tscherna in u plirs formats da rapport. Rapports HTML pon vegnir vesids e stampads directamain, entant che rapports BCF pon vegnir utilisads en instruments da collavuraziun BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
+  "downloadHtmlTooltip": "Telechargiar rapport HTML",
   "select-report-format": "Tscherna almain in format da rapport",
   "report": {
     "summary": "Resumaziun",

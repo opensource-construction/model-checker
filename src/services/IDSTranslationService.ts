@@ -72,11 +72,11 @@ export class IDSTranslationService {
   /**
    * Translate validation results and prepare them for HTML template rendering
    */
-  translateValidationResults(results: ValidationResult): ValidationResult {
+  translateValidationResults(results: ValidationResult, languageOverride?: string): ValidationResult {
     const translated = { ...results }
 
-    // Translate overall status text based on language
-    const language = results.language_code || 'en'
+    // Translate overall status text based on language (prefer override for UI language)
+    const language = languageOverride || results.language_code || 'en'
     translated.status_text = this.getStatusText(results.status, language, false)
 
     // Translate each specification
@@ -164,7 +164,25 @@ export class IDSTranslationService {
   private translateApplicabilityText(applicability: string, language: string): string {
     let translated = applicability
 
-    // Apply language-specific translations for applicability
+    // Handle "All X data" patterns first
+    const allDataPattern = /All (\w+) data/
+    const match = applicability.match(allDataPattern)
+
+    if (match) {
+      const entityType = match[1]
+      if (language === 'de') {
+        translated = `Alle ${entityType} Daten`
+      } else if (language === 'fr') {
+        translated = `Toutes les données ${entityType}`
+      } else if (language === 'it') {
+        translated = `Tutti i dati ${entityType}`
+      } else if (language === 'rm') {
+        translated = `Tut las datas ${entityType}`
+      }
+      return translated
+    }
+
+    // Apply language-specific translations for other applicability patterns
     if (language === 'de') {
       translated = translated.replace(/Data where the/g, 'Daten wo')
       translated = translated.replace(/Elements with/g, 'Elemente mit')
@@ -246,6 +264,7 @@ export class IDSTranslationService {
     }
 
     // Professional German translations (keep IFC property names in English)
+    translated = translated.replace(/shall have/g, 'muss haben')
     translated = translated.replace(/shall be/g, 'zwingend')
     translated = translated.replace(/one of/g, 'einer von')
     translated = translated.replace(/allowed values/g, 'zulässigen Werten')
@@ -277,6 +296,7 @@ export class IDSTranslationService {
     }
 
     // French translations (keep IFC property names in English)
+    translated = translated.replace(/shall have/g, 'doit avoir')
     translated = translated.replace(/shall be/g, 'doit être')
     translated = translated.replace(/one of/g, "l'une des")
     translated = translated.replace(/allowed values/g, 'valeurs autorisées')
@@ -302,6 +322,7 @@ export class IDSTranslationService {
     }
 
     // Italian translations (keep IFC property names in English)
+    translated = translated.replace(/shall have/g, 'deve avere')
     translated = translated.replace(/shall be/g, 'deve essere')
     translated = translated.replace(/one of/g, 'uno dei')
     translated = translated.replace(/allowed values/g, 'valori consentiti')
@@ -327,6 +348,7 @@ export class IDSTranslationService {
     }
 
     // Rumantsch translations (keep IFC property names in English)
+    translated = translated.replace(/shall have/g, 'sto avair')
     translated = translated.replace(/shall be/g, 'sto esser')
     translated = translated.replace(/one of/g, 'ina da')
     translated = translated.replace(/allowed values/g, 'valurs permessas')

@@ -13,7 +13,7 @@ interface ResultsDisplayProps {
     bcf: boolean
   }
   onHtmlReport: (result: ValidationResult, fileName: string) => void
-  onHtmlDownload: (result: ValidationResult, fileName: string) => Promise<void>
+  onHtmlDownload: (result: ValidationResult) => Promise<void>
   onBcfDownload: (result: {
     fileName: string
     result: {
@@ -104,7 +104,7 @@ export const ResultsDisplay = ({
                 </Button>
                 <Tooltip label={t('downloadHtmlTooltip', 'Download HTML report')} withArrow>
                   <Button
-                    onClick={() => onHtmlDownload(result.result, result.fileName)}
+                    onClick={() => onHtmlDownload(result.result)}
                     color='yellow'
                     variant='subtle'
                     size='sm'

@@ -116,6 +116,7 @@
   "report-format-description": "Wählen Sie eines oder beide Berichtsformate. HTML-Berichte können direkt angezeigt und gedruckt werden, während BCF-Berichte in BIM-Kollaborationstools verwendet werden können.",
   "view-html": "HTML",
   "download-bcf": "BCF",
+  "downloadHtmlTooltip": "HTML-Bericht herunterladen",
   "select-report-format": "Bitte wählen Sie mindestens ein Berichtsformat aus",
   "report": {
     "summary": "Zusammenfassung",

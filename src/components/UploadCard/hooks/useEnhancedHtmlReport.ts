@@ -4,7 +4,7 @@ import { IDSTranslationService, ValidationResult as IDSValidationResult } from '
 import { useTranslation } from 'react-i18next'
 
 export const useEnhancedHtmlReport = (templateContent: string | null) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const generateHtmlContent = useCallback(
     async (result: ValidationResult): Promise<string> => {
@@ -21,8 +21,11 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
       // Create translation service (simplified for now)
       const translationService = new IDSTranslationService()
 
-      // Translate the validation results
-      const translatedResults = translationService.translateValidationResults(result as unknown as IDSValidationResult)
+      // Translate the validation results using current UI language
+      const translatedResults = translationService.translateValidationResults(
+        result as unknown as IDSValidationResult,
+        i18n.language,
+      )
 
       // Generate HTML using our template renderer logic
       return await generateHtmlReport(
@@ -31,7 +34,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         t as (key: string, defaultValue?: string) => string,
       )
     },
-    [templateContent, t],
+    [templateContent, t, i18n],
   )
 
   const openHtmlReport = useCallback(
@@ -94,9 +97,20 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
   )
 
   const downloadHtmlReport = useCallback(
-    async (result: ValidationResult, fileName: string) => {
+    async (result: ValidationResult) => {
       try {
         const htmlContent = await generateHtmlContent(result)
+
+        // Build detailed filename matching the view report format
+        const ifc = result.filename || 'report.ifc'
+        const rawIds = result.ids_filename || 'ids'
+        const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
+        const now = new Date()
+        const yyyy = now.getFullYear()
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+        const yy = String(yyyy).slice(-2)
+        const detailedFilename = `${yy}${mm}${dd}-${ifc}-${ids}.html`
 
         // Create a blob with the HTML content
         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
@@ -105,7 +119,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         // Create download link
         const link = document.createElement('a')
         link.href = url
-        link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.html`
+        link.download = detailedFilename
 
         // Trigger download
         document.body.appendChild(link)
@@ -170,9 +184,9 @@ export async function generateHtmlReport(
         'report.phrases.moreElementsNotShown',
         '... {{count}} more {{type}} elements not shown out of {{total}} total ...',
       ),
-      specificationsPassedPrefix: t('report.specificationsPassedPrefix', 'Specifications passed'),
-      requirementsPassedPrefix: t('report.requirementsPassedPrefix', 'Requirements passed'),
-      applicability: t('report.applicability', 'Applicability'),
+      specificationsPassedPrefix: t('report.interface.specificationsPassedPrefix', 'Specifications passed'),
+      requirementsPassedPrefix: t('report.interface.requirementsPassedPrefix', 'Requirements passed'),
+      applicability: t('report.interface.applicability', 'Applicability'),
     },
   }
 

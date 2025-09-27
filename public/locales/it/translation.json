@@ -117,6 +117,7 @@
   "report-format-description": "Seleziona uno o più formati di rapporto. I rapporti HTML possono essere visualizzati e stampati direttamente, mentre i rapporti BCF possono essere utilizzati negli strumenti di collaborazione BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
+  "downloadHtmlTooltip": "Scarica rapporto HTML",
   "select-report-format": "Seleziona almeno un formato di rapporto",
   "report": {
     "summary": "Riepilogo",

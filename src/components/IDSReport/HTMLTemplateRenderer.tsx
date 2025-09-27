@@ -39,7 +39,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     const translationService = new IDSTranslationService()
 
     // Translate the validation results
-    const translatedResults = translationService.translateValidationResults(validationResults)
+    const translatedResults = translationService.translateValidationResults(validationResults, i18n.language)
 
     // Prepare template data with translations
     const templateData: TemplateData = {
@@ -157,7 +157,8 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     translationVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
       const value = getNestedValue(data, varName)
-      result = result.replace(regex, value !== null && value !== undefined ? String(value) : '')
+      // Translations are controlled content - don't escape them
+      result = result.replace(regex, () => String(value ?? ''))
     })
 
     // Handle conditional sections and loops

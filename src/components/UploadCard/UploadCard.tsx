@@ -109,9 +109,9 @@ export const UploadCard = () => {
     }
   }
 
-  const handleHtmlDownload = async (result: ValidationResult, fileName: string) => {
+  const handleHtmlDownload = async (result: ValidationResult) => {
     try {
-      await downloadHtmlReport(result, fileName)
+      await downloadHtmlReport(result)
     } catch (error) {
       console.error('Failed to download HTML report:', error)
       setUploadError(`Failed to download HTML report: ${error instanceof Error ? error.message : 'Unknown error'}`)
