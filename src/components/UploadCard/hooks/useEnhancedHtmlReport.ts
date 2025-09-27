@@ -25,7 +25,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
 
       // Create translation service
       const translationService = new IDSTranslationService(t)
-      
+
       // Translate the validation results
       const translatedResults = translationService.translateValidationResults(result as unknown as IDSValidationResult)
 
@@ -46,7 +46,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
           // Build a detailed title matching original format
           const ifc = result.filename || 'report.ifc'
           const rawIds = (result as any).ids_filename || 'ids'
-          const ids = (rawIds.split(/[\/\\]/).pop() || rawIds)
+          const ids = rawIds.split(/[\/\\]/).pop() || rawIds
           const now = new Date()
           const yyyy = now.getFullYear()
           const mm = String(now.getMonth() + 1).padStart(2, '0')
@@ -63,7 +63,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
           // Fallback to blob URL if storage is unavailable or full
           const ifc = result.filename || 'report.ifc'
           const rawIds = (result as any).ids_filename || 'ids'
-          const ids = (rawIds.split(/[\/\\]/).pop() || rawIds)
+          const ids = rawIds.split(/[\/\\]/).pop() || rawIds
           const now = new Date()
           const yyyy = now.getFullYear()
           const mm = String(now.getMonth() + 1).padStart(2, '0')
@@ -96,16 +96,16 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
         // Create a blob with the HTML content
         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
         const url = window.URL.createObjectURL(blob)
-        
+
         // Create download link
         const link = document.createElement('a')
         link.href = url
         link.download = `${fileName.replace(/\.[^/.]+$/, '')}_report.html`
-        
+
         // Trigger download
         document.body.appendChild(link)
         link.click()
-        
+
         // Cleanup
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
@@ -124,14 +124,14 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
  * Generate HTML report using the template and translated data
  */
 export async function generateHtmlReport(
-  templateContent: string, 
-  translatedResults: ValidationResult, 
-  t: any
+  templateContent: string,
+  translatedResults: ValidationResult,
+  t: any,
 ): Promise<string> {
   // Prepare template data with translations
   const templateData = {
     ...translatedResults,
-    
+
     // Add translation object for template use
     t: {
       summary: t('report.summary', 'Summary'),
@@ -158,14 +158,18 @@ export async function generateHtmlReport(
       elementsPassedPrefix: t('report.interface.elementsPassedPrefix', 'Elements passed'),
       specNotApplyToVersion: t('report.specNotApplyToVersion', 'specification does not apply to this IFC version'),
       failureReason: t('report.failureReason', 'Failure Reason'),
-      moreOfSameType: t('report.phrases.moreOfSameType', 
-        '... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...'),
-      moreElementsNotShown: t('report.phrases.moreElementsNotShown', 
-        '... {{count}} more {{type}} elements not shown out of {{total}} total ...'),
+      moreOfSameType: t(
+        'report.phrases.moreOfSameType',
+        '... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...',
+      ),
+      moreElementsNotShown: t(
+        'report.phrases.moreElementsNotShown',
+        '... {{count}} more {{type}} elements not shown out of {{total}} total ...',
+      ),
       specificationsPassedPrefix: t('report.specificationsPassedPrefix', 'Specifications passed'),
       requirementsPassedPrefix: t('report.requirementsPassedPrefix', 'Requirements passed'),
       applicability: t('report.applicability', 'Applicability'),
-    }
+    },
   }
 
   // Use simplified template replacement
@@ -173,16 +177,35 @@ export async function generateHtmlReport(
 
   // Replace translation variables (may appear inside injected specification sections)
   const translationVars = [
-    't.summary', 't.specifications', 't.requirements', 't.details',
-    't.class', 't.predefinedType', 't.name', 't.description', 't.warning',
-    't.globalId', 't.tag', 't.reportBy', 't.and',
-    't.status.pass', 't.status.fail', 't.status.untested', 't.status.skipped',
-    't.skipped', 't.checksPassedPrefix', 't.elementsPassedPrefix', 't.specNotApplyToVersion',
-    't.failureReason', 't.moreElementsNotShown',
-    't.specificationsPassedPrefix', 't.requirementsPassedPrefix', 't.applicability'
+    't.summary',
+    't.specifications',
+    't.requirements',
+    't.details',
+    't.class',
+    't.predefinedType',
+    't.name',
+    't.description',
+    't.warning',
+    't.globalId',
+    't.tag',
+    't.reportBy',
+    't.and',
+    't.status.pass',
+    't.status.fail',
+    't.status.untested',
+    't.status.skipped',
+    't.skipped',
+    't.checksPassedPrefix',
+    't.elementsPassedPrefix',
+    't.specNotApplyToVersion',
+    't.failureReason',
+    't.moreElementsNotShown',
+    't.specificationsPassedPrefix',
+    't.requirementsPassedPrefix',
+    't.applicability',
   ]
 
-  translationVars.forEach(varName => {
+  translationVars.forEach((varName) => {
     const regex = new RegExp(`\{\{${varName}\}\}`, 'g')
     const value = getNestedValue(templateData, varName)
     // Use function replacement to avoid JS treating $-sequences (e.g. $1, $&) specially
@@ -191,20 +214,27 @@ export async function generateHtmlReport(
 
   // Replace simple top-level variables after scoped content is inserted
   const simpleVars = [
-    'title', 'filename', 'date', '_lang', 'total_specifications', 
-    'total_specifications_pass', 'total_specifications_fail',
-    'total_requirements', 'total_requirements_pass', 'total_requirements_fail',
-    'total_checks', 'total_checks_pass', 'total_checks_fail', 
-    'percent_checks_pass', 'status_text'
+    'title',
+    'filename',
+    'date',
+    '_lang',
+    'total_specifications',
+    'total_specifications_pass',
+    'total_specifications_fail',
+    'total_requirements',
+    'total_requirements_pass',
+    'total_requirements_fail',
+    'total_checks',
+    'total_checks_pass',
+    'total_checks_fail',
+    'percent_checks_pass',
+    'status_text',
   ]
 
-  simpleVars.forEach(varName => {
+  simpleVars.forEach((varName) => {
     const regex = new RegExp(`\{\{${varName}\}\}`, 'g')
     // Insert literally to preserve characters like $ in regex patterns
-    htmlContent = htmlContent.replace(
-      regex,
-      () => String(templateData[varName as keyof ValidationResult] ?? ''),
-    )
+    htmlContent = htmlContent.replace(regex, () => String(templateData[varName as keyof ValidationResult] ?? ''))
   })
 
   // Handle conditional sections
@@ -252,7 +282,7 @@ function processConditionalSections(template: string, data: any): string {
 
   // Handle generic field conditionals for all string fields
   const fields = ['description', 'instructions', 'filename', 'is_ifc_version']
-  fields.forEach(field => {
+  fields.forEach((field) => {
     const hasValue = data[field] && data[field].toString().trim() !== ''
     if (hasValue) {
       // If field exists, show content within {{#field}} and remove {{^field}} blocks
@@ -289,143 +319,157 @@ function processSpecificationLoops(template: string, data: any): string {
   if (specMatch && data.specifications) {
     const specTemplate = specMatch[0]
     const specContent = specTemplate.replace(/\{\{#specifications\}\}/, '').replace(/\{\{\/specifications\}\}/, '')
-    
-    const specHtml = data.specifications.map((spec: any) => {
-      let specSection = specContent
-      
-      // Handle specification-level conditionals
-      const specFields = ['description', 'instructions', 'is_ifc_version']
-      specFields.forEach(field => {
-        const hasValue = spec[field] && spec[field].toString().trim() !== ''
-        if (hasValue) {
-          // If field exists, show content within {{#field}} and remove {{^field}} blocks
-          const regex1 = new RegExp(`\\{\\{#${field}\\}\\}`, 'g')
-          const regex2 = new RegExp(`\\{\\{\\/${field}\\}\\}`, 'g')
-          const regex3 = new RegExp(`\\{\\{\\^${field}\\}\\}[\\s\\S]*?\\{\\{\\/${field}\\}\\}`, 'g')
-          specSection = specSection.replace(regex1, '')
-          specSection = specSection.replace(regex2, '')
-          specSection = specSection.replace(regex3, '')
+
+    const specHtml = data.specifications
+      .map((spec: any) => {
+        let specSection = specContent
+
+        // Handle specification-level conditionals
+        const specFields = ['description', 'instructions', 'is_ifc_version']
+        specFields.forEach((field) => {
+          const hasValue = spec[field] && spec[field].toString().trim() !== ''
+          if (hasValue) {
+            // If field exists, show content within {{#field}} and remove {{^field}} blocks
+            const regex1 = new RegExp(`\\{\\{#${field}\\}\\}`, 'g')
+            const regex2 = new RegExp(`\\{\\{\\/${field}\\}\\}`, 'g')
+            const regex3 = new RegExp(`\\{\\{\\^${field}\\}\\}[\\s\\S]*?\\{\\{\\/${field}\\}\\}`, 'g')
+            specSection = specSection.replace(regex1, '')
+            specSection = specSection.replace(regex2, '')
+            specSection = specSection.replace(regex3, '')
+          } else {
+            // If field doesn't exist, remove {{#field}} blocks and show {{^field}} content
+            const regex1 = new RegExp(`\\{\\{#${field}\\}\\}[\\s\\S]*?\\{\\{\\/${field}\\}\\}`, 'g')
+            const regex2 = new RegExp(`\\{\\{\\^${field}\\}\\}`, 'g')
+            const regex3 = new RegExp(`\\{\\{\\/${field}\\}\\}`, 'g')
+            specSection = specSection.replace(regex1, '')
+            specSection = specSection.replace(regex2, '')
+            specSection = specSection.replace(regex3, '')
+          }
+        })
+
+        // Handle applicability loop
+        if (spec.applicability && spec.applicability.length > 0) {
+          const appLoopRegex = /\{\{#applicability\}\}([\s\S]*?)\{\{\/applicability\}\}/g
+          const appMatch = specSection.match(appLoopRegex)
+
+          if (appMatch) {
+            const appTemplate = appMatch[0]
+            const appContent = appTemplate.replace(/\{\{#applicability\}\}/, '').replace(/\{\{\/applicability\}\}/, '')
+            const appHtml = spec.applicability.map((app: string) => appContent.replace(/\{\{\.\}\}/g, app)).join('')
+
+            specSection = specSection.replace(appLoopRegex, appHtml)
+          }
         } else {
-          // If field doesn't exist, remove {{#field}} blocks and show {{^field}} content
-          const regex1 = new RegExp(`\\{\\{#${field}\\}\\}[\\s\\S]*?\\{\\{\\/${field}\\}\\}`, 'g')
-          const regex2 = new RegExp(`\\{\\{\\^${field}\\}\\}`, 'g')
-          const regex3 = new RegExp(`\\{\\{\\/${field}\\}\\}`, 'g')
-          specSection = specSection.replace(regex1, '')
-          specSection = specSection.replace(regex2, '')
-          specSection = specSection.replace(regex3, '')
+          specSection = specSection.replace(/\{\{#applicability\}\}[\s\S]*?\{\{\/applicability\}\}/g, '')
         }
+
+        // Handle requirements loop
+        if (spec.requirements && spec.requirements.length > 0) {
+          const reqLoopRegex = /\{\{#requirements\}\}([\s\S]*?)\{\{\/requirements\}\}/g
+          const reqMatch = specSection.match(reqLoopRegex)
+
+          if (reqMatch) {
+            const reqTemplate = reqMatch[0]
+            const reqContent = reqTemplate.replace(/\{\{#requirements\}\}/, '').replace(/\{\{\/requirements\}\}/, '')
+            const reqHtml = spec.requirements
+              .map((req: any) => {
+                let reqSection = reqContent
+                // Replace requirement variables - but protect entity table placeholders
+                // First, temporarily protect entity table sections from replacement
+                const entityTableProtected = reqSection.replace(
+                  /(\{\{#(?:passed|failed)_entities\}\}[\s\S]*?\{\{\/(?:passed|failed)_entities\}\})/g,
+                  (match) => match.replace(/\{\{/g, '[[PROTECT[[').replace(/\}\}/g, ']]PROTECT]]'),
+                )
+
+                // Replace requirement variables
+                const reqVars = ['description', 'total_checks', 'total_pass', 'total_fail', 'status', 'cardinality']
+                let processedSection = entityTableProtected
+                reqVars.forEach((varName) => {
+                  const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
+                  // Use nullish coalescing to preserve 0 and false values
+                  const value = req[varName] ?? ''
+                  processedSection = processedSection.replace(regex, () => String(value))
+                })
+
+                // Restore protected placeholders
+                reqSection = processedSection.replace(/\[\[PROTECT\[\[/g, '{{').replace(/\]\]PROTECT\]\]/g, '}}')
+
+                // Handle requirement status conditionals
+                if (req.status === 'skipped') {
+                  reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
+                  reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'skipped')
+                } else if (req.status) {
+                  reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'pass')
+                  reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, '')
+                } else {
+                  reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
+                  reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'fail')
+                }
+
+                // Handle total check conditionals
+                const hasChecks = Number(req.total_checks) > 0
+                if (hasChecks) {
+                  reqSection = applyConditional(reqSection, 'total_checks', true)
+                } else {
+                  // For skipped requirements (total_checks = 0), replace the entire content with just the description
+                  reqSection = reqSection.replace(/\{\{#total_checks\}\}[\s\S]*?\{\{\/total_checks\}\}/g, '')
+                  reqSection = reqSection.replace(/\{\{\^total_checks\}\}([\s\S]*?)\{\{\/total_checks\}\}/g, '$1')
+                }
+                reqSection = reqSection.replace(/<table class="skipped">[\s\S]*?<\/table>/g, '')
+
+                // Handle entity tables
+                reqSection = processEntityTables(reqSection, req)
+
+                return reqSection
+              })
+              .join('')
+
+            specSection = specSection.replace(reqLoopRegex, () => reqHtml)
+          }
+        } else {
+          specSection = specSection.replace(/\{\{#requirements\}\}[\s\S]*?\{\{\/requirements\}\}/g, '')
+        }
+
+        // Handle specification status conditionals
+        if (spec.status === 'skipped') {
+          specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'skipped')
+          specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'skipped')
+        } else if (spec.status) {
+          specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'pass')
+          specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, '')
+        } else {
+          specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
+          specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'fail')
+        }
+
+        // Replace specification variables - expanded list (after processing loops to avoid clobbering nested placeholders)
+        const specVars = [
+          'name',
+          'description',
+          'instructions',
+          'status_text',
+          'identifier',
+          'total_checks',
+          'total_checks_pass',
+          'total_checks_fail',
+          'percent_checks_pass',
+          'total_applicable',
+          'total_applicable_pass',
+          'total_applicable_fail',
+          'failed_entities',
+          'applicable_entities',
+        ]
+
+        specVars.forEach((varName) => {
+          const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
+          // Use nullish coalescing to preserve 0 and false values
+          const value = String(spec[varName] ?? '')
+          specSection = specSection.replace(regex, () => value)
+        })
+
+        return specSection
       })
-
-      // Handle applicability loop
-      if (spec.applicability && spec.applicability.length > 0) {
-        const appLoopRegex = /\{\{#applicability\}\}([\s\S]*?)\{\{\/applicability\}\}/g
-        const appMatch = specSection.match(appLoopRegex)
-        
-        if (appMatch) {
-          const appTemplate = appMatch[0]
-          const appContent = appTemplate.replace(/\{\{#applicability\}\}/, '').replace(/\{\{\/applicability\}\}/, '')
-          const appHtml = spec.applicability.map((app: string) => 
-            appContent.replace(/\{\{\.\}\}/g, app)
-          ).join('')
-          
-          specSection = specSection.replace(appLoopRegex, appHtml)
-        }
-      } else {
-        specSection = specSection.replace(/\{\{#applicability\}\}[\s\S]*?\{\{\/applicability\}\}/g, '')
-      }
-
-      // Handle requirements loop
-      if (spec.requirements && spec.requirements.length > 0) {
-        const reqLoopRegex = /\{\{#requirements\}\}([\s\S]*?)\{\{\/requirements\}\}/g
-        const reqMatch = specSection.match(reqLoopRegex)
-        
-        if (reqMatch) {
-          const reqTemplate = reqMatch[0]
-          const reqContent = reqTemplate.replace(/\{\{#requirements\}\}/, '').replace(/\{\{\/requirements\}\}/, '')
-          const reqHtml = spec.requirements.map((req: any) => {
-            let reqSection = reqContent
-            // Replace requirement variables - but protect entity table placeholders
-            // First, temporarily protect entity table sections from replacement
-            const entityTableProtected = reqSection.replace(
-              /(\{\{#(?:passed|failed)_entities\}\}[\s\S]*?\{\{\/(?:passed|failed)_entities\}\})/g,
-              (match) => match.replace(/\{\{/g, '[[PROTECT[[').replace(/\}\}/g, ']]PROTECT]]')
-            )
-            
-            // Replace requirement variables
-            const reqVars = ['description', 'total_checks', 'total_pass', 'total_fail', 'status', 'cardinality']
-            let processedSection = entityTableProtected
-            reqVars.forEach(varName => {
-              const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-              // Use nullish coalescing to preserve 0 and false values
-              const value = req[varName] ?? ''
-              processedSection = processedSection.replace(regex, () => String(value))
-            })
-            
-            // Restore protected placeholders
-            reqSection = processedSection.replace(/\[\[PROTECT\[\[/g, '{{').replace(/\]\]PROTECT\]\]/g, '}}')
-
-            // Handle requirement status conditionals
-            if (req.status === 'skipped') {
-              reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
-              reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'skipped')
-            } else if (req.status) {
-              reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'pass')
-              reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, '')
-            } else {
-              reqSection = reqSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
-              reqSection = reqSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'fail')
-            }
-
-            // Handle total check conditionals
-            const hasChecks = Number(req.total_checks) > 0
-            if (hasChecks) {
-              reqSection = applyConditional(reqSection, 'total_checks', true)
-            } else {
-              // For skipped requirements (total_checks = 0), replace the entire content with just the description
-              reqSection = reqSection.replace(/\{\{#total_checks\}\}[\s\S]*?\{\{\/total_checks\}\}/g, '')
-              reqSection = reqSection.replace(/\{\{\^total_checks\}\}([\s\S]*?)\{\{\/total_checks\}\}/g, '$1')
-            }
-            reqSection = reqSection.replace(/<table class="skipped">[\s\S]*?<\/table>/g, '')
-
-            // Handle entity tables
-            reqSection = processEntityTables(reqSection, req)
-
-            return reqSection
-          }).join('')
-          
-          specSection = specSection.replace(reqLoopRegex, () => reqHtml)
-        }
-      } else {
-        specSection = specSection.replace(/\{\{#requirements\}\}[\s\S]*?\{\{\/requirements\}\}/g, '')
-      }
-
-      // Handle specification status conditionals
-      if (spec.status === 'skipped') {
-        specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'skipped')
-        specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'skipped')
-      } else if (spec.status) {
-        specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, 'pass')
-        specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, '')
-      } else {
-        specSection = specSection.replace(/\{\{#status\}\}pass\{\{\/status\}\}/g, '')
-        specSection = specSection.replace(/\{\{\^status\}\}fail\{\{\/status\}\}/g, 'fail')
-      }
-
-      // Replace specification variables - expanded list (after processing loops to avoid clobbering nested placeholders)
-      const specVars = ['name', 'description', 'instructions', 'status_text', 'identifier',
-                       'total_checks', 'total_checks_pass', 'total_checks_fail', 'percent_checks_pass',
-                       'total_applicable', 'total_applicable_pass', 'total_applicable_fail',
-                       'failed_entities', 'applicable_entities']
-
-      specVars.forEach(varName => {
-        const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-        // Use nullish coalescing to preserve 0 and false values
-        const value = String(spec[varName] ?? '')
-        specSection = specSection.replace(regex, () => value)
-      })
-
-      return specSection
-    }).join('')
+      .join('')
 
     // Use function replacement to avoid $-sequence interpretation
     result = result.replace(specLoopRegex, () => specHtml)
@@ -444,7 +488,7 @@ function processEntityTables(template: string, req: any): string {
   if (req.total_pass > 0 && req.passed_entities && req.passed_entities.length > 0) {
     const passedTableRegex = /\{\{#total_pass\}\}([\s\S]*?)\{\{\/total_pass\}\}/g
     const passedMatch = result.match(passedTableRegex)
-    
+
     if (passedMatch) {
       const tableTemplate = passedMatch[0]
       const tableContent = tableTemplate.replace(/\{\{#total_pass\}\}/, '').replace(/\{\{\/total_pass\}\}/, '')
@@ -463,18 +507,22 @@ function processEntityTables(template: string, req: any): string {
       const omittedPassesMatch = tableContent.match(omittedPassesRegex)
       const omittedPassesContent = omittedPassesMatch ? omittedPassesMatch[1] : ''
 
-      const entityRows = req.passed_entities.slice(0, 10).map((entity: any) =>
-        rowTemplate
-          .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
-          .replace(/\{\{predefined_type\}\}/g, () => escapeHtml(getEntityValue(entity, ['predefined_type', 'predefinedType'])))
-          .replace(/\{\{name\}\}/g, () => escapeHtml(getEntityValue(entity, ['name'])))
-          .replace(/\{\{description\}\}/g, () => escapeHtml(getEntityValue(entity, ['description'])))
-          .replace(/\{\{global_id\}\}/g, () => escapeHtml(getEntityValue(entity, ['global_id', 'globalId'])))
-          .replace(/\{\{tag\}\}/g, () => escapeHtml(getEntityValue(entity, ['tag'])))
-      ).join('')
+      const entityRows = req.passed_entities
+        .slice(0, 10)
+        .map((entity: any) =>
+          rowTemplate
+            .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
+            .replace(/\{\{predefined_type\}\}/g, () =>
+              escapeHtml(getEntityValue(entity, ['predefined_type', 'predefinedType'])),
+            )
+            .replace(/\{\{name\}\}/g, () => escapeHtml(getEntityValue(entity, ['name'])))
+            .replace(/\{\{description\}\}/g, () => escapeHtml(getEntityValue(entity, ['description'])))
+            .replace(/\{\{global_id\}\}/g, () => escapeHtml(getEntityValue(entity, ['global_id', 'globalId'])))
+            .replace(/\{\{tag\}\}/g, () => escapeHtml(getEntityValue(entity, ['tag']))),
+        )
+        .join('')
 
-      let tableHtml = tableContent
-        .replace(/\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/, entityRows)
+      let tableHtml = tableContent.replace(/\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/, entityRows)
 
       tableHtml = tableHtml.replace(omittedPassesRegex, req.has_omitted_passes ? omittedPassesContent : '')
 
@@ -484,11 +532,11 @@ function processEntityTables(template: string, req: any): string {
     result = result.replace(/\{\{#total_pass\}\}[\s\S]*?\{\{\/total_pass\}\}/g, '')
   }
 
-  // Process failed entities table  
+  // Process failed entities table
   if (req.total_fail > 0 && req.failed_entities && req.failed_entities.length > 0) {
     const failedTableRegex = /\{\{#total_fail\}\}([\s\S]*?)\{\{\/total_fail\}\}/g
     const failedMatch = result.match(failedTableRegex)
-    
+
     if (failedMatch) {
       const tableTemplate = failedMatch[0]
       const tableContent = tableTemplate.replace(/\{\{#total_fail\}\}/, '').replace(/\{\{\/total_fail\}\}/, '')
@@ -509,19 +557,23 @@ function processEntityTables(template: string, req: any): string {
       const omittedFailuresMatch = tableContent.match(omittedFailuresRegex)
       const omittedFailuresContent = omittedFailuresMatch ? omittedFailuresMatch[1] : ''
 
-      const entityRows = req.failed_entities.slice(0, 10).map((entity: any) =>
-        rowTemplate
-          .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
-          .replace(/\{\{predefined_type\}\}/g, () => escapeHtml(getEntityValue(entity, ['predefined_type', 'predefinedType'])))
-          .replace(/\{\{name\}\}/g, () => escapeHtml(getEntityValue(entity, ['name'])))
-          .replace(/\{\{description\}\}/g, () => escapeHtml(getEntityValue(entity, ['description'])))
-          .replace(/\{\{reason\}\}/g, () => escapeHtml(getEntityValue(entity, ['reason']) || 'Validation failed'))
-          .replace(/\{\{global_id\}\}/g, () => escapeHtml(getEntityValue(entity, ['global_id', 'globalId'])))
-          .replace(/\{\{tag\}\}/g, () => escapeHtml(getEntityValue(entity, ['tag'])))
-      ).join('')
+      const entityRows = req.failed_entities
+        .slice(0, 10)
+        .map((entity: any) =>
+          rowTemplate
+            .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
+            .replace(/\{\{predefined_type\}\}/g, () =>
+              escapeHtml(getEntityValue(entity, ['predefined_type', 'predefinedType'])),
+            )
+            .replace(/\{\{name\}\}/g, () => escapeHtml(getEntityValue(entity, ['name'])))
+            .replace(/\{\{description\}\}/g, () => escapeHtml(getEntityValue(entity, ['description'])))
+            .replace(/\{\{reason\}\}/g, () => escapeHtml(getEntityValue(entity, ['reason']) || 'Validation failed'))
+            .replace(/\{\{global_id\}\}/g, () => escapeHtml(getEntityValue(entity, ['global_id', 'globalId'])))
+            .replace(/\{\{tag\}\}/g, () => escapeHtml(getEntityValue(entity, ['tag']))),
+        )
+        .join('')
 
-      let tableHtml = tableContent
-        .replace(/\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/, entityRows)
+      let tableHtml = tableContent.replace(/\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/, entityRows)
 
       tableHtml = tableHtml.replace(omittedFailuresRegex, req.has_omitted_failures ? omittedFailuresContent : '')
 

@@ -25,8 +25,8 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     return 'system'
   })
 
-  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches,
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
   )
 
   useEffect(() => {

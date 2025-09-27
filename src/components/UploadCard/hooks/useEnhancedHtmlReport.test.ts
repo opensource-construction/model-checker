@@ -94,4 +94,3 @@ describe('generateHtmlReport', () => {
     expect(html).toContain('<td>Missing property</td>')
   })
 })
-

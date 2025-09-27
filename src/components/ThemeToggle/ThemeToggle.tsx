@@ -12,11 +12,7 @@ export const ThemeToggle = () => {
   }
 
   return (
-    <button
-      onClick={cycleMode}
-      className='theme-toggle'
-      title={`Theme: ${mode}. Click to change`}
-    >
+    <button onClick={cycleMode} className='theme-toggle' title={`Theme: ${mode}. Click to change`}>
       <div className={`toggle-wrapper ${isDarkMode ? 'dark' : ''} ${mode === 'system' ? 'system' : ''}`}>
         <div className='icons'>
           <IconSun className='sun-icon' size={24} stroke={2} />

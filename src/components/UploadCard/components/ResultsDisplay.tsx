@@ -83,17 +83,19 @@ export const ResultsDisplay = ({
                       borderTopLeftRadius: 10,
                       borderBottomLeftRadius: 10,
                       paddingInline: '14px',
-                      background: 'linear-gradient(135deg, var(--mantine-color-yellow-6), var(--mantine-color-yellow-5))',
+                      background:
+                        'linear-gradient(135deg, var(--mantine-color-yellow-6), var(--mantine-color-yellow-5))',
                       color: 'var(--mantine-color-dark-9)',
                       transition: 'transform 120ms ease, box-shadow 120ms ease, background 200ms ease',
                       boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.1)',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, var(--mantine-color-yellow-7), var(--mantine-color-yellow-6))',
+                        background:
+                          'linear-gradient(135deg, var(--mantine-color-yellow-7), var(--mantine-color-yellow-6))',
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)'
+                        boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)',
                       },
                       '&:active': {
-                        transform: 'translateY(0)'
+                        transform: 'translateY(0)',
                       },
                     },
                   }}
@@ -117,10 +119,10 @@ export const ResultsDisplay = ({
                         '&:hover': {
                           backgroundColor: 'var(--mantine-color-yellow-2)',
                           transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)'
+                          boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)',
                         },
                         '&:active': {
-                          transform: 'translateY(0)'
+                          transform: 'translateY(0)',
                         },
                       },
                     }}
@@ -153,7 +155,7 @@ export const ResultsDisplay = ({
                     },
                     '&:active': {
                       transform: 'translateY(-1px)',
-                      boxShadow: '0 3px 8px rgba(0, 145, 255, 0.20)'
+                      boxShadow: '0 3px 8px rgba(0, 145, 255, 0.20)',
                     },
                   },
                 }}
