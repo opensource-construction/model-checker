@@ -1,10 +1,9 @@
 import { useCallback } from 'react'
 import { ValidationResult } from '../../../types/validation'
-import { i18n as I18nType } from 'i18next'
 import { IDSTranslationService, ValidationResult as IDSValidationResult } from '../../../services/IDSTranslationService'
 import { useTranslation } from 'react-i18next'
 
-export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18nType) => {
+export const useEnhancedHtmlReport = (templateContent: string | null) => {
   const { t } = useTranslation()
 
   const generateHtmlContent = useCallback(
@@ -19,24 +18,26 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
         throw new Error('Template content not loaded')
       }
 
-      const reportLanguage = result.language_code || result.ui_language || i18n.language || 'en'
-
       // Optional debug info removed for production
 
       // Create translation service
-      const translationService = new IDSTranslationService(t)
+      const translationService = new IDSTranslationService()
 
       // Translate the validation results
       const translatedResults = translationService.translateValidationResults(result as unknown as IDSValidationResult)
 
       // Generate HTML using our template renderer logic
-      return await generateHtmlReport(templateContent, translatedResults as unknown as ValidationResult, t)
+      return await generateHtmlReport(
+        templateContent,
+        translatedResults as unknown as ValidationResult,
+        t as (key: string, defaultValue?: string) => string,
+      )
     },
-    [templateContent, i18n, t],
+    [templateContent, t],
   )
 
   const openHtmlReport = useCallback(
-    async (result: ValidationResult, fileName: string) => {
+    async (result: ValidationResult) => {
       try {
         const htmlContent = await generateHtmlContent(result)
 
@@ -45,8 +46,8 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
         try {
           // Build a detailed title matching original format
           const ifc = result.filename || 'report.ifc'
-          const rawIds = (result as any).ids_filename || 'ids'
-          const ids = rawIds.split(/[\/\\]/).pop() || rawIds
+          const rawIds = result.ids_filename || 'ids'
+          const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
           const now = new Date()
           const yyyy = now.getFullYear()
           const mm = String(now.getMonth() + 1).padStart(2, '0')
@@ -54,26 +55,30 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
           const yy = String(yyyy).slice(-2)
           const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
 
+          const titleReplacement = `<title>${pageTitle}</title>`
+          const headReplacement = `<head><title>${pageTitle}</title>`
           const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
           const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}<\/title>`)
-            : htmlContent.replace(/<head>/i, `<head><title>${pageTitle}<\/title>`)
+            ? htmlContent.replace(/<title>.*?<\/title>/i, titleReplacement)
+            : htmlContent.replace(/<head>/i, headReplacement)
           localStorage.setItem(`generated_report_html_${token}`, withTitle)
         } catch (e) {
           // Fallback to blob URL if storage is unavailable or full
           const ifc = result.filename || 'report.ifc'
-          const rawIds = (result as any).ids_filename || 'ids'
-          const ids = rawIds.split(/[\/\\]/).pop() || rawIds
+          const rawIds = result.ids_filename || 'ids'
+          const ids = String(rawIds).split(/[/\\]/).pop() || String(rawIds)
           const now = new Date()
           const yyyy = now.getFullYear()
           const mm = String(now.getMonth() + 1).padStart(2, '0')
           const dd = String(now.getDate()).padStart(2, '0')
           const yy = String(yyyy).slice(-2)
           const pageTitle = `${yy}${mm}${dd}-${ifc}-${ids}`
+          const titleReplacement = `<title>${pageTitle}</title>`
+          const headReplacement = `<head><title>${pageTitle}</title>`
           const hasTitle = /<title>.*?<\/title>/i.test(htmlContent)
           const withTitle = hasTitle
-            ? htmlContent.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}<\/title>`)
-            : htmlContent.replace(/<head>/i, `<head><title>${pageTitle}<\/title>`)
+            ? htmlContent.replace(/<title>.*?<\/title>/i, titleReplacement)
+            : htmlContent.replace(/<head>/i, headReplacement)
           const blob = new Blob([withTitle], { type: 'text/html;charset=utf-8' })
           const url = window.URL.createObjectURL(blob)
           window.open(url, '_blank', 'noopener')
@@ -126,10 +131,9 @@ export const useEnhancedHtmlReport = (templateContent: string | null, i18n: I18n
 export async function generateHtmlReport(
   templateContent: string,
   translatedResults: ValidationResult,
-  t: any,
+  t: (key: string, defaultValue?: string) => string,
 ): Promise<string> {
-  // Prepare template data with translations
-  const templateData = {
+  const templateData: Record<string, unknown> = {
     ...translatedResults,
 
     // Add translation object for template use
@@ -206,7 +210,7 @@ export async function generateHtmlReport(
   ]
 
   translationVars.forEach((varName) => {
-    const regex = new RegExp(`\{\{${varName}\}\}`, 'g')
+    const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
     const value = getNestedValue(templateData, varName)
     // Use function replacement to avoid JS treating $-sequences (e.g. $1, $&) specially
     htmlContent = htmlContent.replace(regex, () => String(value ?? ''))
@@ -232,7 +236,7 @@ export async function generateHtmlReport(
   ]
 
   simpleVars.forEach((varName) => {
-    const regex = new RegExp(`\{\{${varName}\}\}`, 'g')
+    const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
     // Insert literally to preserve characters like $ in regex patterns
     htmlContent = htmlContent.replace(regex, () => String(templateData[varName as keyof ValidationResult] ?? ''))
   })
@@ -240,8 +244,6 @@ export async function generateHtmlReport(
   // Handle conditional sections
   htmlContent = processConditionalSections(htmlContent, templateData)
 
-  // Debug: Check if requirements are in the final HTML
-  const hasRequirements = htmlContent.includes('<summary>') && !htmlContent.includes('{{description}}')
   // Ensure progress bars reflect exact percentages by inlining width from data-width
   htmlContent = applyPercentWidths(htmlContent)
   return htmlContent
@@ -250,14 +252,19 @@ export async function generateHtmlReport(
 /**
  * Get nested object value by dot notation
  */
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj)
+function getNestedValue(obj: Record<string, unknown>, path: string): string | undefined {
+  return path.split('.').reduce((current: unknown, key: string) => {
+    if (current && typeof current === 'object' && key in current) {
+      return (current as Record<string, unknown>)[key]
+    }
+    return undefined
+  }, obj) as string | undefined
 }
 
 /**
  * Process conditional sections in the template
  */
-function processConditionalSections(template: string, data: any): string {
+function processConditionalSections(template: string, data: Record<string, unknown>): string {
   let result = template
 
   // Handle status conditionals
@@ -270,7 +277,7 @@ function processConditionalSections(template: string, data: any): string {
   }
 
   // Handle total_checks conditionals
-  if (data.total_checks > 0) {
+  if (Number(data.total_checks) > 0) {
     result = result.replace(/\{\{\^total_checks\}\}.*?\{\{\/total_checks\}\}/gs, '')
     result = result.replace(/\{\{#total_checks\}\}/g, '')
     result = result.replace(/\{\{\/total_checks\}\}/g, '')
@@ -283,7 +290,7 @@ function processConditionalSections(template: string, data: any): string {
   // Handle generic field conditionals for all string fields
   const fields = ['description', 'instructions', 'filename', 'is_ifc_version']
   fields.forEach((field) => {
-    const hasValue = data[field] && data[field].toString().trim() !== ''
+    const hasValue = data[field] && String(data[field]).trim() !== ''
     if (hasValue) {
       // If field exists, show content within {{#field}} and remove {{^field}} blocks
       const regex1 = new RegExp(`\\{\\{#${field}\\}\\}`, 'g')
@@ -309,25 +316,25 @@ function processConditionalSections(template: string, data: any): string {
 /**
  * Process specification loops in the template
  */
-function processSpecificationLoops(template: string, data: any): string {
+function processSpecificationLoops(template: string, data: Record<string, unknown>): string {
   let result = template
 
   // Find and replace specification loop
   const specLoopRegex = /\{\{#specifications\}\}([\s\S]*?)\{\{\/specifications\}\}/g
   const specMatch = template.match(specLoopRegex)
 
-  if (specMatch && data.specifications) {
+  if (specMatch && data.specifications && Array.isArray(data.specifications)) {
     const specTemplate = specMatch[0]
     const specContent = specTemplate.replace(/\{\{#specifications\}\}/, '').replace(/\{\{\/specifications\}\}/, '')
 
     const specHtml = data.specifications
-      .map((spec: any) => {
+      .map((spec: Record<string, unknown>) => {
         let specSection = specContent
 
         // Handle specification-level conditionals
         const specFields = ['description', 'instructions', 'is_ifc_version']
         specFields.forEach((field) => {
-          const hasValue = spec[field] && spec[field].toString().trim() !== ''
+          const hasValue = spec[field] && String(spec[field]).trim() !== ''
           if (hasValue) {
             // If field exists, show content within {{#field}} and remove {{^field}} blocks
             const regex1 = new RegExp(`\\{\\{#${field}\\}\\}`, 'g')
@@ -348,7 +355,7 @@ function processSpecificationLoops(template: string, data: any): string {
         })
 
         // Handle applicability loop
-        if (spec.applicability && spec.applicability.length > 0) {
+        if (spec.applicability && Array.isArray(spec.applicability) && spec.applicability.length > 0) {
           const appLoopRegex = /\{\{#applicability\}\}([\s\S]*?)\{\{\/applicability\}\}/g
           const appMatch = specSection.match(appLoopRegex)
 
@@ -364,7 +371,7 @@ function processSpecificationLoops(template: string, data: any): string {
         }
 
         // Handle requirements loop
-        if (spec.requirements && spec.requirements.length > 0) {
+        if (spec.requirements && Array.isArray(spec.requirements) && spec.requirements.length > 0) {
           const reqLoopRegex = /\{\{#requirements\}\}([\s\S]*?)\{\{\/requirements\}\}/g
           const reqMatch = specSection.match(reqLoopRegex)
 
@@ -372,7 +379,7 @@ function processSpecificationLoops(template: string, data: any): string {
             const reqTemplate = reqMatch[0]
             const reqContent = reqTemplate.replace(/\{\{#requirements\}\}/, '').replace(/\{\{\/requirements\}\}/, '')
             const reqHtml = spec.requirements
-              .map((req: any) => {
+              .map((req: Record<string, unknown>) => {
                 let reqSection = reqContent
                 // Replace requirement variables - but protect entity table placeholders
                 // First, temporarily protect entity table sections from replacement
@@ -481,11 +488,16 @@ function processSpecificationLoops(template: string, data: any): string {
 /**
  * Process entity tables for passed and failed entities
  */
-function processEntityTables(template: string, req: any): string {
+function processEntityTables(template: string, req: Record<string, unknown>): string {
   let result = template
 
   // Process passed entities table
-  if (req.total_pass > 0 && req.passed_entities && req.passed_entities.length > 0) {
+  if (
+    Number(req.total_pass) > 0 &&
+    req.passed_entities &&
+    Array.isArray(req.passed_entities) &&
+    req.passed_entities.length > 0
+  ) {
     const passedTableRegex = /\{\{#total_pass\}\}([\s\S]*?)\{\{\/total_pass\}\}/g
     const passedMatch = result.match(passedTableRegex)
 
@@ -509,7 +521,7 @@ function processEntityTables(template: string, req: any): string {
 
       const entityRows = req.passed_entities
         .slice(0, 10)
-        .map((entity: any) =>
+        .map((entity: Record<string, unknown>) =>
           rowTemplate
             .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
             .replace(/\{\{predefined_type\}\}/g, () =>
@@ -533,7 +545,12 @@ function processEntityTables(template: string, req: any): string {
   }
 
   // Process failed entities table
-  if (req.total_fail > 0 && req.failed_entities && req.failed_entities.length > 0) {
+  if (
+    Number(req.total_fail) > 0 &&
+    req.failed_entities &&
+    Array.isArray(req.failed_entities) &&
+    req.failed_entities.length > 0
+  ) {
     const failedTableRegex = /\{\{#total_fail\}\}([\s\S]*?)\{\{\/total_fail\}\}/g
     const failedMatch = result.match(failedTableRegex)
 
@@ -559,7 +576,7 @@ function processEntityTables(template: string, req: any): string {
 
       const entityRows = req.failed_entities
         .slice(0, 10)
-        .map((entity: any) =>
+        .map((entity: Record<string, unknown>) =>
           rowTemplate
             .replace(/\{\{class\}\}/g, () => escapeHtml(getEntityValue(entity, ['class', 'type'])))
             .replace(/\{\{predefined_type\}\}/g, () =>
@@ -587,8 +604,8 @@ function processEntityTables(template: string, req: any): string {
 }
 
 function applyConditional(template: string, field: string, condition: boolean): string {
-  const positiveRegex = new RegExp(`\{\{#${field}\}\}([\s\S]*?)\{\{\/${field}\}\}`, 'g')
-  const negativeRegex = new RegExp(`\{\{\^${field}\}\}([\s\S]*?)\{\{\/${field}\}\}`, 'g')
+  const positiveRegex = new RegExp(`\\{\\{#${field}\\}\\}([\\s\\S]*?)\\{\\{\\/${field}\\}\\}`, 'g')
+  const negativeRegex = new RegExp(`\\{\\{\\^${field}\\}\\}([\\s\\S]*?)\\{\\{\\/${field}\\}\\}`, 'g')
 
   if (condition) {
     template = template.replace(positiveRegex, '$1')
@@ -601,7 +618,7 @@ function applyConditional(template: string, field: string, condition: boolean): 
   return template
 }
 
-function getEntityValue(entity: any, keys: string[]): string {
+function getEntityValue(entity: Record<string, unknown>, keys: string[]): string {
   for (const key of keys) {
     if (entity && entity[key] !== undefined && entity[key] !== null) {
       return String(entity[key])
@@ -625,12 +642,15 @@ function escapeHtml(value: string): string {
 function applyPercentWidths(html: string): string {
   // Match only divs that have class including "percent" and a data-width numeric value
   const regex = /(<div[^>]*class="[^"]*percent[^"]*"[^>]*?)data-width=("|')?(\d{1,3})(\2)?([^>]*>)/g
-  return html.replace(regex, (match, pre, quote, num, _q2, post) => {
-    const width = Math.max(0, Math.min(100, Number(num)))
-    // If a style attribute already exists in pre or post, just append width declaration at the end of pre
-    if (/style=/.test(pre)) {
-      return `${pre.replace(/style=("|')/i, (m, q) => `style=${q}width: ${width}%; `)}data-width=${quote || ''}${width}${quote || ''}${post}`
-    }
-    return `${pre}data-width=${quote || ''}${width}${quote || ''} style="width: ${width}%;"${post}`
-  })
+  return html.replace(
+    regex,
+    (_match: string, pre: string, quote: string | undefined, num: string, _q2: string | undefined, post: string) => {
+      const width = Math.max(0, Math.min(100, Number(num)))
+      // If a style attribute already exists in pre or post, just append width declaration at the end of pre
+      if (/style=/.test(pre)) {
+        return `${pre.replace(/style=("|')/i, (_m: string, q: string) => `style=${q}width: ${width}%; `)}data-width=${quote || ''}${width}${quote || ''}${post}`
+      }
+      return `${pre}data-width=${quote || ''}${width}${quote || ''} style="width: ${width}%;"${post}`
+    },
+  )
 }

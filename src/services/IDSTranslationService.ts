@@ -1,5 +1,3 @@
-import { TFunction } from 'i18next'
-
 export interface ValidationResult {
   title: string
   filename: string
@@ -35,16 +33,18 @@ export interface SpecificationResult {
   total_checks_pass: number
   total_checks_fail: number
   percent_checks_pass: number
+  total_applicable?: number
   applicability: string[]
   requirements: RequirementResult[]
 }
 
 export interface RequirementResult {
   description: string
-  status: boolean
+  status: boolean | string
   total_checks: number
   total_pass: number
   total_fail: number
+  total_applicable?: number
   passed_entities: EntityResult[]
   failed_entities: EntityResult[]
   has_omitted_passes: boolean
@@ -64,12 +64,12 @@ export interface EntityResult {
  * to properly translated content while maintaining the exact HTML template structure
  */
 export class IDSTranslationService {
-  constructor(private t: TFunction) {}
+  constructor() {}
 
   /**
    * Translate validation results and prepare them for HTML template rendering
    */
-  translateValidationResults(results: any): any {
+  translateValidationResults(results: ValidationResult): ValidationResult {
     const translated = { ...results }
 
     // Translate overall status text based on language
@@ -77,7 +77,9 @@ export class IDSTranslationService {
     translated.status_text = this.getStatusText(results.status, language, false)
 
     // Translate each specification
-    translated.specifications = results.specifications.map((spec: any) => this.translateSpecification(spec, language))
+    translated.specifications = results.specifications.map((spec: SpecificationResult) =>
+      this.translateSpecification(spec, language),
+    )
 
     return translated
   }
@@ -133,7 +135,7 @@ export class IDSTranslationService {
   /**
    * Translate individual specification
    */
-  private translateSpecification(spec: any, language: string): any {
+  private translateSpecification(spec: SpecificationResult, language: string): SpecificationResult {
     const translated = { ...spec }
 
     // Handle skipped specifications (no applicable entities)
@@ -146,23 +148,11 @@ export class IDSTranslationService {
     translated.applicability = spec.applicability.map((app: string) => this.translateApplicabilityText(app, language))
 
     // Translate requirements
-    translated.requirements = spec.requirements.map((req: any) => this.translateRequirement(req, language, isSkipped))
+    translated.requirements = spec.requirements.map((req: RequirementResult) =>
+      this.translateRequirement(req, language, isSkipped),
+    )
 
     return translated
-  }
-
-  /**
-   * Translate specification names to localized versions
-   */
-  private translateSpecificationName(name: string): string {
-    const specNameMap: Record<string, string> = {
-      Projektbezeichnung: this.t('report.ids.sections.projectDesignation', 'Project Designation'),
-      Projektperimeter: this.t('report.ids.sections.projectPerimeter', 'Project Perimeter'),
-      Gebäudebezeichnung: this.t('report.ids.sections.buildingDesignation', 'Building Designation'),
-      Geschossbezeichung: this.t('report.ids.sections.storeyDesignation', 'Storey Designation'),
-    }
-
-    return specNameMap[name] || name
   }
 
   /**
@@ -201,83 +191,9 @@ export class IDSTranslationService {
   }
 
   /**
-   * Legacy translate applicability text
-   */
-  private translateApplicability(applicability: string): string {
-    // Handle "All X data" patterns
-    const allDataPattern = /All (\w+) data/
-    const match = applicability.match(allDataPattern)
-
-    if (match) {
-      const entityType = match[1]
-      const translatedEntity = this.translateEntityType(entityType)
-      return this.t('report.interface.allEntityData', 'All {{entity}} data', {
-        entity: translatedEntity,
-      })
-    }
-
-    // Handle property patterns
-    if (applicability.includes('Property') && applicability.includes('in set')) {
-      return this.translatePropertyApplicability(applicability)
-    }
-
-    return applicability
-  }
-
-  /**
-   * Translate entity types (IfcProject, IfcSite, etc.)
-   */
-  private translateEntityType(entityType: string): string {
-    return entityType
-  }
-
-  /**
-   * Translate property applicability descriptions
-   */
-  private translatePropertyApplicability(text: string): string {
-    const propertyPattern = /Property (\w+) in set (\w+)(?:\s+with value (.+))?/
-    const match = text.match(propertyPattern)
-
-    if (match) {
-      const [, property, propertySet, value] = match
-
-      if (value) {
-        return this.t(
-          'report.ids.patterns.propertyWithValue',
-          'Property {{property}} in set {{propertySet}} with value {{value}}',
-          {
-            property,
-            propertySet: this.translatePropertySet(propertySet),
-            value,
-          },
-        )
-      } else {
-        return this.t('report.ids.patterns.propertyInSet', 'Property {{property}} in set {{propertySet}}', {
-          property,
-          propertySet: this.translatePropertySet(propertySet),
-        })
-      }
-    }
-
-    return text
-  }
-
-  /**
-   * Translate property set names
-   */
-  private translatePropertySet(propertySet: string): string {
-    const propertySetMap: Record<string, string> = {
-      Pset_PropertyAgreement: this.t('report.ids.propertySets.Pset_PropertyAgreement', 'Property Agreement'),
-      Cust_Site: this.t('report.ids.propertySets.Cust_Site', 'Site Properties'),
-    }
-
-    return propertySetMap[propertySet] || propertySet
-  }
-
-  /**
    * Translate individual requirement
    */
-  private translateRequirement(req: any, language: string, isSpecSkipped: boolean): any {
+  private translateRequirement(req: RequirementResult, language: string, isSpecSkipped: boolean): RequirementResult {
     const translated = { ...req }
 
     // Handle skipped requirements
@@ -313,14 +229,6 @@ export class IDSTranslationService {
 
     // Normalize common artifacts that can appear when upstream already partially translated text
     return this.normalizeTranslatedDescription(translated, language)
-  }
-
-  /**
-   * Legacy translate requirement descriptions using pattern matching
-   */
-  private translateRequirementDescription(description: string): string {
-    const language = this.t('report.language', 'en')
-    return this.translateRequirementDescriptionByLanguage(description, language)
   }
 
   /**

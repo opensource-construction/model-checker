@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IDSTranslationService, ValidationResult } from '../../services/IDSTranslationService'
 
 interface HTMLTemplateRendererProps {
   validationResults: ValidationResult
   onReportGenerated: (htmlContent: string) => void
+}
+
+interface TemplateData {
+  [key: string]: unknown
+  t: {
+    [key: string]: string | { [key: string]: string }
+  }
 }
 
 /**
@@ -25,24 +32,17 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
       .catch((error) => console.error('Error loading template:', error))
   }, [])
 
-  // Generate the report when template and results are ready
-  useEffect(() => {
-    if (templateContent && validationResults) {
-      generateReport()
-    }
-  }, [templateContent, validationResults, i18n.language])
-
-  const generateReport = () => {
+  const generateReport = useCallback(() => {
     if (!templateContent) return
 
     // Create translation service
-    const translationService = new IDSTranslationService(t)
+    const translationService = new IDSTranslationService()
 
     // Translate the validation results
     const translatedResults = translationService.translateValidationResults(validationResults)
 
     // Prepare template data with translations
-    const templateData = {
+    const templateData: TemplateData = {
       ...translatedResults,
 
       // Add translation object for template use
@@ -85,16 +85,23 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     htmlContent = replaceMustacheVariables(htmlContent, templateData)
 
     // Apply additional translations for dynamic content
-    htmlContent = applyDynamicTranslations(htmlContent, translationService)
+    htmlContent = applyDynamicTranslations(htmlContent)
 
     // Callback with the generated HTML
     onReportGenerated(htmlContent)
-  }
+  }, [templateContent, validationResults, t, onReportGenerated])
+
+  // Generate the report when template and results are ready
+  useEffect(() => {
+    if (templateContent && validationResults) {
+      generateReport()
+    }
+  }, [templateContent, validationResults, i18n.language, generateReport])
 
   /**
    * Replace Mustache-style template variables with actual values
    */
-  const replaceMustacheVariables = (template: string, data: any): string => {
+  const replaceMustacheVariables = useCallback((template: string, data: TemplateData): string => {
     let result = template
 
     // Simple variable replacement
@@ -118,7 +125,8 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
 
     simpleVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-      result = result.replace(regex, data[varName] || '')
+      const value = data[varName]
+      result = result.replace(regex, String(value || ''))
     })
 
     // Translation variables
@@ -148,7 +156,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     translationVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
       const value = getNestedValue(data, varName)
-      result = result.replace(regex, value || '')
+      result = result.replace(regex, String(value || ''))
     })
 
     // Handle conditional sections and loops
@@ -156,19 +164,24 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     result = processSpecificationLoops(result, data)
 
     return result
-  }
+  }, [])
 
   /**
    * Get nested object value by dot notation
    */
-  const getNestedValue = (obj: any, path: string): any => {
-    return path.split('.').reduce((current, key) => current?.[key], obj)
+  const getNestedValue = (obj: TemplateData, path: string): string | undefined => {
+    return path.split('.').reduce((current: unknown, key: string) => {
+      if (current && typeof current === 'object' && key in current) {
+        return (current as Record<string, unknown>)[key]
+      }
+      return undefined
+    }, obj) as string | undefined
   }
 
   /**
    * Process conditional sections in the template
    */
-  const processConditionalSections = (template: string, data: any): string => {
+  const processConditionalSections = (template: string, data: TemplateData): string => {
     let result = template
 
     // Handle status conditionals
@@ -181,7 +194,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     }
 
     // Handle total_checks conditionals
-    if (data.total_checks > 0) {
+    if (Number(data.total_checks) > 0) {
       result = result.replace(/\{\{\^total_checks\}\}.*?\{\{\/total_checks\}\}/g, '')
       result = result.replace(/\{\{#total_checks\}\}/g, '')
       result = result.replace(/\{\{\/total_checks\}\}/g, '')
@@ -197,18 +210,18 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
   /**
    * Process specification loops in the template
    */
-  const processSpecificationLoops = (template: string, data: any): string => {
+  const processSpecificationLoops = useCallback((template: string, data: TemplateData): string => {
     let result = template
 
     // Find and replace specification loop
     const specLoopRegex = /\{\{#specifications\}\}([\s\S]*?)\{\{\/specifications\}\}/g
     const specTemplate = template.match(specLoopRegex)?.[0]
 
-    if (specTemplate && data.specifications) {
+    if (specTemplate && data.specifications && Array.isArray(data.specifications)) {
       const specContent = specTemplate.replace(/\{\{#specifications\}\}/, '').replace(/\{\{\/specifications\}\}/, '')
 
       const specHtml = data.specifications
-        .map((spec: any) => {
+        .map((spec: Record<string, unknown>) => {
           let specSection = specContent
 
           // Replace specification variables
@@ -225,11 +238,11 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
 
           specVars.forEach((varName) => {
             const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-            specSection = specSection.replace(regex, spec[varName] || '')
+            specSection = specSection.replace(regex, String(spec[varName] || ''))
           })
 
           // Handle applicability loop
-          if (spec.applicability && spec.applicability.length > 0) {
+          if (spec.applicability && Array.isArray(spec.applicability) && spec.applicability.length > 0) {
             const appLoopRegex = /\{\{#applicability\}\}([\s\S]*?)\{\{\/applicability\}\}/g
             const appTemplate = specSection.match(appLoopRegex)?.[0]
 
@@ -244,21 +257,21 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
           }
 
           // Handle requirements loop
-          if (spec.requirements && spec.requirements.length > 0) {
+          if (spec.requirements && Array.isArray(spec.requirements) && spec.requirements.length > 0) {
             const reqLoopRegex = /\{\{#requirements\}\}([\s\S]*?)\{\{\/requirements\}\}/g
             const reqTemplate = specSection.match(reqLoopRegex)?.[0]
 
             if (reqTemplate) {
               const reqContent = reqTemplate.replace(/\{\{#requirements\}\}/, '').replace(/\{\{\/requirements\}\}/, '')
               const reqHtml = spec.requirements
-                .map((req: any) => {
+                .map((req: Record<string, unknown>) => {
                   let reqSection = reqContent
 
                   // Replace requirement variables
                   const reqVars = ['description', 'total_checks', 'total_pass', 'total_fail']
                   reqVars.forEach((varName) => {
                     const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-                    reqSection = reqSection.replace(regex, req[varName] || '')
+                    reqSection = reqSection.replace(regex, String(req[varName] || ''))
                   })
 
                   // Handle entity tables (passed and failed)
@@ -289,16 +302,16 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     }
 
     return result
-  }
+  }, [])
 
   /**
    * Process entity tables for passed and failed entities
    */
-  const processEntityTables = (template: string, req: any): string => {
+  const processEntityTables = (template: string, req: Record<string, unknown>): string => {
     let result = template
 
     // Process passed entities table
-    if (req.passed_entities && req.passed_entities.length > 0) {
+    if (req.passed_entities && Array.isArray(req.passed_entities) && req.passed_entities.length > 0) {
       const passedTableRegex = /\{\{#total_pass\}\}([\s\S]*?)\{\{\/total_pass\}\}/g
       const passedTemplate = result.match(passedTableRegex)?.[0]
 
@@ -306,7 +319,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
         const tableContent = passedTemplate.replace(/\{\{#total_pass\}\}/, '').replace(/\{\{\/total_pass\}\}/, '')
         const entityRows = req.passed_entities
           .map(
-            (entity: any) =>
+            (entity: Record<string, unknown>) =>
               `<tr>
             <td>${entity.type}</td>
             <td>${entity.predefinedType || ''}</td>
@@ -327,7 +340,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     }
 
     // Process failed entities table
-    if (req.failed_entities && req.failed_entities.length > 0) {
+    if (req.failed_entities && Array.isArray(req.failed_entities) && req.failed_entities.length > 0) {
       const failedTableRegex = /\{\{#total_fail\}\}([\s\S]*?)\{\{\/total_fail\}\}/g
       const failedTemplate = result.match(failedTableRegex)?.[0]
 
@@ -335,7 +348,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
         const tableContent = failedTemplate.replace(/\{\{#total_fail\}\}/, '').replace(/\{\{\/total_fail\}\}/, '')
         const entityRows = req.failed_entities
           .map(
-            (entity: any) =>
+            (entity: Record<string, unknown>) =>
               `<tr>
             <td>${entity.type}</td>
             <td>${entity.predefinedType || ''}</td>
@@ -362,8 +375,8 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
   /**
    * Apply additional dynamic translations that couldn't be handled by template variables
    */
-  const applyDynamicTranslations = (html: string, translationService: IDSTranslationService): string => {
-    let result = html
+  const applyDynamicTranslations = (html: string): string => {
+    const result = html
 
     // Apply any remaining pattern-based translations
     // This is where we can add more sophisticated translation logic if needed

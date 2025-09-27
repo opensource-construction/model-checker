@@ -55,7 +55,7 @@ export const UploadCard = () => {
     reportFormats,
   })
 
-  const { openHtmlReport, downloadHtmlReport } = useEnhancedHtmlReport(templateContent, i18n)
+  const { openHtmlReport, downloadHtmlReport } = useEnhancedHtmlReport(templateContent)
 
   // Function to scroll to results
   const scrollToResults = () => {

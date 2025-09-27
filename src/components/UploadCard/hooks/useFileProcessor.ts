@@ -132,7 +132,7 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
       setIsProcessing(false)
       return processedResults as ProcessedResult[]
     },
-    [i18n, addLog],
+    [i18n, addLog, reportFormats.bcf],
   )
 
   return {

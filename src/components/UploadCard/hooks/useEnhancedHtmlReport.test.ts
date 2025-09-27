@@ -38,7 +38,6 @@ describe('generateHtmlReport', () => {
           name: 'Sample Specification',
           description: 'Sample description',
           instructions: '',
-          identifier: 'spec-1',
           is_ifc_version: true,
           status: false,
           status_text: 'FAIL',
@@ -52,9 +51,8 @@ describe('generateHtmlReport', () => {
             {
               description: 'Requirement desc',
               status: false,
-              total_checks: 2,
-              total_pass: 1,
-              total_fail: 1,
+              total_pass: true,
+              total_fail: true,
               has_omitted_passes: false,
               has_omitted_failures: false,
               passed_entities: [

@@ -42,11 +42,13 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
       return () => mql.removeEventListener('change', handler as (e: Event) => void)
     } else {
       // Safari < 14
-      // @ts-expect-error legacy API
-      mql.addListener(handler)
+      const legacyMql = mql as MediaQueryList & {
+        addListener: (listener: (e: MediaQueryListEvent) => void) => void
+        removeListener: (listener: (e: MediaQueryListEvent) => void) => void
+      }
+      legacyMql.addListener(handler)
       return () => {
-        // @ts-expect-error legacy API
-        mql.removeListener(handler)
+        legacyMql.removeListener(handler)
       }
     }
   }, [])
