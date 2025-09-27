@@ -21,15 +21,22 @@
           var content = localStorage.getItem(key);
           if (!content) return;
 
-          // Replace the entire document content robustly
-          document.documentElement.innerHTML = content;
-          // Ensure title is updated even if head parsing lags
+          // Extract title and set it on the viewer
           var m = content.match(/<title>(.*?)<\/title>/i);
-          if (m && m[1]) {
-            document.title = m[1];
-          }
-          // Cleanup shortly after to reduce storage usage
-          setTimeout(function(){ try { localStorage.removeItem(key); } catch(_){} }, 10000);
+          if (m && m[1]) document.title = m[1];
+
+          // Render report in a sandboxed iframe to prevent script execution / XSS
+          var iframe = document.createElement('iframe');
+          iframe.setAttribute('sandbox', 'allow-same-origin'); // no scripts, keeps CSS working
+          iframe.style.border = '0';
+          iframe.style.width = '100%';
+          iframe.style.height = '100vh';
+          iframe.srcdoc = content;
+          document.body.innerHTML = '';
+          document.body.appendChild(iframe);
+          
+          // Reports persist indefinitely for multi-tab access
+          // No automatic cleanup - reports remain available across tabs/reloads
         } catch (e) {
           console.error('Report viewer error:', e);
         }

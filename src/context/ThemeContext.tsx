@@ -17,19 +17,25 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
-export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('theme')
-    if (saved === 'light' || saved === 'dark' || saved === 'system') return saved
-    if (saved) return saved === 'dark' ? 'dark' : 'light'
-    return 'system'
-  })
+const getInitialMode = (): ThemeMode => {
+  if (typeof window === 'undefined') return 'system'
+  const saved = window.localStorage.getItem('theme')
+  if (saved === 'light' || saved === 'dark' || saved === 'system') return saved
+  if (saved) return saved === 'dark' ? 'dark' : 'light'
+  return 'system'
+}
 
-  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(
-    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
-  )
+const getInitialSystemPrefersDark = (): boolean => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
+  const [mode, setMode] = useState<ThemeMode>(getInitialMode)
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(getInitialSystemPrefersDark)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = (event: MediaQueryListEvent | MediaQueryList) => {
       const matches = 'matches' in event ? event.matches : (event as MediaQueryList).matches

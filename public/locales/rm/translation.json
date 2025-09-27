@@ -159,9 +159,6 @@
       "all": "Tut",
       "data": "Datas"
     },
-    "specificationsPassedPrefix": "Specificaziuns reussidas",
-    "requirementsPassedPrefix": "Pretensiuns satisfatgas",
-    "applicability": "Applicabilitad",
     "specNotApplyToVersion": "la specificaziun na s'applitgescha betg a questa versiun IFC",
     "failureReason": "Motiv dal falliment",
     "phrases": {

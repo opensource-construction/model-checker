@@ -126,7 +126,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     simpleVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
       const value = data[varName]
-      result = result.replace(regex, String(value || ''))
+      result = result.replace(regex, value !== null && value !== undefined ? String(value) : '')
     })
 
     // Translation variables
@@ -156,7 +156,7 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     translationVars.forEach((varName) => {
       const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
       const value = getNestedValue(data, varName)
-      result = result.replace(regex, String(value || ''))
+      result = result.replace(regex, value !== null && value !== undefined ? String(value) : '')
     })
 
     // Handle conditional sections and loops
@@ -304,6 +304,25 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
     return result
   }, [])
 
+  const normalizeEntityForTable = (entity: Record<string, unknown>) => ({
+    type: entity.type ?? entity.class ?? '',
+    predefinedType: entity.predefinedType ?? entity.predefined_type ?? '',
+    name: entity.name ?? '',
+    description: entity.description ?? '',
+    globalId: entity.globalId ?? entity.global_id ?? '',
+    tag: entity.tag ?? '',
+    reason: entity.reason ?? '',
+  })
+
+  const escapeHtml = (value: string): string => {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
   /**
    * Process entity tables for passed and failed entities
    */
@@ -318,17 +337,17 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
       if (passedTemplate) {
         const tableContent = passedTemplate.replace(/\{\{#total_pass\}\}/, '').replace(/\{\{\/total_pass\}\}/, '')
         const entityRows = req.passed_entities
-          .map(
-            (entity: Record<string, unknown>) =>
-              `<tr>
-            <td>${entity.type}</td>
-            <td>${entity.predefinedType || ''}</td>
-            <td>${entity.name}</td>
-            <td>${entity.description}</td>
-            <td>${entity.globalId}</td>
-            <td>${entity.tag}</td>
-          </tr>`,
-          )
+          .map((entity: Record<string, unknown>) => {
+            const normalized = normalizeEntityForTable(entity)
+            return `<tr>
+            <td>${escapeHtml(String(normalized.type))}</td>
+            <td>${escapeHtml(String(normalized.predefinedType))}</td>
+            <td>${escapeHtml(String(normalized.name))}</td>
+            <td>${escapeHtml(String(normalized.description))}</td>
+            <td>${escapeHtml(String(normalized.globalId))}</td>
+            <td>${escapeHtml(String(normalized.tag))}</td>
+          </tr>`
+          })
           .join('')
 
         const tableHtml = tableContent.replace(/<tbody>[\s\S]*?<\/tbody>/, `<tbody>${entityRows}</tbody>`)
@@ -347,18 +366,18 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
       if (failedTemplate) {
         const tableContent = failedTemplate.replace(/\{\{#total_fail\}\}/, '').replace(/\{\{\/total_fail\}\}/, '')
         const entityRows = req.failed_entities
-          .map(
-            (entity: Record<string, unknown>) =>
-              `<tr>
-            <td>${entity.type}</td>
-            <td>${entity.predefinedType || ''}</td>
-            <td>${entity.name}</td>
-            <td>${entity.description}</td>
-            <td>Warning message here</td>
-            <td>${entity.globalId}</td>
-            <td>${entity.tag}</td>
-          </tr>`,
-          )
+          .map((entity: Record<string, unknown>) => {
+            const normalized = normalizeEntityForTable(entity)
+            return `<tr>
+            <td>${escapeHtml(String(normalized.type))}</td>
+            <td>${escapeHtml(String(normalized.predefinedType))}</td>
+            <td>${escapeHtml(String(normalized.name))}</td>
+            <td>${escapeHtml(String(normalized.description))}</td>
+            <td>${escapeHtml(String(normalized.reason))}</td>
+            <td>${escapeHtml(String(normalized.globalId))}</td>
+            <td>${escapeHtml(String(normalized.tag))}</td>
+          </tr>`
+          })
           .join('')
 
         const tableHtml = tableContent.replace(/<tbody>[\s\S]*?<\/tbody>/, `<tbody>${entityRows}</tbody>`)

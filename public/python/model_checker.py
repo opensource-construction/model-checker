@@ -63,34 +63,44 @@ def extract_requirement_data(requirement):
         if hasattr(restriction, 'bounds') and restriction.bounds:
             req_data["bounds"] = str(restriction.bounds)
     
-    # Extract failed/passed entities for detailed reporting
-    if hasattr(requirement, 'failed_entities'):
-        req_data["failed_entities"] = []
-        for entity in requirement.failed_entities[:10]:  # Limit to first 10
-            entity_data = {
-                "global_id": getattr(entity, 'GlobalId', ''),
-                "class": entity.__class__.__name__,
-                "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
-                "name": getattr(entity, 'Name', ''),
-                "tag": getattr(entity, 'Tag', ''),
-                "description": getattr(entity, 'Description', ''),
-                "reason": ''  # TODO: Add failure reason if available
-            }
-            req_data["failed_entities"].append(entity_data)
+    # Extract failed/passed entities for detailed reporting - compute totals first
+    failed_entities = list(getattr(requirement, 'failed_entities', []) or [])
+    passed_entities = list(getattr(requirement, 'passed_entities', []) or [])
     
-    if hasattr(requirement, 'passed_entities'):
-        req_data["passed_entities"] = []
-        for entity in requirement.passed_entities[:10]:  # Limit to first 10
-            entity_data = {
-                "global_id": getattr(entity, 'GlobalId', ''),
-                "class": entity.__class__.__name__,
-                "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
-                "name": getattr(entity, 'Name', ''),
-                "tag": getattr(entity, 'Tag', ''),
-                "description": getattr(entity, 'Description', ''),
-                "reason": ''
-            }
-            req_data["passed_entities"].append(entity_data)
+    # Store full counts for accurate metrics
+    req_data["total_failed_entities"] = len(failed_entities)
+    req_data["total_passed_entities"] = len(passed_entities)
+    
+    # Store only first 10 for display
+    req_data["failed_entities"] = []
+    for entity in failed_entities[:10]:  # Limit to first 10 for display
+        entity_data = {
+            "global_id": getattr(entity, 'GlobalId', ''),
+            "class": entity.__class__.__name__,
+            "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
+            "name": getattr(entity, 'Name', ''),
+            "tag": getattr(entity, 'Tag', ''),
+            "description": getattr(entity, 'Description', ''),
+            "reason": getattr(entity, 'reason', '') or getattr(entity, 'failure_reason', '') or 'Validation failed'
+        }
+        req_data["failed_entities"].append(entity_data)
+    
+    req_data["passed_entities"] = []
+    for entity in passed_entities[:10]:  # Limit to first 10 for display
+        entity_data = {
+            "global_id": getattr(entity, 'GlobalId', ''),
+            "class": entity.__class__.__name__,
+            "predefined_type": getattr(entity, 'PredefinedType', 'NOTDEFINED'),
+            "name": getattr(entity, 'Name', ''),
+            "tag": getattr(entity, 'Tag', ''),
+            "description": getattr(entity, 'Description', ''),
+            "reason": ''
+        }
+        req_data["passed_entities"].append(entity_data)
+    
+    # Set flags for omitted entities (more than 10)
+    req_data["has_omitted_passes"] = len(passed_entities) > 10
+    req_data["has_omitted_failures"] = len(failed_entities) > 10
             
     return req_data
 
@@ -218,9 +228,9 @@ def validate_ifc_ids_json(ifc_path: str, ids_path: str, lang: str = "en"):
                 "ifcVersion": getattr(spec, 'ifcVersion', []),
                 "is_ifc_version": True,  # Assume valid for now
                 
-                # Status and statistics
-                "status": not bool(getattr(spec, 'failed_entities', [])),
-                "status_text": "PASS" if not getattr(spec, 'failed_entities', []) else "FAIL",
+                # Status and statistics (will be computed from actual requirement results)
+                "status": True,
+                "status_text": "PASS",
                 "total_checks": 0,
                 "total_checks_pass": 0,
                 "total_checks_fail": 0,
@@ -259,17 +269,20 @@ def validate_ifc_ids_json(ifc_path: str, ids_path: str, lang: str = "en"):
                 for req in spec.requirements:
                     req_data = extract_requirement_data(req)
                     
-                    # Build requirement display data that matches template structure
+                    # Build requirement display data using real totals (not truncated display lists)
+                    total_pass = req_data.get("total_passed_entities", len(req_data.get("passed_entities", [])))
+                    total_fail = req_data.get("total_failed_entities", len(req_data.get("failed_entities", [])))
+                    
                     req_display = {
                         "description": format_requirement_description(req_data),
                         "status": req_data["status"] == "pass",
-                        "total_checks": len(req_data.get("failed_entities", [])) + len(req_data.get("passed_entities", [])),
-                        "total_pass": len(req_data.get("passed_entities", [])),
-                        "total_fail": len(req_data.get("failed_entities", [])),
+                        "total_checks": total_pass + total_fail,
+                        "total_pass": total_pass,
+                        "total_fail": total_fail,
                         "passed_entities": req_data.get("passed_entities", []),
                         "failed_entities": req_data.get("failed_entities", []),
-                        "has_omitted_passes": len(req_data.get("passed_entities", [])) > 10,
-                        "has_omitted_failures": len(req_data.get("failed_entities", [])) > 10
+                        "has_omitted_passes": total_pass > len(req_data.get("passed_entities", [])),
+                        "has_omitted_failures": total_fail > len(req_data.get("failed_entities", []))
                     }
                     
                     spec_data["requirements"].append(req_display)
@@ -278,10 +291,26 @@ def validate_ifc_ids_json(ifc_path: str, ids_path: str, lang: str = "en"):
                     spec_data["total_checks"] += req_display["total_checks"]
                     spec_data["total_checks_pass"] += req_display["total_pass"]
                     spec_data["total_checks_fail"] += req_display["total_fail"]
+                    spec_data["total_applicable"] += req_display["total_checks"]
+                    spec_data["total_applicable_pass"] += req_display["total_pass"]
+                    spec_data["total_applicable_fail"] += req_display["total_fail"]
+
+                    # Update global requirement counters
+                    results["total_requirements"] += 1
+                    if req_display["total_fail"] > 0:
+                        results["total_requirements_fail"] += 1
+                    else:
+                        results["total_requirements_pass"] += 1
             
             # Calculate percentages
             if spec_data["total_checks"] > 0:
                 spec_data["percent_checks_pass"] = round((spec_data["total_checks_pass"] / spec_data["total_checks"]) * 100)
+            else:
+                spec_data["percent_checks_pass"] = 0
+
+            # Compute spec status from actual requirement results
+            spec_data["status"] = spec_data["total_checks_fail"] == 0
+            spec_data["status_text"] = "PASS" if spec_data["status"] else "FAIL"
             
             results["specifications"].append(spec_data)
             

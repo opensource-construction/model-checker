@@ -159,9 +159,6 @@
       "all": "Tutti",
       "data": "Dati"
     },
-    "specificationsPassedPrefix": "Specifiche superate",
-    "requirementsPassedPrefix": "Requisiti soddisfatti",
-    "applicability": "Applicabilità",
     "specNotApplyToVersion": "la specifica non si applica a questa versione IFC",
     "failureReason": "Motivo del fallimento",
     "phrases": {

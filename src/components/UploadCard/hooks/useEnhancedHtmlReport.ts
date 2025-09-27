@@ -18,9 +18,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         throw new Error('Template content not loaded')
       }
 
-      // Optional debug info removed for production
-
-      // Create translation service
+      // Create translation service (simplified for now)
       const translationService = new IDSTranslationService()
 
       // Translate the validation results
@@ -362,7 +360,9 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
           if (appMatch) {
             const appTemplate = appMatch[0]
             const appContent = appTemplate.replace(/\{\{#applicability\}\}/, '').replace(/\{\{\/applicability\}\}/, '')
-            const appHtml = spec.applicability.map((app: string) => appContent.replace(/\{\{\.\}\}/g, app)).join('')
+            const appHtml = spec.applicability
+              .map((app: string) => appContent.replace(/\{\{\.\}\}/g, () => escapeHtml(app)))
+              .join('')
 
             specSection = specSection.replace(appLoopRegex, appHtml)
           }
@@ -393,9 +393,9 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
                 let processedSection = entityTableProtected
                 reqVars.forEach((varName) => {
                   const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-                  // Use nullish coalescing to preserve 0 and false values
-                  const value = req[varName] ?? ''
-                  processedSection = processedSection.replace(regex, () => String(value))
+                  const rawValue = req[varName]
+                  const safeValue = typeof rawValue === 'string' ? escapeHtml(rawValue) : rawValue
+                  processedSection = processedSection.replace(regex, () => String(safeValue ?? ''))
                 })
 
                 // Restore protected placeholders
@@ -469,9 +469,9 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
 
         specVars.forEach((varName) => {
           const regex = new RegExp(`\\{\\{${varName}\\}\\}`, 'g')
-          // Use nullish coalescing to preserve 0 and false values
-          const value = String(spec[varName] ?? '')
-          specSection = specSection.replace(regex, () => value)
+          const rawValue = spec[varName]
+          const safeValue = typeof rawValue === 'string' ? escapeHtml(rawValue) : rawValue
+          specSection = specSection.replace(regex, () => String(safeValue ?? ''))
         })
 
         return specSection

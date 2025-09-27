@@ -7,9 +7,11 @@ export interface ValidationResult {
   total_specifications: number
   total_specifications_pass: number
   total_specifications_fail: number
+  percent_specifications_pass?: number
   total_requirements: number
   total_requirements_pass: number
   total_requirements_fail: number
+  percent_requirements_pass?: number
   total_checks: number
   total_checks_pass: number
   total_checks_fail: number
@@ -34,6 +36,7 @@ export interface SpecificationResult {
   total_checks_fail: number
   percent_checks_pass: number
   total_applicable?: number
+  total_applicable_pass?: number
   applicability: string[]
   requirements: RequirementResult[]
 }
