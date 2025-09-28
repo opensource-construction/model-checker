@@ -33,7 +33,7 @@ export interface SpecificationResult {
   name: string
   description: string
   instructions: string
-  status: boolean
+  status: boolean | 'skipped'
   status_text: string
   total_checks: number
   total_checks_pass: number
@@ -150,6 +150,11 @@ export class IDSTranslationService {
 
     // Translate status text
     translated.status_text = this.getStatusText(spec.status, language, isSkipped)
+
+    // Set status to 'skipped' for proper template rendering
+    if (isSkipped) {
+      translated.status = 'skipped'
+    }
 
     // Translate applicability descriptions
     translated.applicability = spec.applicability.map((app: string) => this.translateApplicabilityText(app, language))
