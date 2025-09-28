@@ -169,7 +169,6 @@
     "greaterThan": "è maggiore di {{value}}",
     "lessOrEqual": "è minore o uguale a {{value}}",
     "lessThan": "è minore di {{value}}",
-    "specNotApplyToVersion": "la specifica non si applica a questa versione IFC",
     "failureReason": "Motivo del fallimento",
     "phrases": {
       "moreOfSameType": "... {{count}} altri dello stesso tipo di elemento ({{type}} con Tag {{tag}} e ID Globale {{id}}) non mostrati ...",

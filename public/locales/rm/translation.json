@@ -168,8 +168,7 @@
     "greaterOrEqual": "è pli grond u ugual a {{value}}",
     "greaterThan": "è pli grond che {{value}}",
     "lessOrEqual": "è pli pitschen u ugual a {{value}}",
-    "lessThan": "è pli pitschen che {{value}}"
-    "specNotApplyToVersion": "la specificaziun na s'applitgescha betg a questa versiun IFC",
+    "lessThan": "è pli pitschen che {{value}}",
     "failureReason": "Motiv dal falliment",
     "phrases": {
       "moreOfSameType": "... {{count}} dapli dal medem tip d'element ({{type}} cun Tag {{tag}} ed ID global {{id}}) betg mussads ...",

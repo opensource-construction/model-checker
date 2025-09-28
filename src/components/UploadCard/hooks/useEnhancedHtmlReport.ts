@@ -159,7 +159,6 @@ export async function generateHtmlReport(
       skipped: t('report.status.skipped', 'SKIPPED'),
       checksPassedPrefix: t('report.interface.checksPassedPrefix', 'Checks passed'),
       elementsPassedPrefix: t('report.interface.elementsPassedPrefix', 'Elements passed'),
-      specNotApplyToVersion: t('report.specNotApplyToVersion', 'specification does not apply to this IFC version'),
       failureReason: t('report.failureReason', 'Failure Reason'),
       moreOfSameType: t(
         'report.phrases.moreOfSameType',
@@ -200,7 +199,6 @@ export async function generateHtmlReport(
     't.skipped',
     't.checksPassedPrefix',
     't.elementsPassedPrefix',
-    't.specNotApplyToVersion',
     't.failureReason',
     't.moreElementsNotShown',
     't.specificationsPassedPrefix',

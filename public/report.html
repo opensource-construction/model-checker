@@ -326,7 +326,7 @@
             class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
             data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
           >
-            {{^total_checks}}Skipped{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
+            {{^total_checks}}{{t.status.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
           </div>
         </div>
         <p class="summary-stats">

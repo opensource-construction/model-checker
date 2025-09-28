@@ -346,7 +346,10 @@ export class IDSTranslationService {
     normalized = normalized.replace(/\{\{'pattern':\s*'([^']+)'\}\}/g, 'matching pattern "$1"')
     normalized = normalized.replace(/\{\{'enumeration':\s*\[([^\]]+)\]\}\}/g, 'one of $1')
     normalized = normalized.replace(/\{\{'value':\s*'([^']+)'\}\}/g, 'equals "$1"')
-    normalized = normalized.replace(/\{\{'minInclusive':\s*'([^']+)',\s*'maxInclusive':\s*'([^']+)'\}\}/g, 'between $1 and $2')
+    normalized = normalized.replace(
+      /\{\{'minInclusive':\s*'([^']+)',\s*'maxInclusive':\s*'([^']+)'\}\}/g,
+      'between $1 and $2',
+    )
     normalized = normalized.replace(/\{\{'minExclusive':\s*'([^']+)'\}\}/g, 'greater than $1')
     normalized = normalized.replace(/\{\{'minInclusive':\s*'([^']+)'\}\}/g, 'greater than or equal to $1')
     normalized = normalized.replace(/\{\{'maxExclusive':\s*'([^']+)'\}\}/g, 'less than $1')

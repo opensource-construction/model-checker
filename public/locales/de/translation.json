@@ -128,7 +128,6 @@
     "name": "Name",
     "description": "Beschreibung",
     "warning": "Warnung",
-    "specNotApplyToVersion": "Spezifikation gilt nicht für diese IFC-Version",
     "failureReason": "Fehlergrund",
     "globalId": "Globale ID",
     "tag": "Kennzeichnung",

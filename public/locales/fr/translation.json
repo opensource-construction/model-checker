@@ -168,8 +168,7 @@
     "greaterOrEqual": "est supérieur ou égal à {{value}}",
     "greaterThan": "est supérieur à {{value}}",
     "lessOrEqual": "est inférieur ou égal à {{value}}",
-    "lessThan": "est inférieur à {{value}}"
-    "specNotApplyToVersion": "la spécification ne s'applique pas à cette version IFC",
+    "lessThan": "est inférieur à {{value}}",
     "failureReason": "Raison de l'échec",
     "phrases": {
       "moreOfSameType": "... {{count}} autres du même type d'élément ({{type}} avec l'étiquette {{tag}} et l'ID global {{id}}) non affichés ...",

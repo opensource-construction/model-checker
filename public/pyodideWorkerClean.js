@@ -2,19 +2,29 @@
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.28.0/full/pyodide.js')
 
 let pyodide = null
+let isProcessing = false
 
 const WHEEL_PATH = './wasm/ifcopenshell-0.8.4+b1b95ec-cp313-cp313-emscripten_4_0_9_wasm32.whl'
 
 function normalizeIfc4x3Header(arrayBuffer) {
   try {
-    const text = new TextDecoder().decode(new Uint8Array(arrayBuffer))
-    const normalized = text.replace(
-      /FILE_SCHEMA\s*\(\s*\(\s*'IFC4X3(?:_[A-Z0-9]+)?'\s*\)\s*\)/,
-      "FILE_SCHEMA(('IFC4X3_ADD2'))"
-    )
-    return new TextEncoder().encode(normalized)
+    const total = arrayBuffer.byteLength
+    const headerLen = Math.min(total, 64 * 1024)
+    const headerBytes = new Uint8Array(arrayBuffer, 0, headerLen)
+    const decoder = new TextDecoder('utf-8', { fatal: false })
+    const headerStr = decoder.decode(headerBytes)
+    const schemaRe = /FILE_SCHEMA\s*\(\s*\(\s*'IFC4X3(?:_[A-Z0-9]+)?'\s*\)\s*\)/
+    if (!schemaRe.test(headerStr)) return new Uint8Array(arrayBuffer)
+    const newHeaderStr = headerStr.replace(schemaRe, "FILE_SCHEMA(('IFC4X3_ADD2'))")
+    if (newHeaderStr === headerStr) return new Uint8Array(arrayBuffer)
+    const newHeaderBytes = new TextEncoder().encode(newHeaderStr)
+    const rest = new Uint8Array(arrayBuffer, headerLen)
+    const out = new Uint8Array(newHeaderBytes.length + rest.length)
+    out.set(newHeaderBytes, 0)
+    out.set(rest, newHeaderBytes.length)
+    return out
   } catch (err) {
-    console.warn('Schema normalization failed, using original buffer', err)
+    console.warn('Schema normalization skipped; using original buffer', err)
     return new Uint8Array(arrayBuffer)
   }
 }
@@ -59,7 +69,27 @@ const WORKER_VERSION = '3.1.0-clean-bcf'
 console.log('pyodideWorkerClean version:', WORKER_VERSION)
 
 self.onmessage = async function (e) {
+  if (isProcessing) {
+    self.postMessage({
+      type: 'error',
+      errorType: 'busy',
+      message: getConsoleMessage(
+        'console.error.busy',
+        'Validation is already running. Please wait for the current run to finish.',
+      ),
+    })
+    return
+  }
+  isProcessing = true
+
   const { arrayBuffer, idsContent, fileName, language, generateBcf, idsFilename } = e.data
+
+  // Per-run FS isolation
+  const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const runDir = `/${runId}`
+  let ifcPath = ''
+  let idsPath = ''
+  let bcfPath = ''
 
   try {
     // Load Pyodide
@@ -133,11 +163,14 @@ await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystac
       message: getConsoleMessage('console.loading.inputFiles', 'Processing input files...'),
     })
 
+    // Create per-run directory and write inputs
+    try { pyodide.FS.mkdir(runDir) } catch (_) {}
+    ifcPath = `${runDir}/input.ifc`
+    idsPath = `${runDir}/input.ids`
+    bcfPath = `${runDir}/report.bcf`
     const normalizedIfc = normalizeIfc4x3Header(arrayBuffer)
-    pyodide.FS.writeFile('/input.ifc', normalizedIfc)
-    if (idsContent) {
-      pyodide.FS.writeFile('/input.ids', idsContent)
-    }
+    pyodide.FS.writeFile(ifcPath, normalizedIfc)
+    if (idsContent) pyodide.FS.writeFile(idsPath, idsContent)
 
     // Run validation using native IfcTester
     self.postMessage({
@@ -165,6 +198,9 @@ await micropip.install(['lark', 'ifctester==0.8.1', 'bcf-client==0.8.1', 'pystac
       .replace(/\.+$/, '') || 'report'
     const safeReportBaseName = JSON.stringify(sanitizedReportBaseName)
 
+    const pythonIfcPath = JSON.stringify(ifcPath)
+    const pythonIdsPath = JSON.stringify(idsContent ? idsPath : '')
+    const pythonBcfPath = JSON.stringify(bcfPath)
     const pythonFileName = JSON.stringify(fileName ?? '')
     const pythonLanguage = JSON.stringify(language ?? '')
 
@@ -180,10 +216,13 @@ from datetime import datetime
 # Flag for optional BCF generation
 generate_bcf = ${wantBcf ? 'True' : 'False'}
 report_basename = ${safeReportBaseName}
+IFC_PATH = ${pythonIfcPath}
+IDS_PATH = ${pythonIdsPath}
+BCF_PATH = ${pythonBcfPath}
 
 # Open IFC file
-print("Opening IFC file: /input.ifc")
-ifc = ifcopenshell.open('/input.ifc')
+print(f"Opening IFC file: {IFC_PATH}")
+ifc = ifcopenshell.open(IFC_PATH)
 
 # Initialize basic results structure
 results = {
@@ -200,9 +239,9 @@ results = {
 ids_spec = None
 
 # Check if IDS file exists and validate
-if os.path.exists('/input.ids'):
-    print("Loading IDS specification: /input.ids")
-    ids_spec = ids.open('/input.ids')
+if IDS_PATH and os.path.exists(IDS_PATH):
+    print(f"Loading IDS specification: {IDS_PATH}")
+    ids_spec = ids.open(IDS_PATH)
     
     if ids_spec and ids_spec.specifications:
         print("Validating IFC against IDS...")
@@ -274,7 +313,7 @@ if generate_bcf and ids_spec and getattr(ids_spec, 'specifications', None):
     try:
         bcf_reporter = reporter.Bcf(ids_spec)
         bcf_reporter.report()
-        bcf_path = '/report.bcf'
+        bcf_path = BCF_PATH
         bcf_reporter.to_file(bcf_path)
         with open(bcf_path, 'rb') as bcf_file:
             bcf_bytes = bcf_file.read()
@@ -344,5 +383,15 @@ json.dumps(results, default=str, ensure_ascii=False)
         stack: error.stack,
       })
     }
+  } finally {
+    // Cleanup per-run files and release lock
+    try {
+      const exists = (p) => { try { return p && pyodide.FS.analyzePath(p).exists } catch { return false } }
+      if (exists(ifcPath)) pyodide.FS.unlink(ifcPath)
+      if (exists(idsPath)) pyodide.FS.unlink(idsPath)
+      if (exists(bcfPath)) pyodide.FS.unlink(bcfPath)
+      try { pyodide.FS.rmdir(runDir) } catch {}
+    } catch {}
+    isProcessing = false
   }
 }

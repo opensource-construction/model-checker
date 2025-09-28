@@ -39,12 +39,14 @@ export const ProcessingConsole = ({ isProcessing, logs }: ProcessingConsoleProps
 
   // Auto-scroll to the latest log entry whenever logs update or processing state changes
   useEffect(() => {
+    if (!isHovered) return
+
     // Slight delay ensures DOM has rendered the new log before scrolling
     const id = setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }, 0)
     return () => clearTimeout(id)
-  }, [logs.length, isProcessing])
+  }, [logs.length, isProcessing, isHovered])
 
   if (!isProcessing && logs.length === 0) {
     return null
