@@ -22,10 +22,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
       const translationService = new IDSTranslationService()
 
       // Translate the validation results using current UI language
-      const translatedResults = translationService.translateValidationResults(
-        result,
-        i18n.language,
-      )
+      const translatedResults = translationService.translateValidationResults(result, i18n.language)
 
       // Ensure all required fields are present with defaults
       const completeResults = {

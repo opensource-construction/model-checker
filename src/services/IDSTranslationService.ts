@@ -1,8 +1,4 @@
-import {
-  ValidationResult,
-  ValidationSpecification,
-  ValidationRequirement,
-} from '../types/validation'
+import { ValidationResult, ValidationSpecification, ValidationRequirement } from '../types/validation'
 
 /**
  * Translation service that handles IDS validation results and converts them
@@ -95,7 +91,8 @@ export class IDSTranslationService {
     }
 
     // Translate applicability descriptions
-    translated.applicability = spec.applicability?.map((app: string) => this.translateApplicabilityText(app, language)) || []
+    translated.applicability =
+      spec.applicability?.map((app: string) => this.translateApplicabilityText(app, language)) || []
 
     // Translate requirements
     translated.requirements = spec.requirements.map((req: ValidationRequirement) =>
@@ -241,7 +238,11 @@ export class IDSTranslationService {
   /**
    * Translate individual requirement
    */
-  private translateRequirement(req: ValidationRequirement, language: string, isSpecSkipped: boolean): ValidationRequirement {
+  private translateRequirement(
+    req: ValidationRequirement,
+    language: string,
+    isSpecSkipped: boolean,
+  ): ValidationRequirement {
     const translated = { ...req }
 
     // Handle skipped requirements
