@@ -366,7 +366,7 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
               .map((app: string) => appContent.replace(/\{\{\.\}\}/g, () => escapeHtml(app)))
               .join('')
 
-            specSection = specSection.replace(appLoopRegex, appHtml)
+            specSection = specSection.replace(appLoopRegex, () => appHtml)
           }
         } else {
           specSection = specSection.replace(/\{\{#applicability\}\}[\s\S]*?\{\{\/applicability\}\}/g, '')
@@ -536,11 +536,11 @@ function processEntityTables(template: string, req: Record<string, unknown>): st
         )
         .join('')
 
-      let tableHtml = tableContent.replace(/\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/, entityRows)
+      let tableHtml = tableContent.replace(/\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/, () => entityRows)
 
-      tableHtml = tableHtml.replace(omittedPassesRegex, req.has_omitted_passes ? omittedPassesContent : '')
+      tableHtml = tableHtml.replace(omittedPassesRegex, () => req.has_omitted_passes ? omittedPassesContent : '')
 
-      result = result.replace(passedTableRegex, tableHtml)
+      result = result.replace(passedTableRegex, () => tableHtml)
     }
   } else {
     result = result.replace(/\{\{#total_pass\}\}[\s\S]*?\{\{\/total_pass\}\}/g, '')
@@ -592,11 +592,11 @@ function processEntityTables(template: string, req: Record<string, unknown>): st
         )
         .join('')
 
-      let tableHtml = tableContent.replace(/\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/, entityRows)
+      let tableHtml = tableContent.replace(/\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/, () => entityRows)
 
-      tableHtml = tableHtml.replace(omittedFailuresRegex, req.has_omitted_failures ? omittedFailuresContent : '')
+      tableHtml = tableHtml.replace(omittedFailuresRegex, () => req.has_omitted_failures ? omittedFailuresContent : '')
 
-      result = result.replace(failedTableRegex, tableHtml)
+      result = result.replace(failedTableRegex, () => tableHtml)
     }
   } else {
     result = result.replace(/\{\{#total_fail\}\}[\s\S]*?\{\{\/total_fail\}\}/g, '')
