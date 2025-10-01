@@ -1,70 +1,8 @@
-export interface ValidationResult {
-  title: string
-  name?: string
-  filename: string
-  date: string
-  language_code: string
-  _lang: string
-  total_specifications: number
-  total_specifications_pass: number
-  total_specifications_fail: number
-  percent_specifications_pass?: number
-  total_requirements: number
-  total_requirements_pass: number
-  total_requirements_fail: number
-  percent_requirements_pass?: number
-  total_checks: number
-  total_checks_pass: number
-  total_checks_fail: number
-  percent_checks_pass: number
-  total_applicable?: number
-  total_applicable_pass?: number
-  total_applicable_fail?: number
-  status: boolean
-  status_text: string
-  specifications: SpecificationResult[]
-  bcf_data?: {
-    zip_content: string
-    filename: string
-  }
-}
-
-export interface SpecificationResult {
-  name: string
-  description: string
-  instructions: string
-  status: boolean | 'skipped'
-  status_text: string
-  total_checks: number
-  total_checks_pass: number
-  total_checks_fail: number
-  percent_checks_pass: number
-  total_applicable?: number
-  total_applicable_pass?: number
-  applicability: string[]
-  requirements: RequirementResult[]
-}
-
-export interface RequirementResult {
-  description: string
-  status: boolean | string
-  total_checks: number
-  total_pass: number
-  total_fail: number
-  total_applicable?: number
-  passed_entities: EntityResult[]
-  failed_entities: EntityResult[]
-  has_omitted_passes: boolean
-  has_omitted_failures: boolean
-}
-
-export interface EntityResult {
-  globalId: string
-  type: string
-  name: string
-  tag: string
-  description: string
-}
+import {
+  ValidationResult,
+  ValidationSpecification,
+  ValidationRequirement,
+} from '../types/validation'
 
 /**
  * Translation service that handles IDS validation results and converts them
@@ -84,7 +22,7 @@ export class IDSTranslationService {
     translated.status_text = this.getStatusText(results.status, language, false)
 
     // Translate each specification
-    translated.specifications = results.specifications.map((spec: SpecificationResult) =>
+    translated.specifications = results.specifications.map((spec: ValidationSpecification) =>
       this.translateSpecification(spec, language),
     )
 
@@ -142,7 +80,7 @@ export class IDSTranslationService {
   /**
    * Translate individual specification
    */
-  private translateSpecification(spec: SpecificationResult, language: string): SpecificationResult {
+  private translateSpecification(spec: ValidationSpecification, language: string): ValidationSpecification {
     const translated = { ...spec }
 
     // Handle skipped specifications (no applicable entities)
@@ -157,10 +95,10 @@ export class IDSTranslationService {
     }
 
     // Translate applicability descriptions
-    translated.applicability = spec.applicability.map((app: string) => this.translateApplicabilityText(app, language))
+    translated.applicability = spec.applicability?.map((app: string) => this.translateApplicabilityText(app, language)) || []
 
     // Translate requirements
-    translated.requirements = spec.requirements.map((req: RequirementResult) =>
+    translated.requirements = spec.requirements.map((req: ValidationRequirement) =>
       this.translateRequirement(req, language, isSkipped),
     )
 
@@ -303,7 +241,7 @@ export class IDSTranslationService {
   /**
    * Translate individual requirement
    */
-  private translateRequirement(req: RequirementResult, language: string, isSpecSkipped: boolean): RequirementResult {
+  private translateRequirement(req: ValidationRequirement, language: string, isSpecSkipped: boolean): ValidationRequirement {
     const translated = { ...req }
 
     // Handle skipped requirements

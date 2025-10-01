@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IDSTranslationService, ValidationResult } from '../../services/IDSTranslationService'
+import { IDSTranslationService } from '../../services/IDSTranslationService'
+import { ValidationResult } from '../../types/validation'
 
 interface HTMLTemplateRendererProps {
   validationResults: ValidationResult

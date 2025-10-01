@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { ValidationResult } from '../../../types/validation'
-import { IDSTranslationService, ValidationResult as IDSValidationResult } from '../../../services/IDSTranslationService'
+import { IDSTranslationService } from '../../../services/IDSTranslationService'
 import { useTranslation } from 'react-i18next'
 
 export const useEnhancedHtmlReport = (templateContent: string | null) => {
@@ -18,12 +18,12 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         throw new Error('Template content not loaded')
       }
 
-      // Create translation service (simplified for now)
+      // Create translation service
       const translationService = new IDSTranslationService()
 
       // Translate the validation results using current UI language
       const translatedResults = translationService.translateValidationResults(
-        result as unknown as IDSValidationResult,
+        result,
         i18n.language,
       )
 
@@ -39,7 +39,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
       // Generate HTML using our template renderer logic
       return await generateHtmlReport(
         templateContent,
-        completeResults as unknown as ValidationResult,
+        completeResults,
         t as (key: string, defaultValue?: string) => string,
       )
     },

@@ -21,9 +21,11 @@ export interface ValidationEntity {
 
 export interface ValidationRequirement {
   description: string
-  status: boolean
-  total_pass: boolean
-  total_fail: boolean
+  status: boolean | 'skipped'
+  total_checks: number
+  total_pass: number
+  total_fail: number
+  total_applicable?: number
   passed_entities?: ValidationEntity[]
   failed_entities?: ValidationEntity[]
   has_omitted_passes?: boolean
@@ -37,15 +39,17 @@ export interface ValidationRequirement {
 
 export interface ValidationSpecification {
   name: string
-  status: boolean
+  status: boolean | 'skipped'
   status_text?: string
   description: string
   instructions?: string
   percent_checks_pass: number
   total_checks: number
   total_checks_pass: number
+  total_checks_fail?: number
   total_applicable: number
   total_applicable_pass: number
+  total_applicable_fail?: number
   applicability?: string[]
   requirements: ValidationRequirement[]
 }

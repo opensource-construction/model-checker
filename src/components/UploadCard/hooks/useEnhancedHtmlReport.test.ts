@@ -3,8 +3,7 @@ import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 
-// Use the translated report shape to avoid excess/missing property errors
-import type { ValidationResult as ReportValidationResult } from '../../../services/IDSTranslationService'
+import type { ValidationResult } from '../../../types/validation'
 import { generateHtmlReport } from './useEnhancedHtmlReport'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -16,7 +15,7 @@ const stubTranslator = (key: string, defaultValue?: string) => defaultValue ?? k
 
 describe('generateHtmlReport', () => {
   it('renders entity tables for requirements with passed and failed entities', async () => {
-    const validationResult: ReportValidationResult = {
+    const validationResult: ValidationResult = {
       title: 'Test Report',
       filename: 'demo.ifc',
       date: '2025-01-01',
@@ -61,8 +60,9 @@ describe('generateHtmlReport', () => {
               has_omitted_failures: false,
               passed_entities: [
                 {
-                  globalId: '1ABC',
-                  type: 'IfcWall',
+                  global_id: '1ABC',
+                  class: 'IfcWall',
+                  predefined_type: 'NOTDEFINED',
                   name: 'Wall A',
                   tag: 'WALL-01',
                   description: 'Main wall',
@@ -70,8 +70,9 @@ describe('generateHtmlReport', () => {
               ],
               failed_entities: [
                 {
-                  globalId: '2DEF',
-                  type: 'IfcDoor',
+                  global_id: '2DEF',
+                  class: 'IfcDoor',
+                  predefined_type: 'NOTDEFINED',
                   name: 'Door B',
                   tag: 'DOOR-02',
                   description: 'Door missing property',
@@ -83,8 +84,7 @@ describe('generateHtmlReport', () => {
       ],
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const html = await generateHtmlReport(reportTemplate, validationResult as any, stubTranslator)
+    const html = await generateHtmlReport(reportTemplate, validationResult, stubTranslator)
 
     expect(html).toContain('<td>IfcWall</td>')
     expect(html).toContain('<td>Wall A</td>')

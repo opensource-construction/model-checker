@@ -176,7 +176,7 @@
     "greaterOrEqual": "is greater than or equal to {{value}}",
     "greaterThan": "is greater than {{value}}",
     "lessOrEqual": "is less than or equal to {{value}}",
-    "lessThan": "is less than {{value}}"
+    "lessThan": "is less than {{value}}",
     "phrases": {
       "moreOfSameType": "... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...",
       "moreElementsNotShown": "... {{count}} more {{type}} elements not shown out of {{total}} total ..."
