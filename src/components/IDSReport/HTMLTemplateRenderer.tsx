@@ -68,6 +68,10 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
           skipped: t('report.status.skipped', 'SKIPPED'),
         },
         skipped: t('report.status.skipped', 'SKIPPED'),
+        checksPassedPrefix: t('report.interface.checksPassedPrefix', 'Checks passed'),
+        elementsPassedPrefix: t('report.interface.elementsPassedPrefix', 'Elements passed'),
+        failureReason: t('report.failureReason', 'Failure Reason'),
+        specNotApplyToVersion: t('report.specNotApplyToVersion', 'specification does not apply to this IFC version'),
         moreOfSameType: t(
           'report.phrases.moreOfSameType',
           '... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...',
@@ -76,6 +80,9 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
           'report.phrases.moreElementsNotShown',
           '... {{count}} more {{type}} elements not shown out of {{total}} total ...',
         ),
+        specificationsPassedPrefix: t('report.interface.specificationsPassedPrefix', 'Specifications passed'),
+        requirementsPassedPrefix: t('report.interface.requirementsPassedPrefix', 'Requirements passed'),
+        applicability: t('report.interface.applicability', 'Applicability'),
       },
     }
 
@@ -151,8 +158,15 @@ export const HTMLTemplateRenderer: React.FC<HTMLTemplateRendererProps> = ({ vali
       't.status.untested',
       't.status.skipped',
       't.skipped',
+      't.checksPassedPrefix',
+      't.elementsPassedPrefix',
+      't.failureReason',
+      't.specNotApplyToVersion',
       't.moreOfSameType',
       't.moreElementsNotShown',
+      't.specificationsPassedPrefix',
+      't.requirementsPassedPrefix',
+      't.applicability',
     ]
 
     translationVars.forEach((varName) => {
