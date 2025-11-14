@@ -60,10 +60,14 @@
         font-style: italic;
       }
       span.item {
-        padding: 5px;
+        padding: 4px 10px;
         border-radius: 5px;
-        margin-right: 5px;
+        margin-right: 8px;
         border: 1px solid #eee;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1.2;
       }
       span.item.pass,
       span.item.fail {
@@ -138,11 +142,13 @@
         border-top: 1px solid #ccc;
       }
       summary {
-        display: flex;
+        display: list-item;
         cursor: pointer;
+        padding: 10px;
+        font-weight: bold;
       }
-      summary::-webkit-details-marker {
-        display: none;
+      details[open] summary {
+        margin-bottom: 10px;
       }
       * {
         box-sizing: border-box;
@@ -251,6 +257,28 @@
       .percent[data-width='100'] {
         width: 100%;
       }
+      .summary-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        margin: 12px 0;
+        align-items: center;
+      }
+      @media (max-width: 640px) {
+        .summary-stats {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .summary-stats .item {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .summary-stats .item.pass,
+        .summary-stats .item.fail {
+          width: auto;
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body>
@@ -266,20 +294,20 @@
         class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
         data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
       >
-        {{^total_checks}}{{t.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
+        {{^total_checks}}{{t.status.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
       </div>
     </div>
-    <p>
+    <p class="summary-stats">
       <span class="item {{#status}}pass{{/status}}{{^status}}fail{{/status}}">{{status_text}}</span>
       <span class="item">
-        Specifications passed: <strong>{{total_specifications_pass}}</strong> /
+        {{t.specificationsPassedPrefix}}: <strong>{{total_specifications_pass}}</strong> /
         <strong>{{total_specifications}}</strong>
       </span>
       <span class="item">
-        Requirements passed: <strong>{{total_requirements_pass}}</strong> / <strong>{{total_requirements}}</strong>
+        {{t.requirementsPassedPrefix}}: <strong>{{total_requirements_pass}}</strong> / <strong>{{total_requirements}}</strong>
       </span>
       <span class="item">
-        Checks passed: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
+        {{t.checksPassedPrefix}}: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
       </span>
     </p>
     <hr />
@@ -298,31 +326,26 @@
             class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}} percent"
             data-width="{{^total_checks}}100{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}{{/total_checks}}"
           >
-            {{^total_checks}}Skipped{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
+            {{^total_checks}}{{t.status.skipped}}{{/total_checks}}{{#total_checks}}{{percent_checks_pass}}%{{/total_checks}}
           </div>
         </div>
-        <p>
+        <p class="summary-stats">
           <span
             class="item {{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}}"
           >
             {{^total_checks}}{{t.status.skipped}}{{/total_checks}} {{#total_checks}}{{status_text}}{{/total_checks}}
           </span>
           <span class="item">
-            Checks passed: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
+            {{t.checksPassedPrefix}}: <strong>{{total_checks_pass}}</strong> / <strong>{{total_checks}}</strong>
           </span>
           <span class="item">
-            Elements passed: <strong>{{total_applicable_pass}}</strong> / <strong>{{total_applicable}}</strong>
+            {{t.elementsPassedPrefix}}: <strong>{{total_applicable_pass}}</strong> / <strong>{{total_applicable}}</strong>
           </span>
         </p>
-        {{^is_ifc_version}}
-        <p>
-          <span class="item"> <strong>Warning:</strong> specification does not apply to this IFC version </span>
-        </p>
-        {{/is_ifc_version}}
       </div>
       <div class="results">
         <p>
-          <strong>Applicability</strong>
+          <strong>{{t.applicability}}</strong>
         </p>
         <ul>
           {{#applicability}}
@@ -330,20 +353,17 @@
           {{/applicability}}
         </ul>
         <p>
-          <strong>Requirements</strong>
+          <strong>{{t.requirements}}</strong>
         </p>
         <ol>
           {{#requirements}}
           <li
             class="{{^total_checks}}skipped{{/total_checks}}{{#total_checks}}{{#status}}pass{{/status}}{{^status}}fail{{/status}}{{/total_checks}}"
           >
+            {{#total_checks}}
             <details>
               <summary>{{description}}</summary>
-              {{#total_ckecks}}
-              <table class="skipped">
-                <thead></thead>
-              </table>
-              {{/total_ckecks}} {{#total_pass}}
+              {{#total_pass}}
               <table class="pass">
                 <thead>
                   <tr>
@@ -384,9 +404,8 @@
                     <th>{{t.predefinedType}}</th>
                     <th>{{t.name}}</th>
                     <th>{{t.description}}</th>
-                    <th>{{t.warning}}</th>
                     <th>{{t.globalId}}</th>
-                    <th>{{t.tag}}</th>
+                    <th>{{t.failureReason}}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -396,23 +415,26 @@
                     <td>{{predefined_type}}</td>
                     <td>{{name}}</td>
                     <td>{{description}}</td>
-                    <td>{{reason}}</td>
                     <td>{{global_id}}</td>
-                    <td>{{tag}}</td>
+                    <td>{{reason}}</td>
                   </tr>
                   {{#extra_of_type}}
                   <tr>
-                    <td colspan="7">{{t.moreOfSameType}}</td>
+                    <td colspan="6">{{t.moreOfSameType}}</td>
                   </tr>
                   {{/extra_of_type}} {{/failed_entities}} {{#has_omitted_failures}}
                   <tr>
-                    <td colspan="7">{{t.moreElementsNotShown}}</td>
+                    <td colspan="6">{{t.moreElementsNotShown}}</td>
                   </tr>
                   {{/has_omitted_failures}}
                 </tbody>
               </table>
               {{/total_fail}}
             </details>
+            {{/total_checks}}
+            {{^total_checks}}
+            {{description}}
+            {{/total_checks}}
           </li>
           {{/requirements}}
         </ol>
@@ -422,8 +444,11 @@
     <hr />
     <footer>
       <p>
-        {{t.reportBy}} <a href="https://bonsaibim.org/" target="_blank" rel="noopener noreferrer">Bonsai</a> {{t.and}}
-        <a href="http://ifcopenshell.org/" target="_blank" rel="noopener noreferrer">IfcOpenShell</a>.
+        {{t.reportBy}}
+        <a href="https://bonsaibim.org/" target="_blank" rel="noopener noreferrer">Bonsai</a>,
+        <a href="http://ifcopenshell.org/" target="_blank" rel="noopener noreferrer">IfcOpenShell</a>
+        {{t.and}}
+        <a href="https://www.lt.plus/" target="_blank" rel="noopener noreferrer">Louis Tr&#252;mpler</a>.
       </p>
     </footer>
   </body>

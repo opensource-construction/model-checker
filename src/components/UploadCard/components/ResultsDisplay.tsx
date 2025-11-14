@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Text } from '@mantine/core'
+import { Alert, Button, Group, Text, Tooltip } from '@mantine/core'
 import { IconDownload, IconFileText } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { useEffect, RefObject } from 'react'
@@ -13,6 +13,7 @@ interface ResultsDisplayProps {
     bcf: boolean
   }
   onHtmlReport: (result: ValidationResult, fileName: string) => void
+  onHtmlDownload: (result: ValidationResult) => Promise<void>
   onBcfDownload: (result: {
     fileName: string
     result: {
@@ -26,6 +27,7 @@ export const ResultsDisplay = ({
   processedResults,
   reportFormats,
   onHtmlReport,
+  onHtmlDownload,
   onBcfDownload,
   resultsRef,
 }: ResultsDisplayProps) => {
@@ -67,57 +69,93 @@ export const ResultsDisplay = ({
         {processedResults.map((result, index) => (
           <Group key={index} gap='xs'>
             {reportFormats.html && (
-              <Button
-                onClick={() => onHtmlReport(result.result, result.fileName)}
-                color='yellow'
-                variant='outline'
-                size='sm'
-                fw={500}
-                className='report-button'
-                leftSection={<IconFileText size={16} />}
-                styles={{
-                  root: {
-                    border: '2px solid var(--mantine-color-yellow-filled)',
-                    color: 'var(--mantine-color-dark-6)',
-                    backgroundColor: 'var(--mantine-color-yellow-1)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: 'var(--mantine-color-yellow-2)',
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 4px 8px rgba(255, 213, 0, 0.35)',
+              <Button.Group style={{ borderRadius: 10, overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }}>
+                <Button
+                  onClick={() => onHtmlReport(result.result, result.fileName)}
+                  color='yellow'
+                  variant='filled'
+                  size='sm'
+                  fw={600}
+                  className='report-button'
+                  leftSection={<IconFileText size={16} />}
+                  styles={{
+                    root: {
+                      borderTopLeftRadius: 10,
+                      borderBottomLeftRadius: 10,
+                      paddingInline: '14px',
+                      background:
+                        'linear-gradient(135deg, var(--mantine-color-yellow-6), var(--mantine-color-yellow-5))',
+                      color: 'var(--mantine-color-dark-9)',
+                      transition: 'transform 120ms ease, box-shadow 120ms ease, background 200ms ease',
+                      boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.1)',
+                      '&:hover': {
+                        background:
+                          'linear-gradient(135deg, var(--mantine-color-yellow-7), var(--mantine-color-yellow-6))',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
+                      },
                     },
-                    '&:active': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 2px 4px rgba(255, 213, 0, 0.35)',
-                    },
-                  },
-                }}
-              >
-                HTML - {result.fileName}
-              </Button>
+                  }}
+                >
+                  View HTML - {result.fileName}
+                </Button>
+                <Tooltip label={t('downloadHtmlTooltip', 'Download HTML report')} withArrow>
+                  <Button
+                    onClick={() => onHtmlDownload(result.result)}
+                    color='yellow'
+                    variant='subtle'
+                    size='sm'
+                    aria-label='Download HTML'
+                    styles={{
+                      root: {
+                        borderTopRightRadius: 10,
+                        borderBottomRightRadius: 10,
+                        paddingInline: 10,
+                        backgroundColor: 'var(--mantine-color-yellow-1)',
+                        transition: 'transform 120ms ease, box-shadow 120ms ease, background 200ms ease',
+                        '&:hover': {
+                          backgroundColor: 'var(--mantine-color-yellow-2)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 14px rgba(255, 213, 0, 0.25)',
+                        },
+                        '&:active': {
+                          transform: 'translateY(0)',
+                        },
+                      },
+                    }}
+                  >
+                    <IconDownload size={16} />
+                  </Button>
+                </Tooltip>
+              </Button.Group>
             )}
             {reportFormats.bcf && (
               <Button
                 onClick={() => onBcfDownload(result)}
                 variant='outline'
                 size='sm'
-                fw={500}
+                fw={600}
                 className='report-button'
                 leftSection={<IconDownload size={16} />}
                 styles={{
                   root: {
-                    border: '2px solid var(--mantine-color-blue-filled)',
-                    color: 'var(--mantine-color-dark-6)',
-                    backgroundColor: 'var(--mantine-color-blue-1)',
-                    transition: 'all 0.2s ease',
+                    borderRadius: 6,
+                    paddingInline: '14px',
+                    border: '2px solid var(--mantine-color-blue-6)',
+                    color: 'var(--mantine-color-blue-7)',
+                    backgroundColor: 'transparent',
+                    transition: 'transform 120ms ease, box-shadow 120ms ease, background-color 160ms ease',
                     '&:hover': {
-                      backgroundColor: 'var(--mantine-color-blue-2)',
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 4px 8px rgba(0, 145, 255, 0.35)',
+                      backgroundColor: 'var(--mantine-color-blue-0)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 12px rgba(0, 145, 255, 0.18)',
                     },
                     '&:active': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 2px 4px rgba(0, 145, 255, 0.35)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 3px 8px rgba(0, 145, 255, 0.20)',
                     },
                   },
                 }}

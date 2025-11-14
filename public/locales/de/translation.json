@@ -116,6 +116,7 @@
   "report-format-description": "Wählen Sie eines oder beide Berichtsformate. HTML-Berichte können direkt angezeigt und gedruckt werden, während BCF-Berichte in BIM-Kollaborationstools verwendet werden können.",
   "view-html": "HTML",
   "download-bcf": "BCF",
+  "downloadHtmlTooltip": "HTML-Bericht herunterladen",
   "select-report-format": "Bitte wählen Sie mindestens ein Berichtsformat aus",
   "report": {
     "summary": "Zusammenfassung",
@@ -127,6 +128,8 @@
     "name": "Name",
     "description": "Beschreibung",
     "warning": "Warnung",
+    "failureReason": "Fehlergrund",
+    "specNotApplyToVersion": "Spezifikation gilt nicht für diese IFC-Version",
     "globalId": "Globale ID",
     "tag": "Kennzeichnung",
     "reportBy": "Bericht von",
@@ -138,14 +141,38 @@
       "skipped": "ÜBERSPRUNGEN"
     },
     "errorMessages": {
-      "propertySetNotExist": "Der erforderliche Eigenschaftssatz existiert nicht",
+      "propertySetNotExist": "Der erforderliche PropertySet existiert nicht",
       "dataShallBeProvided": "Daten müssen im Datensatz bereitgestellt werden",
       "propertyNotExist": "Die erforderliche Eigenschaft existiert nicht",
       "invalidValue": "hat einen ungültigen Wert",
       "notInRange": "liegt nicht im erlaubten Bereich",
       "notFound": "wurde nicht gefunden",
       "doesNotHave": "hat keine",
-      "missingProperty": "fehlt die erforderliche Eigenschaft"
+      "missingProperty": "fehlt die erforderliche Eigenschaft",
+      "attributeValueDoesNotMatch": "Der Attributwert \"{{value}}\" entspricht nicht der Anforderung",
+      "doesNotMatchRequirement": "entspricht nicht der Anforderung",
+      "entityClassDoesNotMeet": "Die Entitätsklasse \"{{actual}}\" erfüllt nicht die erforderliche IFC-Klasse",
+      "predefinedTypeDoesNotMeet": "Der vordefinierte Typ \"{{actual}}\" erfüllt nicht den erforderlichen Typ",
+      "requiredAttributeNotExist": "Das erforderliche Attribut existiert nicht",
+      "attributeValueEmpty": "Der Attributwert \"{{actual}}\" ist leer",
+      "invalidAttributeName": "Ein ungültiger Attributname wurde in der IDS angegeben",
+      "attributeShouldNotMeet": "Der Attributwert hätte die Anforderung nicht erfüllen dürfen",
+      "noClassification": "Die Entität hat keine Klassifizierung",
+      "referencesDoNotMatch": "Die Referenzen \"{{actual}}\" entsprechen nicht den Anforderungen",
+      "systemsDoNotMatch": "Die Systeme \"{{actual}}\" entsprechen nicht den Anforderungen",
+      "classificationShouldNotMeet": "Die Klassifizierung hätte die Anforderung nicht erfüllen dürfen",
+      "noRelationship": "Die Entität hat keine Beziehung",
+      "relationshipIncorrectEntities": "Die Entität hat eine Beziehung mit falschen Entitäten: \"{{actual}}\"",
+      "relationshipIncorrectPredefinedType": "Die Entität hat eine Beziehung mit falschem vordefinierten Typ: \"{{actual}}\"",
+      "relationshipShouldNotMeet": "Die Beziehung hätte die Anforderung nicht erfüllen dürfen",
+      "propertySetDoesNotContain": "Der PropertySet enthält nicht die erforderliche Eigenschaft",
+      "propertyDataTypeMismatch": "Der Datentyp \"{{actual}}\" der Eigenschaft entspricht nicht dem erforderlichen Datentyp \"{{dataType}}\"",
+      "propertyValueDoesNotMatch": "Der Eigenschaftswert \"{{actual}}\" entspricht nicht den Anforderungen",
+      "propertyValuesDoNotMatch": "Die Eigenschaftswerte \"{{actual}}\" entsprechen nicht den Anforderungen",
+      "propertyShouldNotMeet": "Die Eigenschaft hätte die Anforderung nicht erfüllen dürfen",
+      "noMaterial": "Die Entität hat kein Material",
+      "materialDoesNotMatch": "Die Materialnamen und -kategorien \"{{actual}}\" entsprechen nicht der Anforderung",
+      "materialShouldNotMeet": "Das Material hätte die Anforderung nicht erfüllen dürfen"
     },
     "interface": {
       "passed": "erfüllt",
@@ -156,25 +183,64 @@
       "elementsPassedPrefix": "Elemente erfüllt",
       "applicability": "Anwendbarkeit",
       "all": "Alle",
-      "data": "Daten"
+      "data": "Daten",
+      "allEntityData": "Alle {{entity}} Daten",
+      "matchesPattern": "entspricht dem Muster {{pattern}}",
+      "equals": "ist {{value}}",
+      "oneOf": "ist einer von: {{values}}",
+      "range": "liegt zwischen {{min}} und {{max}}",
+      "greaterOrEqual": "ist grösser oder gleich {{value}}",
+      "greaterThan": "ist grösser als {{value}}",
+      "lessOrEqual": "ist kleiner oder gleich {{value}}",
+      "lessThan": "ist kleiner als {{value}}"
     },
     "phrases": {
       "moreOfSameType": "... {{count}} weitere vom gleichen Elementtyp ({{type}} mit Kennzeichnung {{tag}} und Globaler ID {{id}}) nicht angezeigt ...",
       "moreElementsNotShown": "... {{count}} weitere {{type}} Elemente nicht angezeigt von insgesamt {{total}} ..."
     },
     "ids": {
-      "section": {
-        "loadBearing": "Tragende Struktur"
+      "sections": {
+        "projectDesignation": "Projektbezeichnung",
+        "projectPerimeter": "Projektperimeter",
+        "buildingDesignation": "Gebäudebezeichnung",
+        "storeyDesignation": "Geschossbezeichnung"
       },
-      "description": {
-        "shouldHaveLoadBearing": "Alle Structure Elements sollte haben eine tragende Struktur"
+      "entities": {
+        "IfcProject": "Projekt",
+        "IfcSite": "Grundstück",
+        "IfcBuilding": "Gebäude",
+        "IfcBuildingStorey": "Geschoss"
       },
-      "pattern": {
-        "nameShallBe": "Der Name muss {{value}} sein",
+      "fields": {
+        "name": "Name",
+        "description": "Beschreibung",
+        "phase": "Phase"
+      },
+      "propertySets": {
+        "Pset_PropertyAgreement": "Eigenschaftsvereinbarung",
+        "Cust_Site": "Standort-Eigenschaften"
+      },
+      "patterns": {
+        "nameShallBe": "{{field}} muss {{value}} sein",
         "descriptionRequired": "Die Beschreibung muss angegeben werden",
-        "propertyRequired": "{{property}} muss im Eigenschaftssatz {{propertySet}} angegeben werden",
-        "propertyValue": "{{property}} muss {{value}} im Eigenschaftssatz {{propertySet}} sein",
-        "enumRequired": "Eine der Aufzählungswerte {{values}} muss im Eigenschaftssatz {{propertySet}} angegeben werden"
+        "propertyRequired": "{{property}} muss im PropertySet {{propertySet}} angegeben werden",
+        "propertyValue": "{{property}} muss {{value}} im PropertySet {{propertySet}} sein",
+        "dataRequired": "Die Daten zu {{property}} müssen {{value}} sein und im PropertySet {{propertySet}} enthalten sein",
+        "enumRequired": "{{field}} muss einer der folgenden Werte sein: {{values}}",
+        "propertyInSet": "Eigenschaft {{property}} im PropertySet {{propertySet}}",
+        "propertyWithValue": "Eigenschaft {{property}} im PropertySet {{propertySet}} mit Wert {{value}}"
+      },
+      "enumerations": {
+        "51_0": "51.0",
+        "52_0": "52.0",
+        "53_0": "53.0",
+        "untergeschoss": "Untergeschoss",
+        "erdgeschoss": "Erdgeschoss",
+        "obergeschoss": "Obergeschoss",
+        "zwischengeschoss": "Zwischengeschoss",
+        "dach": "Dach",
+        "u01": "U01",
+        "da": "DA"
       }
     }
   },
@@ -182,6 +248,7 @@
     "loading": {
       "pyodide": "Pyodide wird geladen...",
       "pyodideSuccess": "Pyodide erfolgreich geladen",
+      "idsFile": "IDS-Datei wird gelesen...",
       "translations": "Übersetzungen werden geladen...",
       "packages": "Erforderliche Pakete werden installiert...",
       "micropipPatch": "Micropip wird für Kompatibilitätsprüfungen angepasst...",

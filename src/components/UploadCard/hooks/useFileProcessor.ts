@@ -35,7 +35,6 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
       setIsProcessing(true)
       setUploadProgress(0)
       setUploadError(null)
-      console.log('Starting file processing...')
 
       if (!idsFile && isIdsValidation) {
         setUploadError('IDS file is required for validation')
@@ -60,7 +59,7 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
         ifcFiles.map(async (file) => {
           try {
             const arrayBuffer = await file.arrayBuffer()
-            const worker = new Worker('/pyodideWorker.js')
+            const worker = new Worker('/pyodideWorkerClean.js')
 
             const result = await new Promise((resolve, reject) => {
               worker.onmessage = (event) => {
@@ -72,14 +71,12 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
                     addLog(event.data.message)
                     // Set a timer to reload the page after showing the message
                     setUploadError(event.data.message)
-                    console.log('Out of memory detected, will reload in 3 seconds')
                     setTimeout(() => {
                       window.location.reload()
                     }, 3000) // Wait 3 seconds before reloading
                   }
                   reject(new Error(event.data.message))
                 } else if (event.data.type === 'complete') {
-                  console.log('Received worker result:', event.data.results)
                   if (event.data.message) {
                     addLog(event.data.message)
                   }
@@ -99,12 +96,10 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
                 fileName: file.name,
                 language: i18n.language,
                 generateBcf: reportFormats.bcf.toString(),
+                idsFilename: idsFile ? idsFile.name : null,
               })
-
-              console.log(`Worker started with language: ${i18n.language}`)
             })
 
-            console.log(`Adding result for file ${file.name}`)
             return { fileName: file.name, result }
           } catch (error: unknown) {
             console.error(`Error processing file ${file.name}:`, error)
@@ -128,7 +123,6 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
         }),
       )
 
-      console.log('All files processed, results:', processedResults)
       // Clear and then set the results to ensure the state update is detected
       setProcessedResults([])
       setTimeout(() => {
@@ -138,7 +132,7 @@ export const useFileProcessor = ({ i18n, addLog, reportFormats }: UseFileProcess
       setIsProcessing(false)
       return processedResults as ProcessedResult[]
     },
-    [i18n, addLog],
+    [i18n, addLog, reportFormats.bcf],
   )
 
   return {
