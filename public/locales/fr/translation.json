@@ -129,6 +129,8 @@
     "name": "Nom",
     "description": "Description",
     "warning": "Avertissement",
+    "failureReason": "Raison de l'échec",
+    "specNotApplyToVersion": "la spécification ne s'applique pas à cette version IFC",
     "globalId": "ID Global",
     "tag": "Étiquette",
     "reportBy": "Rapport par",
@@ -140,14 +142,38 @@
       "skipped": "IGNORÉ"
     },
     "errorMessages": {
-      "propertySetNotExist": "L'ensemble de propriétés requis n'existe pas",
+      "propertySetNotExist": "Le PropertySet requis n'existe pas",
       "dataShallBeProvided": "Les données doivent être fournies dans l'ensemble de données",
       "propertyNotExist": "La propriété requise n'existe pas",
       "invalidValue": "a une valeur invalide",
       "notInRange": "n'est pas dans la plage autorisée",
       "notFound": "n'a pas été trouvé",
       "doesNotHave": "n'a pas de",
-      "missingProperty": "la propriété requise est manquante"
+      "missingProperty": "la propriété requise est manquante",
+      "attributeValueDoesNotMatch": "La valeur de l'attribut \"{{value}}\" ne correspond pas à l'exigence",
+      "doesNotMatchRequirement": "ne correspond pas à l'exigence",
+      "entityClassDoesNotMeet": "La classe d'entité \"{{actual}}\" ne répond pas à la classe IFC requise",
+      "predefinedTypeDoesNotMeet": "Le type prédéfini \"{{actual}}\" ne répond pas au type requis",
+      "requiredAttributeNotExist": "L'attribut requis n'existait pas",
+      "attributeValueEmpty": "La valeur de l'attribut \"{{actual}}\" est vide",
+      "invalidAttributeName": "Un nom d'attribut invalide a été spécifié dans l'IDS",
+      "attributeShouldNotMeet": "La valeur de l'attribut n'aurait pas dû répondre à l'exigence",
+      "noClassification": "L'entité n'a pas de classification",
+      "referencesDoNotMatch": "Les références \"{{actual}}\" ne correspondent pas aux exigences",
+      "systemsDoNotMatch": "Les systèmes \"{{actual}}\" ne correspondent pas aux exigences",
+      "classificationShouldNotMeet": "La classification n'aurait pas dû répondre à l'exigence",
+      "noRelationship": "L'entité n'a pas de relation",
+      "relationshipIncorrectEntities": "L'entité a une relation avec des entités incorrectes : \"{{actual}}\"",
+      "relationshipIncorrectPredefinedType": "L'entité a une relation avec un type prédéfini incorrect : \"{{actual}}\"",
+      "relationshipShouldNotMeet": "La relation n'aurait pas dû répondre à l'exigence",
+      "propertySetDoesNotContain": "Le PropertySet ne contient pas la propriété requise",
+      "propertyDataTypeMismatch": "Le type de données \"{{actual}}\" de la propriété ne correspond pas au type de données requis \"{{dataType}}\"",
+      "propertyValueDoesNotMatch": "La valeur de la propriété \"{{actual}}\" ne correspond pas aux exigences",
+      "propertyValuesDoNotMatch": "Les valeurs de la propriété \"{{actual}}\" ne correspondent pas aux exigences",
+      "propertyShouldNotMeet": "La propriété n'aurait pas dû répondre à l'exigence",
+      "noMaterial": "L'entité n'a pas de matériau",
+      "materialDoesNotMatch": "Les noms et catégories de matériau \"{{actual}}\" ne correspondent pas à l'exigence",
+      "materialShouldNotMeet": "Le matériau n'aurait pas dû répondre à l'exigence"
     },
     "interface": {
       "passed": "réussi",
@@ -169,7 +195,6 @@
     "greaterThan": "est supérieur à {{value}}",
     "lessOrEqual": "est inférieur ou égal à {{value}}",
     "lessThan": "est inférieur à {{value}}",
-    "failureReason": "Raison de l'échec",
     "phrases": {
       "moreOfSameType": "... {{count}} autres du même type d'élément ({{type}} avec l'étiquette {{tag}} et l'ID global {{id}}) non affichés ...",
       "moreElementsNotShown": "... {{count}} autres éléments {{type}} non affichés sur un total de {{total}} ..."
@@ -184,9 +209,9 @@
       "pattern": {
         "nameShallBe": "Le nom doit être {{value}}",
         "descriptionRequired": "La description doit être fournie",
-        "propertyRequired": "{{property}} doit être fourni dans l'ensemble de propriétés {{propertySet}}",
-        "propertyValue": "{{property}} doit être {{value}} dans l'ensemble de propriétés {{propertySet}}",
-        "enumRequired": "L'une des valeurs d'énumération {{values}} doit être fournie dans l'ensemble de propriétés {{propertySet}}"
+        "propertyRequired": "{{property}} doit être fourni dans le PropertySet {{propertySet}}",
+        "propertyValue": "{{property}} doit être {{value}} dans le PropertySet {{propertySet}}",
+        "enumRequired": "L'une des valeurs d'énumération {{values}} doit être fournie dans le PropertySet {{propertySet}}"
       }
     }
   },

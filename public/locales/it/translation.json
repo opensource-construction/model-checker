@@ -129,6 +129,8 @@
     "name": "Nome",
     "description": "Descrizione",
     "warning": "Avviso",
+    "failureReason": "Motivo del fallimento",
+    "specNotApplyToVersion": "la specifica non si applica a questa versione IFC",
     "globalId": "ID Globale",
     "tag": "Tag",
     "reportBy": "Report di",
@@ -140,14 +142,38 @@
       "skipped": "SALTATO"
     },
     "errorMessages": {
-      "propertySetNotExist": "Il set di proprietà richiesto non esiste",
+      "propertySetNotExist": "Il PropertySet richiesto non esiste",
       "dataShallBeProvided": "I dati devono essere forniti nel set di dati",
       "propertyNotExist": "La proprietà richiesta non esiste",
       "invalidValue": "ha un valore non valido",
       "notInRange": "non è nell'intervallo consentito",
       "notFound": "non è stato trovato",
       "doesNotHave": "non ha",
-      "missingProperty": "manca la proprietà richiesta"
+      "missingProperty": "manca la proprietà richiesta",
+      "attributeValueDoesNotMatch": "Il valore dell'attributo \"{{value}}\" non corrisponde al requisito",
+      "doesNotMatchRequirement": "non corrisponde al requisito",
+      "entityClassDoesNotMeet": "La classe dell'entità \"{{actual}}\" non soddisfa la classe IFC richiesta",
+      "predefinedTypeDoesNotMeet": "Il tipo predefinito \"{{actual}}\" non soddisfa il tipo richiesto",
+      "requiredAttributeNotExist": "L'attributo richiesto non esisteva",
+      "attributeValueEmpty": "Il valore dell'attributo \"{{actual}}\" è vuoto",
+      "invalidAttributeName": "È stato specificato un nome di attributo non valido nell'IDS",
+      "attributeShouldNotMeet": "Il valore dell'attributo non avrebbe dovuto soddisfare il requisito",
+      "noClassification": "L'entità non ha classificazione",
+      "referencesDoNotMatch": "Le referenze \"{{actual}}\" non corrispondono ai requisiti",
+      "systemsDoNotMatch": "I sistemi \"{{actual}}\" non corrispondono ai requisiti",
+      "classificationShouldNotMeet": "La classificazione non avrebbe dovuto soddisfare il requisito",
+      "noRelationship": "L'entità non ha relazione",
+      "relationshipIncorrectEntities": "L'entità ha una relazione con entità errate: \"{{actual}}\"",
+      "relationshipIncorrectPredefinedType": "L'entità ha una relazione con tipo predefinito errato: \"{{actual}}\"",
+      "relationshipShouldNotMeet": "La relazione non avrebbe dovuto soddisfare il requisito",
+      "propertySetDoesNotContain": "Il PropertySet non contiene la proprietà richiesta",
+      "propertyDataTypeMismatch": "Il tipo di dati \"{{actual}}\" della proprietà non corrisponde al tipo di dati richiesto \"{{dataType}}\"",
+      "propertyValueDoesNotMatch": "Il valore della proprietà \"{{actual}}\" non corrisponde ai requisiti",
+      "propertyValuesDoNotMatch": "I valori della proprietà \"{{actual}}\" non corrispondono ai requisiti",
+      "propertyShouldNotMeet": "La proprietà non avrebbe dovuto soddisfare il requisito",
+      "noMaterial": "L'entità non ha materiale",
+      "materialDoesNotMatch": "I nomi e le categorie del materiale \"{{actual}}\" non corrispondono al requisito",
+      "materialShouldNotMeet": "Il materiale non avrebbe dovuto soddisfare il requisito"
     },
     "interface": {
       "passed": "superato",
@@ -169,7 +195,6 @@
     "greaterThan": "è maggiore di {{value}}",
     "lessOrEqual": "è minore o uguale a {{value}}",
     "lessThan": "è minore di {{value}}",
-    "failureReason": "Motivo del fallimento",
     "phrases": {
       "moreOfSameType": "... {{count}} altri dello stesso tipo di elemento ({{type}} con Tag {{tag}} e ID Globale {{id}}) non mostrati ...",
       "moreElementsNotShown": "... {{count}} altri elementi {{type}} non mostrati su un totale di {{total}} ..."
@@ -184,9 +209,9 @@
       "pattern": {
         "nameShallBe": "Il nome deve essere {{value}}",
         "descriptionRequired": "La descrizione deve essere fornita",
-        "propertyRequired": "{{property}} deve essere fornito nel set di proprietà {{propertySet}}",
-        "propertyValue": "{{property}} deve essere {{value}} nel set di proprietà {{propertySet}}",
-        "enumRequired": "Uno dei valori di enumerazione {{values}} deve essere fornito nel set di proprietà {{propertySet}}"
+        "propertyRequired": "{{property}} deve essere fornito nel PropertySet {{propertySet}}",
+        "propertyValue": "{{property}} deve essere {{value}} nel PropertySet {{propertySet}}",
+        "enumRequired": "Uno dei valori di enumerazione {{values}} deve essere fornito nel PropertySet {{propertySet}}"
       }
     }
   },

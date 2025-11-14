@@ -14,9 +14,9 @@ i18n
     fallbackLng: 'en',
     supportedLngs,
     load: 'languageOnly',
-    debug: true,
+    debug: false,
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
+      order: ['localStorage', 'navigator', 'querystring'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
     },

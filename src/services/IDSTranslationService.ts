@@ -109,7 +109,7 @@ export class IDSTranslationService {
     let translated = this.normalizeApplicabilityText(applicability)
 
     // Handle "All X data" patterns first
-    const allDataPattern = /All (\w+) data/
+    const allDataPattern = /All (.+?) data/
     const match = translated.match(allDataPattern)
 
     if (match) {
@@ -458,5 +458,197 @@ export class IDSTranslationService {
     normalized = normalized.replace(andBeforeDataset, '')
 
     return normalized
+  }
+
+  /**
+   * Translate failure reason messages from validation engine
+   * Covers all IfcTester failure reasons from facet.py Result classes
+   */
+  translateFailureReason(reason: string, language: string, t?: (key: string, defaultValue?: string) => string): string {
+    if (!reason) {
+      return reason
+    }
+
+    // EntityResult patterns
+    const entityClassPattern = /The entity class\s+"([^"]+)"\s+does not meet the required IFC class/i
+    const entityClassMatch = reason.match(entityClassPattern)
+    if (entityClassMatch && t) {
+      const actual = entityClassMatch[1]
+      return t('report.errorMessages.entityClassDoesNotMeet', '').replace('{{actual}}', actual)
+    }
+
+    const predefinedTypePattern = /The predefined type\s+"([^"]+)"\s+does not meet the required type/i
+    const predefinedTypeMatch = reason.match(predefinedTypePattern)
+    if (predefinedTypeMatch && t) {
+      const actual = predefinedTypeMatch[1]
+      return t('report.errorMessages.predefinedTypeDoesNotMeet', '').replace('{{actual}}', actual)
+    }
+
+    // AttributeResult patterns
+    if (reason === 'The required attribute did not exist' || reason.includes('required attribute did not exist')) {
+      return t ? t('report.errorMessages.requiredAttributeNotExist', 'Das erforderliche Attribut existiert nicht') : reason
+    }
+
+    // Pattern: "The attribute value "X" is empty" - handle both straight and curly quotes
+    const attributeEmptyPattern = /The attribute value\s+[""]([^""]+)[""]\s+is empty/i
+    const attributeEmptyMatch = reason.match(attributeEmptyPattern)
+    if (attributeEmptyMatch) {
+      const actual = attributeEmptyMatch[1]
+      if (t) {
+        const translated = t('report.errorMessages.attributeValueEmpty', '')
+        if (translated && translated.trim() !== '') {
+          return translated.replace('{{actual}}', actual)
+        }
+      }
+      // Fallback translations if t function not available or returns empty
+      switch (language) {
+        case 'de':
+          return `Der Attributwert "${actual}" ist leer`
+        case 'fr':
+          return `La valeur de l'attribut "${actual}" est vide`
+        case 'it':
+          return `Il valore dell'attributo "${actual}" è vuoto`
+        case 'rm':
+          return `La valur da l'attribut "${actual}" è vida`
+        default:
+          return reason
+      }
+    }
+
+    if (reason.includes('invalid attribute name was specified')) {
+      return t ? t('report.errorMessages.invalidAttributeName', 'Ein ungültiger Attributname wurde in der IDS angegeben') : reason
+    }
+
+    // Pattern: "The attribute value "X" does not match the requirement"
+    const attributeValuePattern = /The attribute value\s+"([^"]+)"\s+does not match the requirement/i
+    const attributeMatch = reason.match(attributeValuePattern)
+    if (attributeMatch && t) {
+      const value = attributeMatch[1]
+      return t('report.errorMessages.attributeValueDoesNotMatch', '').replace('{{value}}', value)
+    }
+
+    if (reason.includes('attribute value should not have met the requirement')) {
+      return t ? t('report.errorMessages.attributeShouldNotMeet', 'Der Attributwert hätte die Anforderung nicht erfüllen dürfen') : reason
+    }
+
+    // ClassificationResult patterns
+    if (reason === 'The entity has no classification' || reason.includes('entity has no classification')) {
+      return t ? t('report.errorMessages.noClassification', 'Die Entität hat keine Klassifizierung') : reason
+    }
+
+    const referencesPattern = /The references\s+"([^"]+)"\s+do not match the requirements/i
+    const referencesMatch = reason.match(referencesPattern)
+    if (referencesMatch && t) {
+      const actual = referencesMatch[1]
+      return t('report.errorMessages.referencesDoNotMatch', '').replace('{{actual}}', actual)
+    }
+
+    const systemsPattern = /The systems\s+"([^"]+)"\s+do not match the requirements/i
+    const systemsMatch = reason.match(systemsPattern)
+    if (systemsMatch && t) {
+      const actual = systemsMatch[1]
+      return t('report.errorMessages.systemsDoNotMatch', '').replace('{{actual}}', actual)
+    }
+
+    if (reason.includes('classification should not have met the requirement')) {
+      return t ? t('report.errorMessages.classificationShouldNotMeet', 'Die Klassifizierung hätte die Anforderung nicht erfüllen dürfen') : reason
+    }
+
+    // PartOfResult patterns
+    if (reason === 'The entity has no relationship' || reason.includes('entity has no relationship')) {
+      return t ? t('report.errorMessages.noRelationship', 'Die Entität hat keine Beziehung') : reason
+    }
+
+    const relationshipEntitiesPattern = /The entity has a relationship with incorrect entities:\s+"([^"]+)"/i
+    const relationshipEntitiesMatch = reason.match(relationshipEntitiesPattern)
+    if (relationshipEntitiesMatch && t) {
+      const actual = relationshipEntitiesMatch[1]
+      return t('report.errorMessages.relationshipIncorrectEntities', '').replace('{{actual}}', actual)
+    }
+
+    const relationshipPredefinedPattern = /The entity has a relationship with incorrect predefined type:\s+"([^"]+)"/i
+    const relationshipPredefinedMatch = reason.match(relationshipPredefinedPattern)
+    if (relationshipPredefinedMatch && t) {
+      const actual = relationshipPredefinedMatch[1]
+      return t('report.errorMessages.relationshipIncorrectPredefinedType', '').replace('{{actual}}', actual)
+    }
+
+    if (reason.includes('relationship should not have met the requirement')) {
+      return t ? t('report.errorMessages.relationshipShouldNotMeet', 'Die Beziehung hätte die Anforderung nicht erfüllen dürfen') : reason
+    }
+
+    // PropertyResult patterns
+    if (reason === 'The required property set does not exist' || reason.includes('required property set does not exist')) {
+      return t ? t('report.errorMessages.propertySetNotExist', 'Der erforderliche PropertySet existiert nicht') : reason
+    }
+
+    if (reason === 'The property set does not contain the required property' || reason.includes('property set does not contain the required property')) {
+      return t ? t('report.errorMessages.propertySetDoesNotContain', 'Der PropertySet enthält nicht die erforderliche Eigenschaft') : reason
+    }
+
+    const propertyDataTypePattern = /The property's data type\s+"([^"]+)"\s+does not match the required data type of\s+"([^"]+)"/i
+    const propertyDataTypeMatch = reason.match(propertyDataTypePattern)
+    if (propertyDataTypeMatch && t) {
+      const actual = propertyDataTypeMatch[1]
+      const dataType = propertyDataTypeMatch[2]
+      return t('report.errorMessages.propertyDataTypeMismatch', '').replace('{{actual}}', actual).replace('{{dataType}}', dataType)
+    }
+
+    const propertyValuePattern = /The property value\s+"([^"]+)"\s+does not match the requirements/i
+    const propertyValueMatch = reason.match(propertyValuePattern)
+    if (propertyValueMatch && t) {
+      const actual = propertyValueMatch[1]
+      return t('report.errorMessages.propertyValueDoesNotMatch', '').replace('{{actual}}', actual)
+    }
+
+    const propertyValuesPattern = /The property values\s+"([^"]+)"\s+do not match the requirements/i
+    const propertyValuesMatch = reason.match(propertyValuesPattern)
+    if (propertyValuesMatch && t) {
+      const actual = propertyValuesMatch[1]
+      return t('report.errorMessages.propertyValuesDoNotMatch', '').replace('{{actual}}', actual)
+    }
+
+    if (reason.includes('property should not have met the requirement')) {
+      return t ? t('report.errorMessages.propertyShouldNotMeet', 'Die Eigenschaft hätte die Anforderung nicht erfüllen dürfen') : reason
+    }
+
+    // MaterialResult patterns
+    if (reason === 'The entity has no material' || reason.includes('entity has no material')) {
+      return t ? t('report.errorMessages.noMaterial', 'Die Entität hat kein Material') : reason
+    }
+
+    const materialPattern = /The material names and categories of\s+"([^"]+)"\s+does not match the requirement/i
+    const materialMatch = reason.match(materialPattern)
+    if (materialMatch && t) {
+      const actual = materialMatch[1]
+      return t('report.errorMessages.materialDoesNotMatch', '').replace('{{actual}}', actual)
+    }
+
+    if (reason.includes('material should not have met the requirement')) {
+      return t ? t('report.errorMessages.materialShouldNotMeet', 'Das Material hätte die Anforderung nicht erfüllen dürfen') : reason
+    }
+
+    // Pattern: "does not match the requirement" (standalone fallback)
+    if (reason.includes('does not match the requirement')) {
+      if (t) {
+        return t('report.errorMessages.doesNotMatchRequirement', 'entspricht nicht der Anforderung')
+      }
+      // Fallback translations if t function not available
+      switch (language) {
+        case 'de':
+          return reason.replace(/does not match the requirement/i, 'entspricht nicht der Anforderung')
+        case 'fr':
+          return reason.replace(/does not match the requirement/i, "ne correspond pas à l'exigence")
+        case 'it':
+          return reason.replace(/does not match the requirement/i, 'non corrisponde al requisito')
+        case 'rm':
+          return reason.replace(/does not match the requirement/i, "na correspunda betg a la pretensiun")
+        default:
+          return reason
+      }
+    }
+
+    // Return original if no pattern matches
+    return reason
   }
 }

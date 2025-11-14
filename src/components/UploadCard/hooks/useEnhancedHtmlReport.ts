@@ -31,6 +31,7 @@ export const useEnhancedHtmlReport = (templateContent: string | null) => {
         total_applicable: translatedResults.total_applicable || 0,
         total_applicable_pass: translatedResults.total_applicable_pass || 0,
         total_applicable_fail: translatedResults.total_applicable_fail || 0,
+        language_code: i18n.language, // Store language for failure reason translation
       }
 
       // Generate HTML using our template renderer logic
@@ -157,6 +158,10 @@ export async function generateHtmlReport(
       checksPassedPrefix: t('report.interface.checksPassedPrefix', 'Checks passed'),
       elementsPassedPrefix: t('report.interface.elementsPassedPrefix', 'Elements passed'),
       failureReason: t('report.failureReason', 'Failure Reason'),
+      specNotApplyToVersion: t(
+        'report.specNotApplyToVersion',
+        'specification does not apply to this IFC version',
+      ),
       moreOfSameType: t(
         'report.phrases.moreOfSameType',
         '... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...',
@@ -172,7 +177,10 @@ export async function generateHtmlReport(
   }
 
   // Use simplified template replacement
-  let htmlContent = processSpecificationLoops(templateContent, templateData)
+  // Extract language from results if available, or default to 'en'
+  const language = translatedResults.language_code || 'en'
+  const translationService = new IDSTranslationService()
+  let htmlContent = processSpecificationLoops(templateContent, templateData, translationService, language, t)
 
   // Replace translation variables (may appear inside injected specification sections)
   const translationVars = [
@@ -197,6 +205,8 @@ export async function generateHtmlReport(
     't.checksPassedPrefix',
     't.elementsPassedPrefix',
     't.failureReason',
+    't.specNotApplyToVersion',
+    't.moreOfSameType',
     't.moreElementsNotShown',
     't.specificationsPassedPrefix',
     't.requirementsPassedPrefix',
@@ -316,7 +326,13 @@ function processConditionalSections(template: string, data: Record<string, unkno
 /**
  * Process specification loops in the template
  */
-function processSpecificationLoops(template: string, data: Record<string, unknown>): string {
+function processSpecificationLoops(
+  template: string,
+  data: Record<string, unknown>,
+  translationService?: IDSTranslationService,
+  language?: string,
+  t?: (key: string, defaultValue?: string) => string,
+): string {
   let result = template
 
   // Find and replace specification loop
@@ -427,7 +443,7 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
                 reqSection = reqSection.replace(/<table class="skipped">[\s\S]*?<\/table>/g, '')
 
                 // Handle entity tables
-                reqSection = processEntityTables(reqSection, req)
+                reqSection = processEntityTables(reqSection, req, translationService, language, t)
 
                 return reqSection
               })
@@ -490,7 +506,13 @@ function processSpecificationLoops(template: string, data: Record<string, unknow
 /**
  * Process entity tables for passed and failed entities
  */
-function processEntityTables(template: string, req: Record<string, unknown>): string {
+function processEntityTables(
+  template: string,
+  req: Record<string, unknown>,
+  translationService?: IDSTranslationService,
+  language?: string,
+  t?: (key: string, defaultValue?: string) => string,
+): string {
   let result = template
 
   // Process passed entities table
@@ -586,7 +608,30 @@ function processEntityTables(template: string, req: Record<string, unknown>): st
             )
             .replace(/\{\{name\}\}/g, () => escapeHtml(getEntityValue(entity, ['name'])))
             .replace(/\{\{description\}\}/g, () => escapeHtml(getEntityValue(entity, ['description'])))
-            .replace(/\{\{reason\}\}/g, () => escapeHtml(getEntityValue(entity, ['reason']) || 'Validation failed'))
+            .replace(/\{\{reason\}\}/g, () => {
+              let reason = getEntityValue(entity, ['reason'])
+              // If reason is empty or missing, try to derive it from requirement description and entity state
+              if (!reason || reason.trim() === '') {
+                const reqDescription = String(req.description || '').toLowerCase()
+                const entityDescription = getEntityValue(entity, ['description'])
+                // Check if requirement is about description and entity has no description
+                if (
+                  (reqDescription.includes('description') || reqDescription.includes('beschreibung')) &&
+                  (!entityDescription || entityDescription === 'None' || entityDescription.trim() === '')
+                ) {
+                  reason = t ? t('report.errorMessages.requiredAttributeNotExist', 'The required attribute did not exist') : 'The required attribute did not exist'
+                } else {
+                  // Generic fallback - use requirement description if available, otherwise generic message
+                  reason = t ? t('report.errorMessages.doesNotMatchRequirement', 'does not match the requirement') : 'Validation failed'
+                }
+              }
+              // Translate failure reason if translation service is available
+              if (translationService && language && reason) {
+                const translatedReason = translationService.translateFailureReason(reason, language, t)
+                return escapeHtml(translatedReason || reason)
+              }
+              return escapeHtml(reason)
+            })
             .replace(/\{\{global_id\}\}/g, () => escapeHtml(getEntityValue(entity, ['global_id', 'globalId'])))
             .replace(/\{\{tag\}\}/g, () => escapeHtml(getEntityValue(entity, ['tag']))),
         )
