@@ -158,10 +158,7 @@ export async function generateHtmlReport(
       checksPassedPrefix: t('report.interface.checksPassedPrefix', 'Checks passed'),
       elementsPassedPrefix: t('report.interface.elementsPassedPrefix', 'Elements passed'),
       failureReason: t('report.failureReason', 'Failure Reason'),
-      specNotApplyToVersion: t(
-        'report.specNotApplyToVersion',
-        'specification does not apply to this IFC version',
-      ),
+      specNotApplyToVersion: t('report.specNotApplyToVersion', 'specification does not apply to this IFC version'),
       moreOfSameType: t(
         'report.phrases.moreOfSameType',
         '... {{count}} more of the same element type ({{type}} with Tag {{tag}} and GlobalId {{id}}) not shown ...',
@@ -558,9 +555,12 @@ function processEntityTables(
         )
         .join('')
 
-      let tableHtml = tableContent.replace(/\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/, () => entityRows)
+      let tableHtml = tableContent.replace(
+        /\{\{#passed_entities\}\}[\s\S]*?\{\{\/passed_entities\}\}/,
+        () => entityRows,
+      )
 
-      tableHtml = tableHtml.replace(omittedPassesRegex, () => req.has_omitted_passes ? omittedPassesContent : '')
+      tableHtml = tableHtml.replace(omittedPassesRegex, () => (req.has_omitted_passes ? omittedPassesContent : ''))
 
       result = result.replace(passedTableRegex, () => tableHtml)
     }
@@ -619,10 +619,14 @@ function processEntityTables(
                   (reqDescription.includes('description') || reqDescription.includes('beschreibung')) &&
                   (!entityDescription || entityDescription === 'None' || entityDescription.trim() === '')
                 ) {
-                  reason = t ? t('report.errorMessages.requiredAttributeNotExist', 'The required attribute did not exist') : 'The required attribute did not exist'
+                  reason = t
+                    ? t('report.errorMessages.requiredAttributeNotExist', 'The required attribute did not exist')
+                    : 'The required attribute did not exist'
                 } else {
                   // Generic fallback - use requirement description if available, otherwise generic message
-                  reason = t ? t('report.errorMessages.doesNotMatchRequirement', 'does not match the requirement') : 'Validation failed'
+                  reason = t
+                    ? t('report.errorMessages.doesNotMatchRequirement', 'does not match the requirement')
+                    : 'Validation failed'
                 }
               }
               // Translate failure reason if translation service is available
@@ -637,9 +641,14 @@ function processEntityTables(
         )
         .join('')
 
-      let tableHtml = tableContent.replace(/\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/, () => entityRows)
+      let tableHtml = tableContent.replace(
+        /\{\{#failed_entities\}\}[\s\S]*?\{\{\/failed_entities\}\}/,
+        () => entityRows,
+      )
 
-      tableHtml = tableHtml.replace(omittedFailuresRegex, () => req.has_omitted_failures ? omittedFailuresContent : '')
+      tableHtml = tableHtml.replace(omittedFailuresRegex, () =>
+        req.has_omitted_failures ? omittedFailuresContent : '',
+      )
 
       result = result.replace(failedTableRegex, () => tableHtml)
     }

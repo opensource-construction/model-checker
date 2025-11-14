@@ -486,7 +486,9 @@ export class IDSTranslationService {
 
     // AttributeResult patterns
     if (reason === 'The required attribute did not exist' || reason.includes('required attribute did not exist')) {
-      return t ? t('report.errorMessages.requiredAttributeNotExist', 'Das erforderliche Attribut existiert nicht') : reason
+      return t
+        ? t('report.errorMessages.requiredAttributeNotExist', 'Das erforderliche Attribut existiert nicht')
+        : reason
     }
 
     // Pattern: "The attribute value "X" is empty" - handle both straight and curly quotes
@@ -516,7 +518,9 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('invalid attribute name was specified')) {
-      return t ? t('report.errorMessages.invalidAttributeName', 'Ein ungültiger Attributname wurde in der IDS angegeben') : reason
+      return t
+        ? t('report.errorMessages.invalidAttributeName', 'Ein ungültiger Attributname wurde in der IDS angegeben')
+        : reason
     }
 
     // Pattern: "The attribute value "X" does not match the requirement"
@@ -528,7 +532,12 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('attribute value should not have met the requirement')) {
-      return t ? t('report.errorMessages.attributeShouldNotMeet', 'Der Attributwert hätte die Anforderung nicht erfüllen dürfen') : reason
+      return t
+        ? t(
+            'report.errorMessages.attributeShouldNotMeet',
+            'Der Attributwert hätte die Anforderung nicht erfüllen dürfen',
+          )
+        : reason
     }
 
     // ClassificationResult patterns
@@ -551,7 +560,12 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('classification should not have met the requirement')) {
-      return t ? t('report.errorMessages.classificationShouldNotMeet', 'Die Klassifizierung hätte die Anforderung nicht erfüllen dürfen') : reason
+      return t
+        ? t(
+            'report.errorMessages.classificationShouldNotMeet',
+            'Die Klassifizierung hätte die Anforderung nicht erfüllen dürfen',
+          )
+        : reason
     }
 
     // PartOfResult patterns
@@ -574,24 +588,43 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('relationship should not have met the requirement')) {
-      return t ? t('report.errorMessages.relationshipShouldNotMeet', 'Die Beziehung hätte die Anforderung nicht erfüllen dürfen') : reason
+      return t
+        ? t(
+            'report.errorMessages.relationshipShouldNotMeet',
+            'Die Beziehung hätte die Anforderung nicht erfüllen dürfen',
+          )
+        : reason
     }
 
     // PropertyResult patterns
-    if (reason === 'The required property set does not exist' || reason.includes('required property set does not exist')) {
+    if (
+      reason === 'The required property set does not exist' ||
+      reason.includes('required property set does not exist')
+    ) {
       return t ? t('report.errorMessages.propertySetNotExist', 'Der erforderliche PropertySet existiert nicht') : reason
     }
 
-    if (reason === 'The property set does not contain the required property' || reason.includes('property set does not contain the required property')) {
-      return t ? t('report.errorMessages.propertySetDoesNotContain', 'Der PropertySet enthält nicht die erforderliche Eigenschaft') : reason
+    if (
+      reason === 'The property set does not contain the required property' ||
+      reason.includes('property set does not contain the required property')
+    ) {
+      return t
+        ? t(
+            'report.errorMessages.propertySetDoesNotContain',
+            'Der PropertySet enthält nicht die erforderliche Eigenschaft',
+          )
+        : reason
     }
 
-    const propertyDataTypePattern = /The property's data type\s+"([^"]+)"\s+does not match the required data type of\s+"([^"]+)"/i
+    const propertyDataTypePattern =
+      /The property's data type\s+"([^"]+)"\s+does not match the required data type of\s+"([^"]+)"/i
     const propertyDataTypeMatch = reason.match(propertyDataTypePattern)
     if (propertyDataTypeMatch && t) {
       const actual = propertyDataTypeMatch[1]
       const dataType = propertyDataTypeMatch[2]
-      return t('report.errorMessages.propertyDataTypeMismatch', '').replace('{{actual}}', actual).replace('{{dataType}}', dataType)
+      return t('report.errorMessages.propertyDataTypeMismatch', '')
+        .replace('{{actual}}', actual)
+        .replace('{{dataType}}', dataType)
     }
 
     const propertyValuePattern = /The property value\s+"([^"]+)"\s+does not match the requirements/i
@@ -609,7 +642,9 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('property should not have met the requirement')) {
-      return t ? t('report.errorMessages.propertyShouldNotMeet', 'Die Eigenschaft hätte die Anforderung nicht erfüllen dürfen') : reason
+      return t
+        ? t('report.errorMessages.propertyShouldNotMeet', 'Die Eigenschaft hätte die Anforderung nicht erfüllen dürfen')
+        : reason
     }
 
     // MaterialResult patterns
@@ -625,7 +660,9 @@ export class IDSTranslationService {
     }
 
     if (reason.includes('material should not have met the requirement')) {
-      return t ? t('report.errorMessages.materialShouldNotMeet', 'Das Material hätte die Anforderung nicht erfüllen dürfen') : reason
+      return t
+        ? t('report.errorMessages.materialShouldNotMeet', 'Das Material hätte die Anforderung nicht erfüllen dürfen')
+        : reason
     }
 
     // Pattern: "does not match the requirement" (standalone fallback)
@@ -642,7 +679,7 @@ export class IDSTranslationService {
         case 'it':
           return reason.replace(/does not match the requirement/i, 'non corrisponde al requisito')
         case 'rm':
-          return reason.replace(/does not match the requirement/i, "na correspunda betg a la pretensiun")
+          return reason.replace(/does not match the requirement/i, 'na correspunda betg a la pretensiun')
         default:
           return reason
       }
