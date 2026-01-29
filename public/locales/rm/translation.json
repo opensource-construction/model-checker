@@ -117,6 +117,7 @@
   "report-format-description": "Tscherna in u plirs formats da rapport. Rapports HTML pon vegnir vesids e stampads directamain, entant che rapports BCF pon vegnir utilisads en instruments da collavuraziun BIM.",
   "view-html": "HTML",
   "download-bcf": "BCF",
+  "downloadHtmlTooltip": "Telechargiar rapport HTML",
   "select-report-format": "Tscherna almain in format da rapport",
   "report": {
     "summary": "Resumaziun",
@@ -128,6 +129,8 @@
     "name": "Num",
     "description": "Descripziun",
     "warning": "Avertiment",
+    "failureReason": "Motiv dal falliment",
+    "specNotApplyToVersion": "la specificaziun na s'applitgescha betg a questa versiun IFC",
     "globalId": "ID global",
     "tag": "Tag",
     "reportBy": "Rapport da",
@@ -139,14 +142,38 @@
       "skipped": "SURSIGLÌ"
     },
     "errorMessages": {
-      "propertySetNotExist": "Il set da proprietads pretendì n'exista betg",
+      "propertySetNotExist": "Il PropertySet pretendì n'exista betg",
       "dataShallBeProvided": "Las datas ston vegnir furnidas en il set da datas",
       "propertyNotExist": "La proprietad pretendida n'exista betg",
       "invalidValue": "ha ina valur nunvalida",
       "notInRange": "n'è betg en il spectrum permess",
       "notFound": "n'è betg vegnì chattà",
       "doesNotHave": "n'ha betg",
-      "missingProperty": "manca la proprietad pretendida"
+      "missingProperty": "manca la proprietad pretendida",
+      "attributeValueDoesNotMatch": "La valur da l'attribut \"{{value}}\" na correspunda betg a la pretensiun",
+      "doesNotMatchRequirement": "na correspunda betg a la pretensiun",
+      "entityClassDoesNotMeet": "La classa da l'entitad \"{{actual}}\" na cuntent betg la classa IFC pretendida",
+      "predefinedTypeDoesNotMeet": "Il tip predefinì \"{{actual}}\" na cuntent betg il tip pretendì",
+      "requiredAttributeNotExist": "L'attribut pretendì n'existiva betg",
+      "attributeValueEmpty": "La valur da l'attribut \"{{actual}}\" è vida",
+      "invalidAttributeName": "In num d'attribut nunvalid è vegnì specificà en l'IDS",
+      "attributeShouldNotMeet": "La valur da l'attribut na duess betg avair cuntent la pretensiun",
+      "noClassification": "L'entitad n'ha nagina classificaziun",
+      "referencesDoNotMatch": "Las referenzas \"{{actual}}\" na correspundan betg a las pretensiuns",
+      "systemsDoNotMatch": "Ils sistems \"{{actual}}\" na correspundan betg a las pretensiuns",
+      "classificationShouldNotMeet": "La classificaziun na duess betg avair cuntent la pretensiun",
+      "noRelationship": "L'entitad n'ha nagina relaziun",
+      "relationshipIncorrectEntities": "L'entitad ha ina relaziun cun entitads sbagliadas: \"{{actual}}\"",
+      "relationshipIncorrectPredefinedType": "L'entitad ha ina relaziun cun tip predefinì sbaglià: \"{{actual}}\"",
+      "relationshipShouldNotMeet": "La relaziun na duess betg avair cuntent la pretensiun",
+      "propertySetDoesNotContain": "Il PropertySet na cuntegna betg la proprietad pretendida",
+      "propertyDataTypeMismatch": "Il tip da datas \"{{actual}}\" da la proprietad na correspunda betg al tip da datas pretendì \"{{dataType}}\"",
+      "propertyValueDoesNotMatch": "La valur da la proprietad \"{{actual}}\" na correspunda betg a las pretensiuns",
+      "propertyValuesDoNotMatch": "Las valurs da la proprietad \"{{actual}}\" na correspundan betg a las pretensiuns",
+      "propertyShouldNotMeet": "La proprietad na duess betg avair cuntent la pretensiun",
+      "noMaterial": "L'entitad n'ha nagin material",
+      "materialDoesNotMatch": "Ils nums e las categorias dal material \"{{actual}}\" na correspundan betg a la pretensiun",
+      "materialShouldNotMeet": "Il material na duess betg avair cuntent la pretensiun"
     },
     "interface": {
       "passed": "reussì",
@@ -159,6 +186,15 @@
       "all": "Tut",
       "data": "Datas"
     },
+    "allEntityData": "Tut las datas {{entity}}",
+    "matchesPattern": "correspunda al model {{pattern}}",
+    "equals": "è {{value}}",
+    "oneOf": "è in dad: {{values}}",
+    "range": "è tranter {{min}} e {{max}}",
+    "greaterOrEqual": "è pli grond u ugual a {{value}}",
+    "greaterThan": "è pli grond che {{value}}",
+    "lessOrEqual": "è pli pitschen u ugual a {{value}}",
+    "lessThan": "è pli pitschen che {{value}}",
     "phrases": {
       "moreOfSameType": "... {{count}} dapli dal medem tip d'element ({{type}} cun Tag {{tag}} ed ID global {{id}}) betg mussads ...",
       "moreElementsNotShown": "... {{count}} ulteriurs elements {{type}} betg mussads ord in total da {{total}} ..."
@@ -173,9 +209,9 @@
       "pattern": {
         "nameShallBe": "Il num sto esser {{value}}",
         "descriptionRequired": "La descripziun sto vegnir furnida",
-        "propertyRequired": "{{property}} sto vegnir furnì en il set da proprietads {{propertySet}}",
-        "propertyValue": "{{property}} sto esser {{value}} en il set da proprietads {{propertySet}}",
-        "enumRequired": "Ina da las valurs d'enumeraziun {{values}} sto vegnir furnida en il set da proprietads {{propertySet}}"
+        "propertyRequired": "{{property}} sto vegnir furnì en il PropertySet {{propertySet}}",
+        "propertyValue": "{{property}} sto esser {{value}} en il PropertySet {{propertySet}}",
+        "enumRequired": "Ina da las valurs d'enumeraziun {{values}} sto vegnir furnida en il PropertySet {{propertySet}}"
       }
     }
   },

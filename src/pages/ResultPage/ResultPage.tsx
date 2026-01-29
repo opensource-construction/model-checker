@@ -25,9 +25,6 @@ export const ResultPage = () => {
     removeAfterPrint: true,
     content: () => {
       // For basic checking results, we can just print what's currently displayed
-      console.log('ResultPage: Printing basic checking results')
-
-      // Return the current content for printing
       return contentToPrint.current
     },
   })

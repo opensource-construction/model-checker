@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { BcfData, downloadBcfReport } from '../../utils/bcfUtils'
+import { ValidationResult } from '../../types/validation'
 import { processFile } from './processFile.ts'
 import {
   ErrorDisplay,
@@ -15,7 +16,8 @@ import {
   UploadInstructions,
 } from './components'
 import { UploadCardTitle } from './UploadCardTitle.tsx'
-import { useFileProcessor, useHtmlReport } from './hooks'
+import { useFileProcessor } from './hooks'
+import { useEnhancedHtmlReport } from './hooks/useEnhancedHtmlReport'
 import { FileError } from './hooks/useFileProcessor'
 
 export const UploadCard = () => {
@@ -53,7 +55,7 @@ export const UploadCard = () => {
     reportFormats,
   })
 
-  const { openHtmlReport } = useHtmlReport(templateContent, i18n)
+  const { openHtmlReport, downloadHtmlReport } = useEnhancedHtmlReport(templateContent)
 
   // Function to scroll to results
   const scrollToResults = () => {
@@ -77,13 +79,16 @@ export const UploadCard = () => {
 
   useEffect(() => {
     // Load the HTML template
-    fetch('/report.html')
-      .then((response) => response.text())
-      .then((content) => {
-        console.log('Template loaded, length:', content.length)
+    const loadTemplate = async () => {
+      try {
+        const response = await fetch('/report.html')
+        const content = await response.text()
         setTemplateContent(content)
-      })
-      .catch((error) => console.error('Error loading template:', error))
+      } catch (error) {
+        console.error('Failed to load template:', error)
+      }
+    }
+    loadTemplate()
   }, [])
 
   const handleBcfDownload = (result: {
@@ -101,6 +106,15 @@ export const UploadCard = () => {
       }
     } else {
       setUploadError('No BCF data available for download')
+    }
+  }
+
+  const handleHtmlDownload = async (result: ValidationResult) => {
+    try {
+      await downloadHtmlReport(result)
+    } catch (error) {
+      console.error('Failed to download HTML report:', error)
+      setUploadError(`Failed to download HTML report: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -178,6 +192,7 @@ export const UploadCard = () => {
               processedResults={processedResults}
               reportFormats={reportFormats}
               onHtmlReport={openHtmlReport}
+              onHtmlDownload={handleHtmlDownload}
               onBcfDownload={handleBcfDownload}
               resultsRef={resultsRef}
             />

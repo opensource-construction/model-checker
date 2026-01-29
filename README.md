@@ -90,7 +90,7 @@ model-checker/
 ├── public/              # Static assets and Python files
 │   ├── locales/         # Translation files
 │   ├── python/          # Python scripts
-│   └── pyodideWorker.js # Web worker for Pyodide
+│   └── pyodideWorkerClean.js # Web worker for Pyodide
 ├── src/                 # Source code
 │   ├── assets/          # Images and assets
 │   ├── components/      # React components

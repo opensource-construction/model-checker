@@ -10,12 +10,6 @@ export const useHtmlReport = (templateContent: string | null, i18n: I18nType) =>
         if (templateContent) {
           const reportLanguage = result.language_code || result.ui_language || i18n.language || 'en'
 
-          console.log('Opening report with:', {
-            language: reportLanguage,
-            availableLanguages: result.available_languages,
-            hasHtmlContent: Boolean(result.html_content),
-          })
-
           // If we have pre-rendered HTML content from the worker that's already translated
           if (result.html_content) {
             const newWindow = window.open()
